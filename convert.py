@@ -153,6 +153,10 @@ def convert(filename, saveext, pendown, penup, fontsize, fontstyle, fontbias, sw
     log = lambda s: print(s, end="")
     
   log("Preparing data... ")
+  if not os.path.exists("temp"):
+    os.mkdir("temp")
+  if not os.path.exists("data"):
+    os.mkdir("data")
   filein = os.path.join("data", filename)
   fileinsplit = os.path.join("temp", "input{}.txt")
   filehandwriting = os.path.join("temp", "handwriting{}.svg")
