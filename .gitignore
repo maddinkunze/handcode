@@ -163,3 +163,7 @@ cython_debug/
 # Ignore data files (except demo.txt)
 /src/data/*
 !/src/data/demo.txt
+
+# Allow lib subfolder (contains icon.ico and svg2gcode)
+# i know those should not be in lib, but meh
+!/src/lib
