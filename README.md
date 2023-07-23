@@ -15,7 +15,7 @@ HandCode is a simple tool that enables its users to automatically create GCode f
 ##### Filename:
 
 This is the name (and path) of the text file, whose content will be used for the synthesis. If it is located within the data subdirectory it will simply show the filename, otherwise the whole path will be displayed. You can select your own text files or write in the large text input below to change the data that will be converted to gcode.
-> :warning: **Warning**: If you are editing after opening a text file, starting the conversion process will write the changes in the opened file. This may lead to data loss so please verify you are editing the correct file before each conversion.
+> :warning: **Warning**: If you are editing after opening a text file, starting the conversion process will apply your changes to the open file. This may lead to unexpected data loss so please verify you are editing the correct file before each conversion.
 
 ##### Export extension:
 
@@ -42,7 +42,7 @@ Honestly, i don't really know what exactly this does, i just copied its descript
 
 ## Features
 
-This project is based on great work from Sean Vasquez, who published his work on handwriting synthesis. It ensures the uniqueness of each letter and the natural flow from each letter to the next. You can choose between 12 sampled handwritings or (if you _really_ want to, i dont know how though) sample your own handwriting to use with this program.
+This project is based on great work from Sean Vasquez, who published his work on handwriting synthesis (see contributions). It ensures the uniqueness of each letter and the natural flow from each letter to the next. You can choose between 12 sampled handwritings or (if you _really_ want to, i dont know how though) sample your own handwriting to use with this program.
 
 ## Contributions
 
