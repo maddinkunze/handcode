@@ -14,18 +14,22 @@ HandCode is a simple tool that enables its users to automatically create GCode f
 
 ##### Filename:
 
-This is the name (and path) of the text file, whose content will be used for the synthesis. If it is located within the data subdirectory it will simply show the filename, otherwise the whole path will be displayed. You can select your own text files or write in the large text input below to change the data that will be converted to gcode.
+This is the name (and path) of the text file, whose content will be used for the synthesis. If it is located within the data subdirectory it will simply show the filename, otherwise the whole path will be displayed. You can select your own text files or write in the large text input below to change the data that will be converted to gcode. If you just want to write a short text in the large text input field, the filename input can be used for 
 > :warning: **Warning**: If you are editing after opening a text file, starting the conversion process will apply your changes to the open file. This may lead to unexpected data loss so please verify you are editing the correct file before each conversion.
 
 ##### Export extension:
 
-This is the extension that will be used for the export file. The export content will always be GCode, but some programs (i.e. Estlcam) require the file extension to be .nc, so to avoid the renaming step after each conversion you can use this field.
+This is the extension that will be used for the export file, the (base-)filename will be inherited from the filename field. The export content will always be GCode, but some programs (i.e. Estlcam) require the file extension to be .nc, so this field can be used to avoid the renaming step after each conversion.
+Examples:
+ - demo.txt + gcode -> demo.gcode
+ - estlcam.txt + nc -> estlcam.nc
+ - de.mo.txt + gcode -> de.mo.gcode
 
 #### Font Options
 
 ##### Size:
 
-This is the "font" size of the generated text. In theory it should be the line height in mm, so if you have paper with lines spaced 15mm apart from each other, the font size should be 15mm. However in practice, it has been more reliable to simply trial and error this value.
+This is the "font" size of the generated text. In theory it should be the line height in mm, so if you have paper with lines spaced 15mm apart from each other, the font size should be 15mm. However in practice, it has been more reliable to simply trial and error this value. To the best of my knowledge and testing, this scales linearly, so if you've tested and found out that for 15mm paper, the corrext font size is 30, then the font size for 30mm _should be_ 60mm.
 
 ##### Style:
 
