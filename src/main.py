@@ -5,66 +5,133 @@ import threading
 import traceback
 import tkinter as tk
 import tkinter.ttk as ttk
+import tkinter.font as tkf
 import tkinter.filedialog as tkfd
 import tkinter.messagebox as tkmb
 
 # This is just the GUI for this program, dont be intimidated.
 # For the main part of the program have a look at the convert() function in the convert.py file
 
+style = {
+  "bg_window": "#303030",
+  "bg_button": "#505050",
+  "bg_button_hover": "#404040",
+  "bg_button_start": "#409040",
+  "bg_scroll": "#202020",
+  "bg_inner": "#101010",
+  "bg_separator": "#606060",
+  "fg_button": "#D0D0D0",
+  "fg_button_hover": "#D0D0D0",
+  "fg_button_start": "#004000",
+  "fg_scroll": "#808080",
+  "fg_label": "#D0D0D0",
+  "fg_text": "#F0F0F0",
+  "fg_hint": "#A0A0A0",
+  "fg_progress": "#409040",
+  "relief": "flat",
+  "borderwidth": 0
+}
+
 def main():
     window = tk.Tk()
     window.resizable(False, False)
     window.geometry("220x60")
     window.title("HandCode")
+    window.configure(bg=style["bg_window"])
+
+    ttkStyle = ttk.Style()
+    ttkStyle.theme_use("default")
+    ttkStyle.configure("Maddin.HC.Horizontal.TProgressbar", borderwidth=style["borderwidth"], troughcolor=style["bg_inner"], background=style["fg_progress"], troughrelief=style["relief"])
+    ttkStyle.configure('Maddin.HC.Horizontal.TScrollbar', troughcolor=style["bg_window"], background=style["bg_button"], arrowcolor=style["fg_hint"], relief=style["relief"], troughrelief=style["relief"])
+    ttkStyle.map('Maddin.HC.Horizontal.TScrollbar', background=[('pressed', '!disabled', 'active', style["bg_button_hover"])])
+    ttkStyle.configure('Maddin.HC.Vertical.TScrollbar', troughcolor=style["bg_window"], background=style["bg_button"], arrowcolor=style["fg_hint"], relief=style["relief"], troughrelief=style["relief"])
+    ttkStyle.map('Maddin.HC.Vertical.TScrollbar', background=[('pressed', '!disabled', 'active', style["bg_button_hover"])])
+
+    fontText = tkf.Font(size=9)
+    fontLabel = tkf.Font(size=10, weight="bold")
+    fontStart = tkf.Font(size=24, weight="bold")
 
     lblLoading = tk.Label(window, text="Loading neural network...")
+    lblLoading.configure(bg=style["bg_window"], fg=style["fg_hint"])
     lblLoading.place(x=10, y=5)
     prgLoading = ttk.Progressbar(window, orient="horizontal", mode="indeterminate")
+    prgLoading.configure(style="Maddin.HC.Horizontal.TProgressbar")
     prgLoading.place(x=10, y=30, width=200, height=20)
     prgLoading.start(20)
 
     lblFilename = tk.Label(window, text="Filename:")
+    lblFilename.configure(font=fontLabel, bg=style["bg_window"], fg=style["fg_label"])
     edtFilename = tk.Entry(window)
+    edtFilename.configure(font=fontText, insertbackground=style["fg_hint"], bg=style["bg_inner"], fg=style["fg_text"], relief=style["relief"])
     btnFileselect = tk.Button(window, text="...")
+    btnFileselect.configure(bg=style["bg_button"], fg=style["fg_button"], relief=style["relief"])
     btnFilereload = tk.Button(window, text="⟳")
+    btnFilereload.configure(bg=style["bg_button"], fg=style["fg_button"], relief=style["relief"])
     lblFileext = tk.Label(window, text="Export extension:")
+    lblFileext.configure(font=fontLabel, bg=style["bg_window"], fg=style["fg_label"])
     edtFileext = tk.Entry(window)
+    edtFileext.configure(font=fontText, insertbackground=style["fg_hint"], bg=style["bg_inner"], fg=style["fg_text"], relief=style["relief"])
     lblInput = tk.Label(window, text="Input text:")
+    lblInput.configure(font=fontLabel, bg=style["bg_window"], fg=style["fg_label"])
     edtInput = tk.Text(window, wrap="none")
-    scrInputX = tk.Scrollbar(window, orient="horizontal", command=edtInput.xview)
-    scrInputY = tk.Scrollbar(window, orient="vertical", command=edtInput.yview)
+    edtInput.configure(font=fontText, insertbackground=style["fg_hint"], bg=style["bg_inner"], fg=style["fg_text"], relief=style["relief"])
+    scrInputX = ttk.Scrollbar(window, orient="horizontal", command=edtInput.xview)
+    scrInputX.configure(style="Maddin.HC.Horizontal.TScrollbar")
+    scrInputY = ttk.Scrollbar(window, orient="vertical", command=edtInput.yview)
+    scrInputY.configure(style="Maddin.HC.Vertical.TScrollbar")
     edtInput.configure(xscrollcommand=scrInputX.set, yscrollcommand=scrInputY.set)
 
-    segLeftRight = ttk.Separator(window, orient="vertical")
+    segLeftRight = tk.Frame(window, bd=0, bg=style["bg_separator"])
 
     lblFont = tk.Label(window, text="Font Settings:")
+    lblFont.configure(font=fontLabel, bg=style["bg_window"], fg=style["fg_label"])
     lblFontsize = tk.Label(window, text="Size")
+    lblFontsize.configure(font=fontText, bg=style["bg_window"], fg=style["fg_label"])
     edtFontsize = tk.Entry(window)
+    edtFontsize.configure(font=fontText, insertbackground=style["fg_hint"], bg=style["bg_inner"], fg=style["fg_text"], relief=style["relief"])
     lblFontstyle = tk.Label(window, text="Style")
+    lblFontstyle.configure(font=fontText, bg=style["bg_window"], fg=style["fg_label"])
     varFontstyle = tk.StringVar()
     sltFontstyle = tk.OptionMenu(window, varFontstyle, *[f"Style {i+1}" for i in range(12)])
-    sltFontstyle.configure(highlightthickness=0)
+    sltFontstyle.configure(font=fontText, highlightthickness=0, relief=style["relief"], borderwidth=style["borderwidth"], bg=style["bg_button"], fg=style["fg_button"], activebackground=style["bg_button_hover"], activeforeground=style["fg_button_hover"])
+    sltFontstyle["menu"].configure(font=fontText, relief=style["relief"], bg=style["bg_button"], fg=style["fg_button"], activebackground=style["bg_button_hover"], activeforeground=style["fg_button_hover"])
     lblFontbias = tk.Label(window, text="Legibility")
+    lblFontbias.configure(font=fontText, bg=style["bg_window"], fg=style["fg_label"])
     edtFontbias = tk.Entry(window)
-
+    edtFontbias.configure(font=fontText, insertbackground=style["fg_hint"], bg=style["bg_inner"], fg=style["fg_text"], relief=style["relief"])
+    
     lblPen = tk.Label(window, text="Pen Settings:")
+    lblPen.configure(font=fontLabel, bg=style["bg_window"], fg=style["fg_label"])
     lblPenup = tk.Label(window, text="Z Up/Travel")
+    lblPenup.configure(font=fontText, bg=style["bg_window"], fg=style["fg_label"])
     edtPenup = tk.Entry(window)
+    edtPenup.configure(font=fontText, insertbackground=style["fg_hint"], bg=style["bg_inner"], fg=style["fg_text"], relief=style["relief"])
     lblPendown = tk.Label(window, text="Z Down/Writing")
+    lblPendown.configure(font=fontText, bg=style["bg_window"], fg=style["fg_label"])
     edtPendown = tk.Entry(window)
-
+    edtPendown.configure(font=fontText, insertbackground=style["fg_hint"], bg=style["bg_inner"], fg=style["fg_text"], relief=style["relief"])
+    
     lblOther = tk.Label(window, text="Other Settings:")
+    lblOther.configure(font=fontLabel, bg=style["bg_window"], fg=style["fg_label"])
     varSwapXY = tk.IntVar(window)
     lblSwapXY = tk.Label(window, text="Swap X/Y Axis (Rotate 90°)")
+    lblSwapXY.configure(font=fontText, bg=style["bg_window"], fg=style["fg_label"])
     chkSwapXY = tk.Checkbutton(window, variable=varSwapXY, onvalue=1, offvalue=0)
+    chkSwapXY.configure(relief=style["relief"], highlightthickness=0, bg=style["bg_window"], activebackground=style["bg_window"], fg=style["fg_text"], selectcolor=style["bg_inner"], bd=style["borderwidth"])
 
     lblLog = tk.Label(window, text="Event Log:")
+    lblLog.configure(font=fontLabel, bg=style["bg_window"], fg=style["fg_label"])
     edtLog = tk.Text(window, wrap="none")
-    scrLogX = tk.Scrollbar(window, orient="horizontal", command=edtLog.xview)
-    scrLogY = tk.Scrollbar(window, orient="vertical", command=edtLog.yview)
+    edtLog.configure(font=fontText, insertbackground=style["fg_hint"], bg=style["bg_inner"], fg=style["fg_text"], relief=style["relief"])
+    scrLogX = ttk.Scrollbar(window, orient="horizontal", command=edtLog.xview)
+    scrLogX.configure(style="Maddin.HC.Horizontal.TScrollbar")
+    scrLogY = ttk.Scrollbar(window, orient="vertical", command=edtLog.yview)
+    scrLogY.configure(style="Maddin.HC.Vertical.TScrollbar")
     edtLog.configure(xscrollcommand=scrLogX.set, yscrollcommand=scrLogY.set)
     btnShow = tk.Button(window, text="Open input/output folder")
+    btnShow.configure(bg=style["bg_button"], fg=style["fg_button"], relief=style["relief"])
     btnStart = tk.Button(window, text="Start")
+    btnStart.configure(font=fontStart, bg=style["bg_button_start"], fg=style["fg_button_start"], relief=style["relief"])
     
 
     def startConvert():
@@ -113,7 +180,7 @@ def main():
         scrInputX.place(x=10, y=480, width=385, height=15)
         scrInputY.place(x=395, y=70, width=15, height=410)
 
-        segLeftRight.place(x=420, y=10, height=485)
+        segLeftRight.place(x=419, y=10, width=2, height=485)
 
         lblFont.place(x=430, y=5, height=20)
         lblFontsize.place(x=430, y=25, width=60, height=20)
