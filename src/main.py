@@ -1,9 +1,12 @@
 import os
+import sys
 import json
 import threading
+import traceback
 import tkinter as tk
 import tkinter.ttk as ttk
 import tkinter.filedialog as tkfd
+import tkinter.messagebox as tkmb
 
 # This is just the GUI for this program, dont be intimidated.
 # For the main part of the program have a look at the convert() function in the convert.py file
@@ -77,17 +80,21 @@ def main():
         convertEvent.set()
 
     def threadConvert():
-        import convert
-        report("loaded")
-        log = lambda s: report("log", s)
-        while True:
-            convertEvent.wait()
-            try:
-                convert.convert(**convertData, log=log)
-                report("success")
-            except Exception as e:
-                report("error", e)
-            convertEvent.clear()
+        try:
+            import convert
+            report("loaded")
+            log = lambda s: report("log", s)
+            while True:
+                convertEvent.wait()
+                try:
+                    convert.convert(**convertData, log=log)
+                    report("success")
+                except Exception as e:
+                    report("error", e)
+                convertEvent.clear()
+        except Exception as e:
+            tkmb.showerror("Error in the neural network thread", f"The following unhandled exception occured: {e}\n\n{traceback.format_exc()}\n\n{sys.exc_info()}")
+            
 
     def loadUI():
         lblLoading.place_forget()
@@ -313,7 +320,7 @@ def main():
 
     convertEvent = threading.Event()
     convertData = dict()
-    convertThread = threading.Thread(target=threadConvert)
+    convertThread = threading.Thread(target=threadConvert, daemon=True)
     convertThread.start()
     
     window.update()
