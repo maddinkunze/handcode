@@ -160,6 +160,6 @@ cython_debug/
 #.idea/
 
 
-# Demo files (except demo.txt)
-src/data/*
-!src/data/demo.txt
+# Ignore data files (except demo.txt)
+/src/data/*
+!/src/data/demo.txt
