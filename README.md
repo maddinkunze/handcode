@@ -21,10 +21,12 @@ This is the name (and path) of the text file, whose content will be used for the
 
 This is the extension that will be used for the export file, the (base-)filename will be inherited from the filename field. The export content will always be GCode, but some programs (i.e. Estlcam) require the file extension to be .nc, so this field can be used to avoid the renaming step after each conversion.
 Examples:
- - demo.txt + gcode 	-> demo.gcode
- - estlcam.txt + nc 	-> estlcam.nc
- - de.mo.txt + gcode 	-> de.mo.gcode
- - estlcam + nc 	-> estlcam.nc
+| Filename    | Exp. ext. | Exported file |
+|-------------|-----------|---------------|
+| demo.txt    | gcode     | demo.gcode    |
+| estlcam.txt | nc 	  | estlcam.nc    |
+| de.mo.txt   | gcode     | de.mo.gcode   |
+| estlcam     | nc        | estlcam.nc    |
 
 #### Font Options
 
