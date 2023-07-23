@@ -38,6 +38,7 @@ def main():
     window.geometry("220x60")
     window.title("HandCode")
     window.configure(bg=style["bg_window"])
+    window.iconbitmap(os.path.join("lib", "icon.ico"))
 
     ttkStyle = ttk.Style()
     ttkStyle.theme_use("default")

@@ -2,7 +2,7 @@ import os
 import shutil
 import pkgutil
 
-path_build = os.path.join("build", "exe.win-amd64-3.6")
+path_build = os.path.join("dist", "handcode-win64")
 path_lib = os.path.join(path_build, "lib")
 
 print("Copying neccessary files... ", end="")
