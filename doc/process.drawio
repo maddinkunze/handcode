@@ -1,10 +1,10 @@
-<mxfile host="app.diagrams.net" modified="2023-07-23T15:14:39.367Z" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36 Edg/114.0.1823.82" etag="Mzd-L2NjRatOilPRBjex" version="21.6.5" type="device">
+<mxfile host="app.diagrams.net" modified="2023-07-23T15:19:55.164Z" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36 Edg/114.0.1823.82" etag="fvO8OGzFv2RMSPwu_4N5" version="21.6.5" type="device">
   <diagram name="Seite-1" id="Llcf0wU5-I7FdMxQEXYU">
     <mxGraphModel dx="989" dy="549" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
-        <mxCell id="yo9vmSVmJTYEfxWX2iS3-10" value="Computer" style="swimlane;whiteSpace=wrap;html=1;startSize=23;fillColor=#121212;fontColor=#D0D0D0;fillStyle=auto;" vertex="1" parent="1">
+        <mxCell id="yo9vmSVmJTYEfxWX2iS3-10" value="Computer" style="swimlane;whiteSpace=wrap;html=1;startSize=23;fillColor=#121212;fontColor=#D0D0D0;fillStyle=auto;strokeColor=#808080;" vertex="1" parent="1">
           <mxGeometry x="10" y="10" width="790" height="130" as="geometry">
             <mxRectangle x="10" y="10" width="90" height="30" as="alternateBounds" />
           </mxGeometry>
@@ -108,7 +108,7 @@
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="yo9vmSVmJTYEfxWX2iS3-28" value="CNC/3D Printer" style="swimlane;whiteSpace=wrap;html=1;fillColor=#121212;fontColor=#d0d0d0;" vertex="1" parent="1">
+        <mxCell id="yo9vmSVmJTYEfxWX2iS3-28" value="CNC/3D Printer" style="swimlane;whiteSpace=wrap;html=1;fillColor=#121212;fontColor=#d0d0d0;strokeColor=#808080;" vertex="1" parent="1">
           <mxGeometry x="820" y="10" width="150" height="130" as="geometry" />
         </mxCell>
         <mxCell id="yo9vmSVmJTYEfxWX2iS3-29" value="SD Card Reader" style="rounded=0;whiteSpace=wrap;html=1;fontColor=#808080;strokeColor=#a0a0a0;" vertex="1" parent="yo9vmSVmJTYEfxWX2iS3-28">
