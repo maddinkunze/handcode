@@ -67,6 +67,25 @@ This checkbox should be set if you want to mount the paper perpendicular to your
 
 This project is based on great work from Sean Vasquez, who published his work on handwriting synthesis (see contributions). It ensures the uniqueness of each letter and the natural flow from each letter to the next. You can choose between 12 sampled handwritings or (if you _really_ want to, i dont know how though) sample your own handwriting to use with this program.
 
+## Building
+
+For building this project you need to do the following:
+
+### Windows
+
+You should be simply able to run the `build.bat` script provided in the `build` subdirectory. Besides the libraries you installed for the project you need to install (cx_Freeze)[https://cx-freeze.readthedocs.io/en/stable/]. You can install cx_Freeze using
+    pip install cx_Freeze
+
+The provided script will do the following:
+1. Build and bundle the software to the best of cx_Freeze's capabilities, see (cx_Freezes documentation)[https://cx-freeze.readthedocs.io/en/stable/] and my `build/setup.py` script for more information
+2. Add files (and folders) cx_Freeze did not copy correctly (mainly files from tensorflow since cx_Freeze somehow misses a few and i dont know how to force cx_Freeze to include the whole tensorflow library)
+3. Remove unneccessary files, especially library data, demos, tests, duplicate files and folders, especially pycache folders. This step is not strictly needed but it reduces the package size from initially ~400-500MB to 300MB (still very big but meh)
+
+### Other
+
+I have not tested nor built this project on other platforms then mentioned. If you wish to build this for other platforms, you have to include the (svg2gcode binary)[https://github.com/sameer/svg2gcode/releases/] for your platform in the `src/lib/svg2gcode` subdirectory and change the `os.system(...)` call in `converttogcode(...)` within `src/convert.py`
+
+
 ## Contributions
 
 This project is written in [Python](https://python.org) and uses the following projects:
