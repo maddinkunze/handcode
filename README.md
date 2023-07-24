@@ -30,14 +30,13 @@ After changing the settings to your liking you can click `Start` to start the co
 
 When the program finishes converting, which may take a few minutes, you can use its generated GCode which is located in the `data` subdirectory.
 
-<p align="center"><img src="doc/img/example_handcode_path.jpg" width="50%"></p>
+<p align="center"><img src="doc/img/example_handcode_path.png" width="70%"></p>
 
 #### Working with the generated GCode
 
 The generated GCode can be saved on an SD-Card or loaded into a GCode Sender program such as [Estlcam](https://www.estlcam.de/). Before running the GCode you should zero your tool/pen to the top left of where you want your text to start. Also, make sure that the lines on the paper are parallel to your X Axis. After starting the program you should stay close to the machine to ensure it does not break or move out of bounds.
 
-<p align="center"><img src="doc/img/example_handcode_drawn.jpg" width="50%"></p>
-<p align="center"><img src="doc/img/machine_3018_full.jpg" width="47%">&nbsp;<img src="doc/img/machine_3018_closeup.jpg" width="47%"></p>
+<p align="center"><img src="doc/img/example_handcode_drawn.jpg" width="70%"><br><img src="doc/img/machine_3018_full.jpg" width="47%">&nbsp;<img src="doc/img/machine_3018_closeup.jpg" width="47%"></p>
 
 #### Calibrating and Testing different values
 
