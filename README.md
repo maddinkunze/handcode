@@ -1,4 +1,4 @@
-<img src="doc/img/icon.svg" width=50%>
+<p align="center"><img src="doc/img/icon.svg" width="20%"></p>
 
 # HandCode - A handwiriting gcode generator
 
