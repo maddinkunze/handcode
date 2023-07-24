@@ -16,7 +16,7 @@ build_exe_options = {
     'include_files': includefiles,
     'excludes': excludes,
     'optimize': optimization,
-    'path': [*sys.path, path_src, os.path.join(path_src, "handwriting")], 
+    'path': [*sys.path, path_src, os.path.join(path_src, "lib", "handwriting")], 
 }
 
 # base="Win32GUI" should be used only for Windows GUI app
@@ -80,7 +80,7 @@ if optimization == 2:
 
 setup(
     name="HandCode",
-    version="0.2.0",
+    version="0.2.1",
     description="HandCode: Handwriting GCode Generator",
     options={"build_exe": build_exe_options},
     executables=[Executable(os.path.join(path_src, "main.py"), base=base, icon=os.path.join(path_src, "lib", "icon.ico"), target_name="HandCode")],
