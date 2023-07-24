@@ -10,6 +10,35 @@ HandCode is a simple tool that enables its users to automatically create GCode f
 
 ![](doc/img/process.png)
 
+### Getting started
+
+#### Preparations
+
+First of all, you need to have an 3-axis gantry controlled by GCode. Common examples for this are CNCs, 3D printers, laser cutters or engravers. You should have some experience in using your machine and you should know what GCode is.
+You also have to either clone the repo or download a release of this program.
+Lastly, it is recommended that you build a toolholder that can firmly hold your pen. I designed a parametrized and customizable pen holder that originally was designed to be used in a standard 3018 CNC mill, but can be adapted to many different sizes. The files for this penholder can be found [here](doc/files).
+
+TODO add images of penholder and cnc and both
+
+#### Using HandCode
+
+Open HandCode and wait until the neural network finished loading, this may take a few minutes. While waiting, you can take the text you want to convert to handwriting and save it in a plain text file. After the program finished loading you can open your text file by clicking the `...` button. If you want, you can change the settings (see below for all options) or edit your input if you noticed a mistake. After editing, changes will be saved to the file. Probably the most interesting options are the font options, which can be tested in this [web demo](https://caligrapher.ai). Note, that the font size setting is not accurate and does not represent any real life metric. See "Calibrating" below for more information.
+
+After changing the settings to your liking you can click `Start` to start the conversion process. During this process, command prompts may open. These are for converting the handwriting to gcode and should not concern you. Please do not close them manually, they should close themselves.
+
+When the program finishes converting, which may take a few minutes, you can use its generated GCode which is located in the `data` subdirectory.
+
+#### Working with the generated GCode
+
+The generated GCode can be saved on an SD-Card or loaded into a GCode Sender program such as [Estlcam](https://www.estlcam.de/). Before running the GCode you should zero your tool/pen to the top left of where you want your text to start. After starting the program you should stay close to the machine to ensure it does not break or move out of bounds.
+
+#### Calibrating and Testing different values
+
+I recommend spending some time to calibrate the font size to different line heights for your environment. To do so, simply take a text file with 10 lines of content and convert it to GCode with different font sizes. You can then measure the actual distance and graph and inter-/extrapolate it to whatever font size you might need in the future.
+Furthermore i encourage you to play around with the other options, such as how high you have to lift the pen and how low you have to put it to write but not drag unneccessarily.
+All options available are described below.
+
+
 ### Options
 
 #### File Options
@@ -22,7 +51,9 @@ This is the name (and path) of the text file, whose content will be used for the
 ##### Export extension:
 
 This is the extension that will be used for the export file, the (base-)filename will be inherited from the filename field. The export content will always be GCode, but some programs (i.e. Estlcam) require the file extension to be .nc, so this field can be used to avoid the renaming step after each conversion.
-Examples:
+
+_Examples:_
+
 | Filename    | Exp. ext. | Exported file |
 |-------------|-----------|---------------|
 | demo.txt    | gcode     | demo.gcode    |
@@ -61,7 +92,7 @@ This is the (absolute) Z-Position (in mm) of your CNC tool head when the pen sho
 
 ##### Swap X/Y Axis (Rotate 90°)
 
-This checkbox should be set if you want to mount the paper perpendicular to your CNC/3D Printer. Usually the GCode generated will write each line along the X-Axis and lines below each other along the Y-Axis. By checking this box, the GCode will move the tool head along its Y Axis while writing each line and along the X axis when going to the next line
+This checkbox should be set if you want to mount the paper perpendicular to your CNC/3D Printer. Usually the GCode generated will write each line along the X-Axis and lines below each other along the Y-Axis. By checking this box, the GCode will move the tool head along its Y Axis while writing each line and along the X axis when going to the next line.
 
 ## Features
 
@@ -73,17 +104,18 @@ For building this project you need to do the following:
 
 ### Windows
 
-You should be simply able to run the `build.bat` script provided in the `build` subdirectory. Besides the libraries you installed for the project you need to install (cx_Freeze)[https://cx-freeze.readthedocs.io/en/stable/]. You can install cx_Freeze using
+You should be simply able to run the `build.bat` script provided in the `build` subdirectory. Besides the libraries you installed for the project you need to install [cx_Freeze](https://cx-freeze.readthedocs.io/en/stable/). You can install cx_Freeze using
+
     pip install cx_Freeze
 
 The provided script will do the following:
-1. Build and bundle the software to the best of cx_Freeze's capabilities, see (cx_Freezes documentation)[https://cx-freeze.readthedocs.io/en/stable/] and my `build/setup.py` script for more information
+1. Build and bundle the software to the best of cx_Freeze's capabilities, see [cx_Freezes documentation](https://cx-freeze.readthedocs.io/en/stable/) and my `build/setup.py` script for more information
 2. Add files (and folders) cx_Freeze did not copy correctly (mainly files from tensorflow since cx_Freeze somehow misses a few and i dont know how to force cx_Freeze to include the whole tensorflow library)
 3. Remove unneccessary files, especially library data, demos, tests, duplicate files and folders, especially pycache folders. This step is not strictly needed but it reduces the package size from initially ~400-500MB to 300MB (still very big but meh)
 
 ### Other
 
-I have not tested nor built this project on other platforms then mentioned. If you wish to build this for other platforms, you have to include the (svg2gcode binary)[https://github.com/sameer/svg2gcode/releases/] for your platform in the `src/lib/svg2gcode` subdirectory and change the `os.system(...)` call in `converttogcode(...)` within `src/convert.py`
+I have not tested nor built this project on other platforms then mentioned. If you wish to build this for other platforms, you have to include the [svg2gcode binary](https://github.com/sameer/svg2gcode/releases/) for your platform in the `src/lib/svg2gcode` subdirectory and change the `os.system(...)` call in `converttogcode(...)` within `src/convert.py`
 
 
 ## Contributions
