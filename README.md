@@ -10,17 +10,17 @@ HandCode is a simple tool that enables its users to automatically create GCode f
 
 ## How to Use
 
-![](doc/img/process.png)
+![](doc/img/diagram_process.png)
 
 ### Getting started
 
 #### Preparations
 
 First of all, you need to have an 3-axis gantry controlled by GCode. Common examples for this are CNCs, 3D printers, laser cutters or engravers. You should have some experience in using your machine and you should know what GCode is.
-You also have to either clone the repo or download a release of this program.
+You also have to either clone the repo or download a release of this program (duh).
 Lastly, it is recommended that you build a toolholder that can firmly hold your pen. I designed a parametrized and customizable pen holder that originally was designed to be used in a standard 3018 CNC mill, but can be adapted to many different sizes. The files for this penholder can be found [here](doc/files).
 
-TODO add images of penholder and cnc and both
+<p align="center"><img src="doc/img/machine_penholders.jpg" width="50%"></p>
 
 #### Using HandCode
 
@@ -99,6 +99,8 @@ This is the (absolute) Z-Position (in mm) of your CNC tool head when the pen sho
 ##### Swap X/Y Axis (Rotate 90°)
 
 This checkbox should be set if you want to mount the paper perpendicular to your CNC/3D Printer. Usually the GCode generated will write each line along the X-Axis and lines below each other along the Y-Axis. By checking this box, the GCode will move the tool head along its Y Axis while writing each line and along the X axis when going to the next line.
+
+<p align="center><img src="doc/img/setting_swapxy_no.jpg" width="40%">&nbsp;<img src="doc/img/setting_swapxy_yes.jpg" width="40%"></p>
 
 ## Features
 
