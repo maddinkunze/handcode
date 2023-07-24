@@ -100,7 +100,7 @@ This is the (absolute) Z-Position (in mm) of your CNC tool head when the pen sho
 
 This checkbox should be set if you want to mount the paper perpendicular to your CNC/3D Printer. Usually the GCode generated will write each line along the X-Axis and lines below each other along the Y-Axis. By checking this box, the GCode will move the tool head along its Y Axis while writing each line and along the X axis when going to the next line.
 
-<p align="center><img src="doc/img/setting_swapxy_no.jpg" width="40%">&nbsp;<img src="doc/img/setting_swapxy_yes.jpg" width="40%"></p>
+<p align="center"><img src="doc/img/setting_swapxy_no.jpg" width="40%">&nbsp;<img src="doc/img/setting_swapxy_yes.jpg" width="40%"></p>
 
 ## Features
 
