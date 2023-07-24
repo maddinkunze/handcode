@@ -1,7 +1,10 @@
 import os
 import re
+import sys
 import math
-from lib.handwriting import Hand
+
+sys.path.append("lib") # for clean build reasons we dont include lib.handwriting
+from handwriting import Hand
 
 filename = "demo.txt"  # filename of the input file, should be located within the data subdirectory (if converttype == "file")
 saveext = "nc"         # extension of the output file (will be located within the data subdirectory)

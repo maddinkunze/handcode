@@ -1,12 +1,14 @@
+![](doc/img/icon.svg)
+
 # HandCode - A handwiriting gcode generator
 
 ## Overview
 
-HandCode is a simple tool that enables its users to automatically create GCode from plain text input. This GCode can then be used to, for example, build a handwriting robot.
+HandCode is a simple tool that enables its users to automatically create GCode from plain text input. This GCode can then be used to, for example, build a handwriting robot. It is based on a pretrained AI model to create the handwriting path. This leads to unique characters, a natural flow between characters and a realistic writing order.
 
 ## How to Use
 
-![](doc/process.png)
+![](doc/img/process.png)
 
 ### Options
 
@@ -45,7 +47,21 @@ Honestly, i don't really know what exactly this does, i just copied its descript
 
 #### Pen Options
 
+##### Z Up (Travel)
+
+This is the (absolute) Z-Position (in mm) of your CNC tool head when the pen is travelling, i.e. not writing. This should not be too small, otherwise you may be drawing lines between characters.
+
+##### Z Down (Writing)
+
+This is the (absolute) Z-Position (in mm) of your CNC tool head when the pen should be drawing. This value should be 0 if you've levelled your CNC correctly and using a pen that does not need any pressure (e.g. fineliners). If you are using a pen that needs pressure (e.g. ball bens) you can decrease this value. For me a value of 0 is perfect for fineliners and a value of -1.5 applies enough pressure for a ball pen.
+
+> :warning: **Warning**: If you are testing what the correct Z Down value is, i recommended to use a pen that is reasonably flexible to avoid damaging your CNC.
+
 #### Other Options
+
+##### Swap X/Y Axis (Rotate 90°)
+
+This checkbox should be set if you want to mount the paper perpendicular to your CNC/3D Printer. Usually the GCode generated will write each line along the X-Axis and lines below each other along the Y-Axis. By checking this box, the GCode will move the tool head along its Y Axis while writing each line and along the X axis when going to the next line
 
 ## Features
 
