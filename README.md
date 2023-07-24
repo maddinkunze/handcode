@@ -30,7 +30,9 @@ When the program finishes converting, which may take a few minutes, you can use 
 
 #### Working with the generated GCode
 
-The generated GCode can be saved on an SD-Card or loaded into a GCode Sender program such as [Estlcam](https://www.estlcam.de/). Before running the GCode you should zero your tool/pen to the top left of where you want your text to start. After starting the program you should stay close to the machine to ensure it does not break or move out of bounds.
+The generated GCode can be saved on an SD-Card or loaded into a GCode Sender program such as [Estlcam](https://www.estlcam.de/). Before running the GCode you should zero your tool/pen to the top left of where you want your text to start. Also, make sure that the lines on the paper are parallel to your X Axis. After starting the program you should stay close to the machine to ensure it does not break or move out of bounds.
+
+<p><img src="doc/img/machine_3018_full.jpg" width="50%"><img src="doc/img/machine_3018_closeup.jpg" width="50%"></p>
 
 #### Calibrating and Testing different values
 
@@ -54,12 +56,12 @@ This is the extension that will be used for the export file, the (base-)filename
 
 _Examples:_
 
-| Filename    | Exp. ext. | Exported file |
-|-------------|-----------|---------------|
-| demo.txt    | gcode     | demo.gcode    |
-| estlcam.txt | nc 	  | estlcam.nc    |
-| de.mo.txt   | gcode     | de.mo.gcode   |
-| estlcam     | nc        | estlcam.nc    |
+| Filename    | Export ext. | Exported file |
+|-------------|-------------|---------------|
+| demo.txt    | gcode       | demo.gcode    |
+| estlcam.txt | nc 	    | estlcam.nc    |
+| de.mo.txt   | gcode       | de.mo.gcode   |
+| otherext    | ext         | otherext.ext  |
 
 #### Font Options
 
