@@ -1,4 +1,4 @@
-![](doc/img/icon.svg)
+<img src="doc/img/icon.svg" width=50%>
 
 # HandCode - A handwiriting gcode generator
 
