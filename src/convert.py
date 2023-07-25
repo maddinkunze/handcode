@@ -44,8 +44,34 @@ def simplifygcode(filein, fileout, swapXY=False, offsetTop=0, offsetLeft=0):
   file.close()
 
   dataClean = []
-  offsetX = None
-  offsetY = None
+  _offsetCountX = 7  # TODO should be dependent on number of lines (more lines -> more random dots on the side)
+  _offsetCountY = 1  # and (max) number of characters each line is wide AND also maybe should be customizable(?)
+  offsetsX = []
+  offsetsY = []
+  def _insertoffset(offsets, newoffset, maxoffsets, compare):
+    if not newoffset:
+      return
+    newoffset = float(newoffset[0])
+    if len(offsets) < maxoffsets:
+      offsets.append(newoffset)
+      return
+    
+    maxoffset = max(offsets)
+    if compare(maxoffset, newoffset):
+      offsets.append(newoffset)
+      offsets.remove(maxoffset)
+  def _getoffset(offsets):
+    if not offsets:
+      return 0
+
+    # basically returning the median
+    numoffsets = len(offsets)
+    _i = int(numoffsets / 2)
+    if numoffsets % 2:
+      return offsets[_i]
+    else:
+      return (offsets[_i-1] + offsets[_i]) / 2
+      
   patternX = re.compile("X(-?[0-9]*\.?[0-9]*)(?:$|\s)")
   patternY = re.compile("Y(-?[0-9]*\.?[0-9]*)(?:$|\s)")
 
@@ -57,22 +83,9 @@ def simplifygcode(filein, fileout, swapXY=False, offsetTop=0, offsetLeft=0):
     # get top-most position
     if line.startswith("G0") or line.startswith("G1"):
       currentX = patternX.findall(line)
-      if currentX:
-        currentX = float(currentX[0])
-      else:
-        currentX = offsetX
-
-      if (offsetX is None) or (currentX < offsetX):
-        offsetX = currentX
-
+      _insertoffset(offsetsX, currentX, _offsetCountX, lambda old, new: old > new)
       currentY = patternY.findall(line)
-      if currentY:
-        currentY = float(currentY[0])
-      else:
-        currentY = offsetY
-
-      if (offsetY is None) or (currentY > offsetY):
-        offsetY = currentY
+      _insertoffset(offsetsY, currentY, _offsetCountY, lambda old, new: old < new)
 
     # swapping x and y axis
     if swapXY:
@@ -81,10 +94,8 @@ def simplifygcode(filein, fileout, swapXY=False, offsetTop=0, offsetLeft=0):
     # append clean line again
     dataClean.append(line)
 
-  if offsetX is None:
-    offsetX = 0
-  if offsetY is None:
-    offsetY = 0
+  offsetX = _getoffset(offsetsX) # get median
+  offsetY = _getoffset(offsetsY) # get median
 
   offsetX += offsetLeft
   offsetY += offsetTop
@@ -188,7 +199,7 @@ def convert(filename, saveext, pendown, penup, fontsize, fontstyle, fontbias, sw
     log("Done\n")
 
     log(f"[File {i+1}/{linespernewline}] Simplifying gcode... ")
-    offsetTop = 0.9 * i * fontsize
+    offsetTop = (0.95 * i + 0.05) * fontsize  # TODO the 0.95 is a weird hack, should be customizable (?) [Line height factor] or something
     simplifygcode(filegcode.format(i), filencode.format(i), swapXY=swapXY, offsetTop=offsetTop)
     log("Done\n")
 
