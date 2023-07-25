@@ -1,4 +1,5 @@
 import os
+import lzma
 import shutil
 import pkgutil
 
@@ -158,5 +159,48 @@ def removeunneccessaryfolders(basedir):
     return count
 
 removeunneccessaryfolders(path_lib)
+
+print("Done")
+
+print("Compressing large files... ", end="")
+
+def compresslargefiles(basedir, minsize, compressfactor, excludes, maxlevel):
+    if maxlevel < 0:
+        return
+
+    filters_compression = [
+        {"id": lzma.FILTER_LZMA2, "preset": 9 | lzma.PRESET_EXTREME},
+    ]
+    
+    for item in os.listdir(basedir):
+        path_item = os.path.join(basedir, item)
+        if (item in excludes) or (path_item in excludes):
+            continue
+        
+        if os.path.isdir(path_item):
+            compresslargefiles(path_item, minsize, compressfactor, excludes, maxlevel-1)
+        elif os.path.isfile(path_item):
+            filesize_orig = os.stat(path_item).st_size
+            if filesize_orig < minsize:
+                continue
+            path_compressed = path_item + ".lzma"
+
+            file_orig = open(path_item, "rb")
+            file_compressed = lzma.open(path_compressed, "wb", filters=filters_compression)
+            file_compressed.write(file_orig.read())
+            file_compressed.close()
+            file_orig.close()
+            
+            filesize_compressed = os.stat(path_compressed).st_size
+            path_del = path_compressed
+            if (filesize_compressed / filesize_orig) < compressfactor:
+                path_del = path_item
+            os.remove(path_del)
+
+excludes_compress = [
+  "lzma",
+  "library.zip"
+]
+compresslargefiles(path_lib, 500_000, 0.6, excludes_compress, 3)
 
 print("Done")

@@ -6,11 +6,13 @@ path_src = os.path.join("..", "src")
 # Dependencies are automatically detected, but it might need fine tuning.
 packages = ["matplotlib"]
 includes = []
-includefiles = [os.path.join(path_src, "data/"), (os.path.join(path_src, "lib", "svg2gcode"), os.path.join("lib", "svg2gcode")), (os.path.join(path_src, "lib", "icon.ico"), os.path.join("lib", "icon.ico"))]
+includefiles = [(os.path.join(path_src, "data", "demo.txt"), os.path.join("data", "demo.txt")), (os.path.join(path_src, "lib", "svg2gcode"), os.path.join("lib", "svg2gcode")), (os.path.join(path_src, "lib", "icon.ico"), os.path.join("lib", "icon.ico"))]
 excludes = ["asnycio", "atomicwrites", "attr", "backcall", "bleach", "bs4", "certifi", "chardet", "cloudpickle", "curses", "Cython", "defusedxml", "grpc", "html", "h5py", "html5lib", "idna", "importlib_metadata", "iniconfig", "ipykernel", "IPython", "ipython_genutils", "jedi", "jinja2", "jsonschema", "jupyter_client", "jupyter_core", "lib2to3", "llvmlite", "lxml", "markdown", "markupsafe", "mock", "msilib", "nbconvert", "nbformat", "notebook", "numba", "packaging", "parso", "pkg_resources", "pluggy", "prompt_toolkit", "psutil", "py", "pydoc_data", "pygments", "pyreadline", "pyrsistent", "pytest", "pyximport", "setuptools", "simplejson", "soupsieve", "sqlite3", "test", "testpath", "toml", "tornado", "traitlets", "urllib3", "wcwidth", "werkzeug", "win32com", "wsgiref", "xmlrpc", "yaml", "zmq"]
 optimization = 1
+buildversion = "0.2.2"
+buildpath = os.path.join("dist", "handcode-win64")
 build_exe_options = {
-    'build_exe': "dist/handcode-win64",
+    'build_exe': buildpath,
     'packages': packages,
     'includes': includes,
     'include_files': includefiles,
@@ -78,9 +80,15 @@ if optimization == 2:
     
 """
 
+if os.path.exists(buildpath + f"-v{buildversion}.zip"):
+    print("/-----------------------------------------------------------------\\")
+    print("| WARNING! There already exists a build with this version number! |")
+    print("\\-----------------------------------------------------------------/")
+    print()
+
 setup(
     name="HandCode",
-    version="0.2.0",
+    version=buildversion,
     description="HandCode: Handwriting GCode Generator",
     options={"build_exe": build_exe_options},
     executables=[Executable(os.path.join(path_src, "main.py"), base=base, icon=os.path.join(path_src, "lib", "icon.ico"), target_name="HandCode")],
