@@ -159,7 +159,7 @@ def converttohandwriting(filein, fileout, bias=0.75, style=12):
   styles = [style for l in data]
   widths = [0.1 for l in data]
 
-  if data and any(data):
+  if data and any(map(str.strip, data)):  # if there are lines that contain anything other than a null character
     HAND.write(filename=fileout, lines=data, biases=biases, styles=styles, stroke_widths=widths)
   else:
     return 0
@@ -182,8 +182,10 @@ def splittextfile(filein, filesout):
 
   for i, line in enumerate(lines):
     fi = i % len(files)
-    if i >= len(files):
+    if i >= len(files):  # if we are not on the first line of the current file, append a newline to the last line -> no unneccessary \n characters
       files[fi].write("\n")
+    elif not line:
+      line = " "  # force content on every files first line, otherwise distances may be messed up
     files[fi].write(line)
 
   for file in files:
