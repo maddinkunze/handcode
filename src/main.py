@@ -113,6 +113,10 @@ def main():
     lblPendown.configure(font=fontText, bg=style["bg_window"], fg=style["fg_label"])
     edtPendown = tk.Entry(window)
     edtPendown.configure(font=fontText, insertbackground=style["fg_hint"], bg=style["bg_inner"], fg=style["fg_text"], relief=style["relief"])
+    lblFeedrate = tk.Label(window, text="Feedrate")
+    lblFeedrate.configure(font=fontText, bg=style["bg_window"], fg=style["fg_label"])
+    edtFeedrate = tk.Entry(window)
+    edtFeedrate.configure(font=fontText, insertbackground=style["fg_hint"], bg=style["bg_inner"], fg=style["fg_text"], relief=style["relief"])
     
     lblOther = tk.Label(window, text="Other Settings:")
     lblOther.configure(font=fontLabel, bg=style["bg_window"], fg=style["fg_label"])
@@ -170,7 +174,7 @@ def main():
 
     def loadUI():
         lblLoading.place_forget()
-        window.geometry("660x505")
+        window.geometry("660x545")
 
         lblFilename.place(x=10, y=5, height=20)
         edtFilename.place(x=10, y=25, width=150, height=20)
@@ -181,9 +185,9 @@ def main():
         lblFileext.place(x=220, y=5, height=20)
         edtFileext.place(x=220, y=25, width=100, height=20)
         lblInput.place(x=10, y=50, height=20)
-        edtInput.place(x=10, y=70, width=385, height=410)
-        scrInputX.place(x=10, y=480, width=385, height=15)
-        scrInputY.place(x=395, y=70, width=15, height=410)
+        edtInput.place(x=10, y=70, width=385, height=450)
+        scrInputX.place(x=10, y=520, width=385, height=15)
+        scrInputY.place(x=395, y=70, width=15, height=450)
 
         segLeftRight.place(x=419, y=10, width=2, height=485)
 
@@ -200,18 +204,20 @@ def main():
         edtPenup.place(x=430, y=120, width=105, height=20)
         lblPendown.place(x=545, y=100, width=105, height=20)
         edtPendown.place(x=545, y=120, width=105, height=20)
+        lblFeedrate.place(x=430, y=140, width=105, height=20)
+        edtFeedrate.place(x=430, y=160, width=105, height=20)
 
-        lblOther.place(x=430, y=150, height=20)
-        lblSwapXY.place(x=430, y=170, height=20)
-        chkSwapXY.place(x=630, y=170, width=20, height=20)
+        lblOther.place(x=430, y=190, height=20)
+        lblSwapXY.place(x=430, y=210, height=20)
+        chkSwapXY.place(x=630, y=210, width=20, height=20)
 
-        lblLog.place(x=430, y=200, height=20)
-        edtLog.place(x=430, y=220, width=205, height=125)
-        scrLogX.place(x=430, y=345, width=205, height=15)
-        scrLogY.place(x=635, y=220, width=15, height=125)
-        prgLoading.place(x=430, y=380, width=220, height=20)
-        btnShow.place(x=430, y=410, width=220, height=25)
-        btnStart.place(x=430, y=445, width=220, height=50)
+        lblLog.place(x=430, y=240, height=20)
+        edtLog.place(x=430, y=260, width=205, height=125)
+        scrLogX.place(x=430, y=385, width=205, height=15)
+        scrLogY.place(x=635, y=260, width=15, height=125)
+        prgLoading.place(x=430, y=420, width=220, height=20)
+        btnShow.place(x=430, y=450, width=220, height=25)
+        btnStart.place(x=430, y=485, width=220, height=50)
         btnStart.configure(command=startConvert)
 
         prgLoading.stop()
@@ -236,7 +242,7 @@ def main():
             btnStart.configure(state=tk.NORMAL)
             prgLoading.stop()
             report("log", f"\nUnhandled error: {data}\n")
-            print(f"{traceback.format_exc()}\n\n{sys.exc_info()}")
+            print(f"An error occurred:\n{traceback.format_exc()}\n\n{sys.exc_info()}")
 
     def selectInputFile():
         filename = tkfd.askopenfilename(title="Open text file...", initialdir="data")
@@ -306,6 +312,7 @@ def main():
         convertData["saveext"] = edtFileext.get()
         invalidData += _getConvertDataFloat("penup", edtPenup)
         invalidData += _getConvertDataFloat("pendown", edtPendown)
+        invalidData += _getConvertDataFloat("feedrate", edtFeedrate)
         invalidData += _getConvertDataFloat("fontsize", edtFontsize)
         invalidData += _getConvertDataFloat("fontbias", edtFontbias)
         try:
@@ -334,18 +341,18 @@ def main():
         edtPenup.insert(0, convertData["penup"])
         edtPendown.delete(0, tk.END)
         edtPendown.insert(0, convertData["pendown"])
+        edtFeedrate.delete(0, tk.END)
+        edtFeedrate.insert(0, convertData["feedrate"])
 
         varSwapXY.set(convertData["swapXY"])
 
     def verifyConvertData():
         if "filename" not in convertData:
-            print(convertData)
             convertData["filename"] = "demo.txt"
         _filepath = os.path.join("data", convertData["filename"])
         _datapath = os.path.abspath("data")
         if (not os.path.isfile(_filepath)) and (not os.path.samefile(os.path.commonpath([os.path.abspath(_filepath), _datapath]), _datapath)):
             convertData["filename"] = "demo.txt"
-            print("replace 2")
 
         if "saveext" not in convertData:
             convertData["saveext"] = "gcode"
@@ -354,6 +361,8 @@ def main():
             convertData["pendown"] = 0
         if "penup" not in convertData:
             convertData["penup"] = 5
+        if "feedrate" not in convertData:
+            convertData["feedrate"] = 2000
 
         if "fontsize" not in convertData:
             convertData["fontsize"] = 10

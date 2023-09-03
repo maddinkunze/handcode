@@ -13,6 +13,7 @@ saveext = "nc"         # extension of the output file (will be located within th
 
 pendown = 0  # z-location when the pen is down/pressed
 penup = 6    # z-location when the pen is up/released
+feedrate = 2000  # movement feedrate for both travel and writing
 
 # the following settings can be tested in the online handwriting generator demo:
 # https://www.calligrapher.ai/
@@ -228,7 +229,7 @@ def replaceinvalidcharacters(filein, fileout, alphabet=alphabet, replacetable={}
   return replacements
 
 
-def convert(filename, saveext, pendown, penup, fontsize, fontstyle, fontbias, swapXY, linespernewline, alphabet, replacetable, log=None):
+def convert(filename, saveext, pendown, penup, feedrate, fontsize, fontstyle, fontbias, swapXY, linespernewline, alphabet, replacetable, log=None):
   if not log:
     log = lambda s: print(s, end="")
     
@@ -266,7 +267,7 @@ def convert(filename, saveext, pendown, penup, fontsize, fontstyle, fontbias, sw
 
     log(f"[File {i+1}/{linespernewline}] Converting to gcode... ")
     numlines += (numlines+1) * (linespernewline-1) # add "empty" lines (e.g. 5 lines with content will have 4 lines without content between them and 1 above and below, so together 5+4+2=11 logical lines)
-    converttogcode(filehandwriting.format(i), filegcode.format(i), height=fontsize*numlines, feedrate=2000, penup=penup, pendown=pendown)
+    converttogcode(filehandwriting.format(i), filegcode.format(i), height=fontsize*numlines, feedrate=feedrate, penup=penup, pendown=pendown)
     log("Done\n")
 
     log(f"[File {i+1}/{linespernewline}] Simplifying gcode... ")
@@ -289,4 +290,4 @@ def convert(filename, saveext, pendown, penup, fontsize, fontstyle, fontbias, sw
   
 
 if __name__ == "__main__":
-  convert(filename, saveext, pendown, penup, fontsize, fontstyle, fontbias, swapXY, linespernewline, alphabet, replacetable)
+  convert(filename, saveext, pendown, penup, feedrate, fontsize, fontstyle, fontbias, swapXY, linespernewline, alphabet, replacetable)
