@@ -138,7 +138,7 @@ class LSTMAttentionCell(tf.compat.v1.nn.rnn_cell.RNNCell):
         covar_matrix = tf.stack(covar_matrix, axis=2)
         covar_matrix = tf.reshape(covar_matrix, (self.batch_size, self.num_output_mixture_components, 2, 2))
 
-        mvn = tfd.MultivariateNormalFullCovariance(loc=mus, covariance_matrix=covar_matrix)
+        mvn = tfd.MultivariateNormalTriL(loc=mus, scale_tril=tf.linalg.cholesky(covar_matrix))
         b = tfd.Bernoulli(probs=es)
         c = tfd.Categorical(probs=pis)
 

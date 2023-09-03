@@ -357,7 +357,11 @@ class TFBaseModel(object):
 
         optimizer = self.get_optimizer(self.learning_rate_var, self.beta1_decay_var)
         grads = optimizer.compute_gradients(loss)
-        clipped = [(tf.clip_by_value(g, -self.grad_clip, self.grad_clip), v_) for g, v_ in grads]
+        def clip_or_none(v):
+            if v is None:
+                return v
+            return tf.clip_by_value(v, -self.grad_clip, self.grad_clip)
+        clipped = [(clip_or_none(g), v_) for g, v_ in grads]
 
         update_ops = tf.compat.v1.get_collection(tf.compat.v1.GraphKeys.UPDATE_OPS)
         with tf.control_dependencies(update_ops):

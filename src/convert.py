@@ -4,7 +4,7 @@ import sys
 import math
 
 sys.path.append("lib") # for clean build reasons we dont include lib.handwriting
-from handwriting import Hand
+import handwriting
 
 filename = "demo.txt"  # filename of the input file, should be located within the data subdirectory (if converttype == "file")
 saveext = "nc"         # extension of the output file (will be located within the data subdirectory)
@@ -27,6 +27,20 @@ linespernewline = 2  # generating handwriting leaves an empty line after every c
                      # and generate the handwriting for every odd and even line seperately and merge those afterwards to effectively use every line
                      # should only ever be 1 or 2, but feel free to play with it
 
+alphabet = handwriting.alphabet
+replacetable = {
+  "Q": "O",
+  "X": "x",
+  "Z": "z",
+  "Ä": "A",
+  "Ö": "O",
+  "Ü": "U",
+  "ä": "a",
+  "ö": "o",
+  "ü": "u"
+}
+
+HAND = None
 
 def mergegcode(files, fileout):
   fileo = open(fileout, "w")
@@ -127,6 +141,13 @@ def simplifygcode(filein, fileout, swapXY=False, offsetTop=0, offsetLeft=0):
     file.write("\n")
   file.close()
 
+def initializehandwritingengine():
+  global HAND
+  _engine = handwriting.Hand
+  if isinstance(HAND, _engine):
+    return
+  HAND = _engine()
+
 def converttohandwriting(filein, fileout, bias=0.75, style=12):
   file = open(filein, "r")
   data = file.read().split("\n")
@@ -137,14 +158,14 @@ def converttohandwriting(filein, fileout, bias=0.75, style=12):
   widths = [0.1 for l in data]
 
   if data and any(data):
-    Hand().write(filename=fileout, lines=data, biases=biases, styles=styles, stroke_widths=widths)
+    HAND.write(filename=fileout, lines=data, biases=biases, styles=styles, stroke_widths=widths)
   else:
     return 0
   return len(data)
 
 def converttogcode(filein, fileout, height=10, feedrate=300, penup=5, pendown=0):
   path_svg2gcode = os.path.join(os.curdir, "lib", "svg2gcode", "svg2gcode.exe")
-  os.system(f"{path_svg2gcode} --dimensions ,{height} --feedrate {feedrate} --on \"G0 Z{pendown}\" --off \"G0 Z{penup}\" --out {fileout} {filein}")
+  os.system(f"{path_svg2gcode} --dimensions ,{height}mm --feedrate {feedrate} --on \"G0 Z{pendown}\" --off \"G0 Z{penup}\" --out {fileout} {filein}")
 
 def splittextfile(filein, filesout):
   file = open(filein, "r")
@@ -162,8 +183,52 @@ def splittextfile(filein, filesout):
   for file in files:
     file.close()
 
+def replaceinvalidcharacters(filein, fileout, alphabet=alphabet, replacetable={}):
+  file = open(filein, "r")
+  lines = file.read().split("\n")
+  file.close()
 
-def convert(filename, saveext, pendown, penup, fontsize, fontstyle, fontbias, swapXY, linespernewline, log=None):
+  _countindexstart = 1  # should the output be formatted like "on line 1, word 2" (1-indexed) or "on line 0, word 1" (0-indexed)
+  _safechar = " "  # safe character if no replacement rule is given
+  if _safechar not in alphabet:
+    _safechar = ""
+    
+  replacements = []
+  cleanedtext = ""
+  
+  for lineno, line in enumerate(lines, _countindexstart):
+    if lineno > _countindexstart:
+      cleanedtext += "\n"
+      
+    for wordno, word in enumerate(line.split(" "), _countindexstart):
+      if wordno > _countindexstart:
+        cleanedtext += " "
+
+      wordreplacements = []
+      for oldchar in word:
+        newchar = oldchar
+
+        while newchar not in alphabet: # doing this allows for multiple replacements of the same character, eg Ü -> U -> V if neither Ü nor U exist
+          newchar = replacetable.get(newchar, _safechar)
+          if newchar == _safechar:
+            break
+          
+        if newchar != oldchar:
+          wordreplacements.append((oldchar, newchar))
+
+        cleanedtext += newchar
+
+      if wordreplacements:
+        replacements.append(((lineno, wordno), word, wordreplacements))
+
+  file = open(fileout, "w")
+  file.write(cleanedtext)
+  file.close()
+
+  return replacements
+
+
+def convert(filename, saveext, pendown, penup, fontsize, fontstyle, fontbias, swapXY, linespernewline, alphabet, replacetable, log=None):
   if not log:
     log = lambda s: print(s, end="")
     
@@ -173,6 +238,7 @@ def convert(filename, saveext, pendown, penup, fontsize, fontstyle, fontbias, sw
   if not os.path.exists("data"):
     os.mkdir("data")
   filein = os.path.join("data", filename)
+  fileintemp = os.path.join("temp", os.path.split(filein)[-1])
   fileinsplit = os.path.join("temp", "input{}.txt")
   filehandwriting = os.path.join("temp", "handwriting{}.svg")
   filegcode = os.path.join("temp", "handwriting{}.gcode")
@@ -181,7 +247,12 @@ def convert(filename, saveext, pendown, penup, fontsize, fontstyle, fontbias, sw
   _fn, _ext = filename.rsplit(_split, 1)
   fileout = os.path.join("data", _fn + _split + saveext)
 
-  splittextfile(filein, [fileinsplit.format(i) for i in range(linespernewline)])
+  replacedcharacters = replaceinvalidcharacters(filein, fileintemp, alphabet, replacetable)
+  splittextfile(fileintemp, [fileinsplit.format(i) for i in range(linespernewline)])
+  log("Done\n")
+
+  log("Initializing handwriting engine... ")
+  initializehandwritingengine()
   log("Done\n")
 
   for i in range(linespernewline):
@@ -208,7 +279,14 @@ def convert(filename, saveext, pendown, penup, fontsize, fontstyle, fontbias, sw
   log("Done\n")
   
   log("All done :)\n")
+
+  if replacedcharacters:
+    log("\nThe following characters were replaced:\n")
+    for position, word, replacements in replacedcharacters:
+      log(f"On line {position[0]}, word {position[1]} = {word}:\n")
+      for oldchar, newchar in replacements:
+        log(f" - [{oldchar}] -> [{newchar}]\n")
   
 
 if __name__ == "__main__":
-  convert(filename, saveext, pendown, penup, fontsize, fontstyle, fontbias, swapXY, linespernewline)
+  convert(filename, saveext, pendown, penup, fontsize, fontstyle, fontbias, swapXY, linespernewline, alphabet, replacetable)

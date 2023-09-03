@@ -138,7 +138,7 @@ def main():
     
 
     def startConvert():
-        if convertEvent.isSet():
+        if convertEvent.is_set():
             return
         if loadedCounter["current"] < loadedCounter["required"]:
             return
@@ -156,6 +156,8 @@ def main():
             log = lambda s: report("log", s)
             while True:
                 convertEvent.wait()
+                convertData["alphabet"] = convert.alphabet
+                convertData["replacetable"] = convert.replacetable
                 try:
                     convert.convert(**convertData, log=log)
                     report("success")
