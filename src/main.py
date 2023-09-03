@@ -233,7 +233,8 @@ def main():
         if (event == "error"):
             btnStart.configure(state=tk.NORMAL)
             prgLoading.stop()
-            report("log", f"Unhandled error: {data}\n")
+            report("log", f"\nUnhandled error: {data}\n")
+            print(f"{traceback.format_exc()}\n\n{sys.exc_info()}")
 
     def selectInputFile():
         filename = tkfd.askopenfilename(title="Open text file...", initialdir="data")
