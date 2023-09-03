@@ -1,7 +1,8 @@
 from collections import namedtuple
 
 import tensorflow as tf
-import tensorflow.contrib.distributions as tfd
+from tensorflow_probability import distributions as tfd
+#import tensorflow.contrib.distributions as tfd
 import numpy as np
 
 from tf_utils import dense_layer, shape
@@ -13,7 +14,7 @@ LSTMAttentionCellState = namedtuple(
 )
 
 
-class LSTMAttentionCell(tf.nn.rnn_cell.RNNCell):
+class LSTMAttentionCell(tf.compat.v1.nn.rnn_cell.RNNCell):
 
     def __init__(
         self,
@@ -31,8 +32,8 @@ class LSTMAttentionCell(tf.nn.rnn_cell.RNNCell):
         self.attention_values = attention_values
         self.attention_values_lengths = attention_values_lengths
         self.window_size = shape(self.attention_values, 2)
-        self.char_len = tf.shape(attention_values)[1]
-        self.batch_size = tf.shape(attention_values)[0]
+        self.char_len = tf.shape(input=attention_values)[1]
+        self.batch_size = tf.shape(input=attention_values)[0]
         self.num_output_mixture_components = num_output_mixture_components
         self.output_units = 6*self.num_output_mixture_components + 1
         self.bias = bias
@@ -73,11 +74,11 @@ class LSTMAttentionCell(tf.nn.rnn_cell.RNNCell):
         )
 
     def __call__(self, inputs, state, scope=None):
-        with tf.variable_scope(scope or type(self).__name__, reuse=tf.AUTO_REUSE):
+        with tf.compat.v1.variable_scope(scope or type(self).__name__, reuse=tf.compat.v1.AUTO_REUSE):
 
             # lstm 1
             s1_in = tf.concat([state.w, inputs], axis=1)
-            cell1 = tf.contrib.rnn.LSTMCell(self.lstm_size)
+            cell1 = tf.compat.v1.nn.rnn_cell.LSTMCell(self.lstm_size)
             s1_out, s1_state = cell1(s1_in, state=(state.c1, state.h1))
 
             # attention
@@ -92,21 +93,21 @@ class LSTMAttentionCell(tf.nn.rnn_cell.RNNCell):
 
             enum = tf.reshape(tf.range(self.char_len), (1, 1, self.char_len))
             u = tf.cast(tf.tile(enum, (self.batch_size, self.num_attn_mixture_components, 1)), tf.float32)
-            phi_flat = tf.reduce_sum(alpha*tf.exp(-tf.square(kappa - u) / beta), axis=1)
+            phi_flat = tf.reduce_sum(input_tensor=alpha*tf.exp(-tf.square(kappa - u) / beta), axis=1)
 
             phi = tf.expand_dims(phi_flat, 2)
             sequence_mask = tf.cast(tf.sequence_mask(self.attention_values_lengths, maxlen=self.char_len), tf.float32)
             sequence_mask = tf.expand_dims(sequence_mask, 2)
-            w = tf.reduce_sum(phi*self.attention_values*sequence_mask, axis=1)
+            w = tf.reduce_sum(input_tensor=phi*self.attention_values*sequence_mask, axis=1)
 
             # lstm 2
             s2_in = tf.concat([inputs, s1_out, w], axis=1)
-            cell2 = tf.contrib.rnn.LSTMCell(self.lstm_size)
+            cell2 = tf.compat.v1.nn.rnn_cell.LSTMCell(self.lstm_size)
             s2_out, s2_state = cell2(s2_in, state=(state.c2, state.h2))
 
             # lstm 3
             s3_in = tf.concat([inputs, s2_out, w], axis=1)
-            cell3 = tf.contrib.rnn.LSTMCell(self.lstm_size)
+            cell3 = tf.compat.v1.nn.rnn_cell.LSTMCell(self.lstm_size)
             s3_out, s3_state = cell3(s3_in, state=(state.c3, state.h3))
 
             new_state = LSTMAttentionCellState(
@@ -126,7 +127,7 @@ class LSTMAttentionCell(tf.nn.rnn_cell.RNNCell):
             return s3_out, new_state
 
     def output_function(self, state):
-        params = dense_layer(state.h3, self.output_units, scope='gmm', reuse=tf.AUTO_REUSE)
+        params = dense_layer(state.h3, self.output_units, scope='gmm', reuse=tf.compat.v1.AUTO_REUSE)
         pis, mus, sigmas, rhos, es = self._parse_parameters(params)
         mu1, mu2 = tf.split(mus, 2, axis=1)
         mus = tf.stack([mu1, mu2], axis=2)
@@ -150,7 +151,7 @@ class LSTMAttentionCell(tf.nn.rnn_cell.RNNCell):
         return tf.concat([coords, tf.cast(sampled_e, tf.float32)], axis=1)
 
     def termination_condition(self, state):
-        char_idx = tf.cast(tf.argmax(state.phi, axis=1), tf.int32)
+        char_idx = tf.cast(tf.argmax(input=state.phi, axis=1), tf.int32)
         final_char = char_idx >= self.attention_values_lengths - 1
         past_final_char = char_idx >= self.attention_values_lengths
         output = self.output_function(state)
@@ -174,10 +175,10 @@ class LSTMAttentionCell(tf.nn.rnn_cell.RNNCell):
         sigmas = sigmas - tf.expand_dims(self.bias, 1)
 
         pis = tf.nn.softmax(pis, axis=-1)
-        pis = tf.where(pis < .01, tf.zeros_like(pis), pis)
+        pis = tf.compat.v1.where(pis < .01, tf.zeros_like(pis), pis)
         sigmas = tf.clip_by_value(tf.exp(sigmas), sigma_eps, np.inf)
         rhos = tf.clip_by_value(tf.tanh(rhos), eps - 1.0, 1.0 - eps)
         es = tf.clip_by_value(tf.nn.sigmoid(es), eps, 1.0 - eps)
-        es = tf.where(es < .01, tf.zeros_like(es), es)
+        es = tf.compat.v1.where(es < .01, tf.zeros_like(es), es)
 
         return pis, mus, sigmas, rhos, es

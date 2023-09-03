@@ -14,26 +14,26 @@ def dense_layer(inputs, output_units, bias=True, activation=None, batch_norm=Non
     Returns:
         Tensor of shape [batch size, output_units].
     """
-    with tf.variable_scope(scope, reuse=reuse):
-        W = tf.get_variable(
+    with tf.compat.v1.variable_scope(scope, reuse=reuse):
+        W = tf.compat.v1.get_variable(
             name='weights',
-            initializer=tf.contrib.layers.variance_scaling_initializer(),
+            initializer=tf.compat.v1.keras.initializers.VarianceScaling(scale=2.0),
             shape=[shape(inputs, -1), output_units]
         )
         z = tf.matmul(inputs, W)
         if bias:
-            b = tf.get_variable(
+            b = tf.compat.v1.get_variable(
                 name='biases',
-                initializer=tf.constant_initializer(),
+                initializer=tf.compat.v1.constant_initializer(),
                 shape=[output_units]
             )
             z = z + b
 
         if batch_norm is not None:
-            z = tf.layers.batch_normalization(z, training=batch_norm, reuse=reuse)
+            z = tf.compat.v1.layers.batch_normalization(z, training=batch_norm, reuse=reuse)
 
         z = activation(z) if activation else z
-        z = tf.nn.dropout(z, dropout) if dropout is not None else z
+        z = tf.nn.dropout(z, 1 - (dropout)) if dropout is not None else z
         return z
 
 
@@ -54,26 +54,26 @@ def time_distributed_dense_layer(
     Returns:
         Tensor of shape [batch size, max sequence length, output_units].
     """
-    with tf.variable_scope(scope, reuse=reuse):
-        W = tf.get_variable(
+    with tf.compat.v1.variable_scope(scope, reuse=reuse):
+        W = tf.compat.v1.get_variable(
             name='weights',
-            initializer=tf.contrib.layers.variance_scaling_initializer(),
+            initializer=tf.compat.v1.keras.initializers.VarianceScaling(scale=2.0),
             shape=[shape(inputs, -1), output_units]
         )
         z = tf.einsum('ijk,kl->ijl', inputs, W)
         if bias:
-            b = tf.get_variable(
+            b = tf.compat.v1.get_variable(
                 name='biases',
-                initializer=tf.constant_initializer(),
+                initializer=tf.compat.v1.constant_initializer(),
                 shape=[output_units]
             )
             z = z + b
 
         if batch_norm is not None:
-            z = tf.layers.batch_normalization(z, training=batch_norm, reuse=reuse)
+            z = tf.compat.v1.layers.batch_normalization(z, training=batch_norm, reuse=reuse)
 
         z = activation(z) if activation else z
-        z = tf.nn.dropout(z, dropout) if dropout is not None else z
+        z = tf.nn.dropout(z, 1 - (dropout)) if dropout is not None else z
         return z
 
 

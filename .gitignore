@@ -160,6 +160,9 @@ cython_debug/
 #.idea/
 
 
+# Ignore files to be deleted but kept temporarily as a backup
+_del/
+
 # Ignore data files (except demo.txt)
 /src/data/*
 !/src/data/demo.txt

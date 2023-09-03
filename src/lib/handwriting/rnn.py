@@ -3,6 +3,7 @@ import os
 
 import numpy as np
 import tensorflow as tf
+tf.compat.v1.disable_v2_behavior()
 
 import drawing
 from data_frame import DataFrame
@@ -114,21 +115,21 @@ class rnn(TFBaseModel):
 
         exp = -1.0*Z / (2*(1 - tf.square(rho)))
         gaussian_likelihoods = tf.exp(exp) * norm
-        gmm_likelihood = tf.reduce_sum(pis * gaussian_likelihoods, 2)
+        gmm_likelihood = tf.reduce_sum(input_tensor=pis * gaussian_likelihoods, axis=2)
         gmm_likelihood = tf.clip_by_value(gmm_likelihood, eps, np.inf)
 
-        bernoulli_likelihood = tf.squeeze(tf.where(tf.equal(tf.ones_like(y_3), y_3), es, 1 - es))
+        bernoulli_likelihood = tf.squeeze(tf.compat.v1.where(tf.equal(tf.ones_like(y_3), y_3), es, 1 - es))
 
-        nll = -(tf.log(gmm_likelihood) + tf.log(bernoulli_likelihood))
+        nll = -(tf.math.log(gmm_likelihood) + tf.math.log(bernoulli_likelihood))
         sequence_mask = tf.logical_and(
-            tf.sequence_mask(lengths, maxlen=tf.shape(y)[1]),
-            tf.logical_not(tf.is_nan(nll)),
+            tf.sequence_mask(lengths, maxlen=tf.shape(input=y)[1]),
+            tf.logical_not(tf.math.is_nan(nll)),
         )
-        nll = tf.where(sequence_mask, nll, tf.zeros_like(nll))
-        num_valid = tf.reduce_sum(tf.cast(sequence_mask, tf.float32), axis=1)
+        nll = tf.compat.v1.where(sequence_mask, nll, tf.zeros_like(nll))
+        num_valid = tf.reduce_sum(input_tensor=tf.cast(sequence_mask, tf.float32), axis=1)
 
-        sequence_loss = tf.reduce_sum(nll, axis=1) / tf.maximum(num_valid, 1.0)
-        element_loss = tf.reduce_sum(nll) / tf.maximum(tf.reduce_sum(num_valid), 1.0)
+        sequence_loss = tf.reduce_sum(input_tensor=nll, axis=1) / tf.maximum(num_valid, 1.0)
+        element_loss = tf.reduce_sum(input_tensor=nll) / tf.maximum(tf.reduce_sum(input_tensor=num_valid), 1.0)
         return sequence_loss, element_loss
 
     def sample(self, cell):
@@ -147,7 +148,7 @@ class rnn(TFBaseModel):
 
     def primed_sample(self, cell):
         initial_state = cell.zero_state(self.num_samples, dtype=tf.float32)
-        primed_state = tf.nn.dynamic_rnn(
+        primed_state = tf.compat.v1.nn.dynamic_rnn(
             inputs=self.x_prime,
             cell=cell,
             sequence_length=self.x_prime_len,
@@ -163,18 +164,18 @@ class rnn(TFBaseModel):
         )[1]
 
     def calculate_loss(self):
-        self.x = tf.placeholder(tf.float32, [None, None, 3])
-        self.y = tf.placeholder(tf.float32, [None, None, 3])
-        self.x_len = tf.placeholder(tf.int32, [None])
-        self.c = tf.placeholder(tf.int32, [None, None])
-        self.c_len = tf.placeholder(tf.int32, [None])
+        self.x = tf.compat.v1.placeholder(tf.float32, [None, None, 3])
+        self.y = tf.compat.v1.placeholder(tf.float32, [None, None, 3])
+        self.x_len = tf.compat.v1.placeholder(tf.int32, [None])
+        self.c = tf.compat.v1.placeholder(tf.int32, [None, None])
+        self.c_len = tf.compat.v1.placeholder(tf.int32, [None])
 
-        self.sample_tsteps = tf.placeholder(tf.int32, [])
-        self.num_samples = tf.placeholder(tf.int32, [])
-        self.prime = tf.placeholder(tf.bool, [])
-        self.x_prime = tf.placeholder(tf.float32, [None, None, 3])
-        self.x_prime_len = tf.placeholder(tf.int32, [None])
-        self.bias = tf.placeholder_with_default(
+        self.sample_tsteps = tf.compat.v1.placeholder(tf.int32, [])
+        self.num_samples = tf.compat.v1.placeholder(tf.int32, [])
+        self.prime = tf.compat.v1.placeholder(tf.bool, [])
+        self.x_prime = tf.compat.v1.placeholder(tf.float32, [None, None, 3])
+        self.x_prime_len = tf.compat.v1.placeholder(tf.int32, [None])
+        self.bias = tf.compat.v1.placeholder_with_default(
             tf.zeros([self.num_samples], dtype=tf.float32), [None])
 
         cell = LSTMAttentionCell(
@@ -185,8 +186,8 @@ class rnn(TFBaseModel):
             num_output_mixture_components=self.output_mixture_components,
             bias=self.bias
         )
-        self.initial_state = cell.zero_state(tf.shape(self.x)[0], dtype=tf.float32)
-        outputs, self.final_state = tf.nn.dynamic_rnn(
+        self.initial_state = cell.zero_state(tf.shape(input=self.x)[0], dtype=tf.float32)
+        outputs, self.final_state = tf.compat.v1.nn.dynamic_rnn(
             inputs=self.x,
             cell=cell,
             sequence_length=self.x_len,
@@ -199,9 +200,9 @@ class rnn(TFBaseModel):
         sequence_loss, self.loss = self.NLL(self.y, self.x_len, pis, mus, sigmas, rhos, es)
 
         self.sampled_sequence = tf.cond(
-            self.prime,
-            lambda: self.primed_sample(cell),
-            lambda: self.sample(cell)
+            pred=self.prime,
+            true_fn=lambda: self.primed_sample(cell),
+            false_fn=lambda: self.sample(cell)
         )
         return self.loss
 
