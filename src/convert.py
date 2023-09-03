@@ -2,6 +2,7 @@ import os
 import re
 import sys
 import math
+import subprocess
 
 sys.path.append("lib") # for clean build reasons we dont include lib.handwriting
 import handwriting
@@ -165,8 +166,12 @@ def converttohandwriting(filein, fileout, bias=0.75, style=12):
   return len(data)
 
 def converttogcode(filein, fileout, height=10, feedrate=300, penup=5, pendown=0):
-  path_svg2gcode = os.path.join(os.curdir, "lib", "svg2gcode", "svg2gcode.exe")
-  os.system(f"{path_svg2gcode} --dimensions ,{height}mm --feedrate {feedrate} --on \"G0 Z{pendown}\" --off \"G0 Z{penup}\" --out {fileout} {filein}")
+  path_svg2gcode = os.path.abspath(os.path.join(os.curdir, "lib", "svg2gcode", "svg2gcode.exe"))
+  command_svg2gcode = f"{path_svg2gcode} --dimensions ,{height}mm --feedrate {feedrate} --on \"G0 Z{pendown}\" --off \"G0 Z{penup}\" --out {fileout} {filein}"
+
+  si = subprocess.STARTUPINFO()
+  si.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+  subprocess.call(command_svg2gcode, startupinfo=si)
 
 def splittextfile(filein, filesout):
   file = open(filein, "r")
