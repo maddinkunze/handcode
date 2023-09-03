@@ -1,6 +1,4 @@
-if __name__ == "__main__":
-    import prestart
-    prestart.prestart()
+import prestart
 
 import os
 import sys
