@@ -20,7 +20,7 @@ build_exe_options = {
     'include_msvcr': True,
     'excludes': excludes,
     'optimize': optimization,
-#    'replace_paths': [("*", "")],
+    'replace_paths': [("*", "")],
     'path': [*sys.path, path_src, os.path.join(path_src, "lib"), os.path.join(path_src, "lib", "handwriting")],
 }
 
@@ -94,5 +94,5 @@ setup(
     version=buildversion,
     description="HandCode: Handwriting GCode Generator",
     options={"build_exe": build_exe_options},
-    executables=[Executable(os.path.join(path_src, "main.py"), base=base, icon=os.path.join(path_src, "lib", "icon.ico"), target_name="HandCode")],
+    executables=[Executable(os.path.join(path_src, "main.py"), base=base, icon=os.path.join(path_src, "lib", "icon.ico"), target_name="HandCode", copyright="© Martin Kunze - https://github.com/maddinkunze/handcode")],
 )

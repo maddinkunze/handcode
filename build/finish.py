@@ -9,7 +9,7 @@ path_lib = os.path.join(path_build, "lib")
 
 print("Moving files... ", end="")
 
-movefiles_tolib = ["vcruntime140.dll", "vcruntime140_1.dll"]
+movefiles_tolib = ["vcruntime140.dll", "vcruntime140_1.dll", "frozen_application_license.txt"]
 for file in movefiles_tolib:
     try: os.rename(os.path.join(path_build, file), os.path.join(path_lib, file))
     except: pass
