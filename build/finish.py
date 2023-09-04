@@ -1,4 +1,5 @@
 import os
+import sys
 import lzma
 import shutil
 import pkgutil
@@ -6,62 +7,17 @@ import pkgutil
 path_build = os.path.join("dist", "handcode-win64")
 path_lib = os.path.join(path_build, "lib")
 
-print("Copying neccessary files... ", end="")
+print("Moving files... ", end="")
 
-path_tf = os.path.join(path_lib, "tensorflow")
-path_tf_from = os.path.dirname(pkgutil.get_loader("tensorflow").get_filename())
-copyfiles_tf = [
-  ("python", "util", "lazy_loader.py"), 
-  ("python", "layers", "maxout.py"), 
-  ("python", "profiler", "profile_context.py"),
-  ("python", "eager", "custom_gradient.py"),
-  ("python", "eager", "execution_callbacks.py"),
-  ("python", "ops", "gen_batch_ops.py"),
-  ("python", "ops", "distributions", "transformed_distribution.py"),
-  ("contrib", "__init__.py"),
-  ("contrib", "rnn", "__init__.py"),
-  ("contrib", "layers", "__init__.py"),
-  ("contrib", "framework", "__init__.py"),
-  ("contrib", "meta_graph_transform", "meta_graph_transform.py")
-]
-for file in copyfiles_tf:
-    shutil.copyfile(os.path.join(path_tf_from, *file), os.path.join(path_tf, *file))
-
-path_pb = os.path.join(path_lib, "google", "protobuf")
-path_pb_from = os.path.dirname(pkgutil.get_loader("google.protobuf").get_filename())
-shutil.copyfile(os.path.join(path_pb_from, "wrappers_pb2.py"), os.path.join(path_pb, "wrappers_pb2.py"))
+movefiles_tolib = ["vcruntime140.dll", "vcruntime140_1.dll"]
+for file in movefiles_tolib:
+    try: os.rename(os.path.join(path_build, file), os.path.join(path_lib, file))
+    except: pass
 
 print("Done")
 
 print("Copying neccessary folders... ", end="")
-
-copydirs_tf = [
-  ("core",),
-  ("contrib", "tpu"),
-  ("contrib", "util"),
-  ("contrib", "data"),
-  ("contrib", "lite"),
-  ("contrib", "learn"),
-  ("contrib", "eager"),
-  ("contrib", "linalg"),
-  ("contrib", "lookup"),
-  ("contrib", "metrics"),
-  ("contrib", "summary"),
-  ("contrib", "training"),
-  ("contrib", "compiler"),
-  ("contrib", "factorization"),
-  ("contrib", "distributions"),
-  ("contrib", "session_bundle"),
-  ("contrib", "input_pipeline"),
-  ("contrib", "receptive_field"),
-  ("contrib", "linear_optimizer"),
-  ("contrib", "rnn", "ops"),
-  ("contrib", "rnn", "python", "ops"),
-  ("contrib", "layers", "ops"),
-  ("contrib", "layers", "python"),
-  ("contrib", "framework", "python"),
-  ("contrib", "losses", "python", "losses"),
-]
+sys.stdout.flush()
 
 def copytree(src, dst):
     if not os.path.isdir(dst):
@@ -80,52 +36,75 @@ def copytree(src, dst):
                 continue
             shutil.copyfile(path_item_src, path_item_dst)
 
-for dir_tf in copydirs_tf:
-    copytree(os.path.join(path_tf_from, *dir_tf), os.path.join(path_tf, *dir_tf))
-
 print("Done")
 
 print("Removing unneccessary files... ", end="")
+sys.stdout.flush()
 
+delfiles = [
+  ("_asyncio.pyd",),
+  ("_bz2.pyd",),
+  ("_decimal.pyd",),
+  ("_elementtree.pyd",),
+  ("_hashlib.pyd",),
+  ("_queue.pyd",),
+  ("_ssl.pyd",),
+  ("_testbuffer.pyd",),
+  ("_uuid.pyd",),
+  ("pyexpat.pyd",),
+  ("sqlite.dll",),
+  ("libcrypto-3.dll",),
+  ("libssl-3.dll",),
+  ("tensorflow", "python", "_pywrap_tensorflow_internal.lib"),
+]
 
-try: os.remove(os.path.join(path_lib, "sqlite3.dll"))
-except: pass
-try: os.remove(os.path.join(path_lib, "tensorboard", "webfiles.zip"))
-except: pass
-try: os.remove(os.path.join(path_lib, "tensorflow", "python", "pywrap_tensorflow_internal.lib"))
-except: pass
+for path in delfiles:
+    try: os.remove(os.path.join(path_lib, *path))
+    except: pass
 
 print("Done")
 
 print("Removing unneccessary folders... ", end="")
+sys.stdout.flush()
 
 deldirs = [
-  ("asyncio",),
   ("ctypes", "macholib"),
   ("distutils", "command"),
   ("distutils", "tests"),
   ("handwriting", "logs"),
-  ("multiprocessing", "dummy"),
+  ("numpy", "_pyinstaller"),
+  ("numpy", "_typing"),
   ("numpy", "core", "include"),
   ("numpy", "core", "lib"),
+  ("numpy", "array_api", "tests"),
   ("numpy", "distutils"),
   ("numpy", "doc"),
   ("numpy", "f2py"),
   ("numpy", "random", "lib"),
+  ("numpy", "testing", "tests"),
+  ("dateutil", "zoneinfo"),
   ("pytz", "zoneinfo"),
   ("scipy", "_build_utils"),
-  ("sklearn", "_build_utils"),
-  ("tensorboard", "pip_package"),
-  ("tcltk", "tcl8.6", "encoding"),
-  ("tcltk", "tcl8.6", "http1.0"),
-  ("tcltk", "tcl8.6", "msgs"),
-  ("tcltk", "tcl8.6", "opt0.4"),
-  ("tcltk", "tcl8.6", "tzdata"),
-  ("tcltk", "tk8.6", "demos"),
-  ("tcltk", "tk8.6", "images"),
-  ("tcltk", "tk8.6", "msgs"),
+  ("tensorboard",),
+  ("google", "_upb"),
+  ("google", "auth"),
+  ("google", "oauth"),
+  ("importlib", "metadata"),
+  ("matplotlib","backends"),
+  ("matplotlib","sphinxext"),
+  ("tcl8",),
+  ("tcl8.6", "encoding"),
+  ("tcl8.6", "http1.0"),
+  ("tcl8.6", "msgs"),
+  ("tcl8.6", "opt0.4"),
+  ("tcl8.6", "tzdata"),
+  ("tk8.6", "demos"),
+  ("tk8.6", "images"),
+  ("tk8.6", "msgs"),
   ("tkinter", "test"),
   ("tensorflow", "include"),
+  ("pkg_ressources", "_vendor"),
+  ("requests", "packages"),
 ]
 
 for item in deldirs:
@@ -134,6 +113,13 @@ for item in deldirs:
 path_mpl_data = os.path.join(path_lib, "matplotlib", "mpl-data")
 for item in os.listdir(path_mpl_data):
     path_item = os.path.join(path_mpl_data, item)
+    if not os.path.isdir(path_item):
+        continue
+    shutil.rmtree(path_item, ignore_errors=True)
+
+path_scipy = os.path.join(path_lib, "scipy")
+for item in os.listdir(path_scipy):
+    path_item = os.path.join(path_scipy, item, "tests")
     if not os.path.isdir(path_item):
         continue
     shutil.rmtree(path_item, ignore_errors=True)
@@ -162,7 +148,9 @@ removeunneccessaryfolders(path_lib)
 
 print("Done")
 
-print("Compressing large files... ", end="")
+
+print("Compressing large files (this may take a few minutes)... ", end="")
+sys.stdout.flush()
 
 def compresslargefiles(basedir, minsize, compressfactor, excludes, maxlevel):
     if maxlevel < 0:
@@ -173,6 +161,7 @@ def compresslargefiles(basedir, minsize, compressfactor, excludes, maxlevel):
     ]
     
     for item in os.listdir(basedir):
+        if maxlevel == 3: print(item)
         path_item = os.path.join(basedir, item)
         if (item in excludes) or (path_item in excludes):
             continue

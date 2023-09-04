@@ -1,3 +1,4 @@
-python36 setup.py build
-python36 finish.py
+<NUL set /p="Building with " & python --version
+python setup.py build
+python finish.py
 pause

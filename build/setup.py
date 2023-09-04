@@ -1,23 +1,26 @@
-import sys, os
+import os, sys
 from cx_Freeze import setup, Executable
 
 path_src = os.path.join("..", "src")
 
 # Dependencies are automatically detected, but it might need fine tuning.
-packages = ["matplotlib"]
+packages = ["matplotlib", "tensorflow", "tensorflow_probability"]
 includes = []
 includefiles = [(os.path.join(path_src, "data", "demo.txt"), os.path.join("data", "demo.txt")), (os.path.join(path_src, "lib", "svg2gcode"), os.path.join("lib", "svg2gcode")), (os.path.join(path_src, "lib", "icon.ico"), os.path.join("lib", "icon.ico"))]
-excludes = ["asnycio", "atomicwrites", "attr", "backcall", "bleach", "bs4", "certifi", "chardet", "cloudpickle", "curses", "Cython", "defusedxml", "grpc", "html", "h5py", "html5lib", "idna", "importlib_metadata", "iniconfig", "ipykernel", "IPython", "ipython_genutils", "jedi", "jinja2", "jsonschema", "jupyter_client", "jupyter_core", "lib2to3", "llvmlite", "lxml", "markdown", "markupsafe", "mock", "msilib", "nbconvert", "nbformat", "notebook", "numba", "packaging", "parso", "pkg_resources", "pluggy", "prompt_toolkit", "psutil", "py", "pydoc_data", "pygments", "pyreadline", "pyrsistent", "pytest", "pyximport", "setuptools", "simplejson", "soupsieve", "sqlite3", "test", "testpath", "toml", "tornado", "traitlets", "urllib3", "wcwidth", "werkzeug", "win32com", "wsgiref", "xmlrpc", "yaml", "zmq"]
+excludes = ["cachetools", "contourpy", "curses", "fontTools", "google_auth_oauthlib", "grpc", "h5py", "lib2to3", "markdown", "markupsafe", "oauthlib", "pasta", "pkg_ressources", "pyasn1", "pyasn1_modules", "pydoc_data", "pytz", "requests_oauthlib", "rsa", "setuptools", "tensorboard_data_server", "tensorflow_estimator", "tensorflow_io_gcs_filesystem", "test", "werkzeug", "wheel", "wsgiref", "xmlrpc", "zoneinfo"]
+#excludes = []
 optimization = 1
-buildversion = "0.2.2"
+buildversion = "0.3.0"
 buildpath = os.path.join("dist", "handcode-win64")
 build_exe_options = {
     'build_exe': buildpath,
     'packages': packages,
     'includes': includes,
     'include_files': includefiles,
+    'include_msvcr': True,
     'excludes': excludes,
     'optimize': optimization,
+#    'replace_paths': [("*", "")],
     'path': [*sys.path, path_src, os.path.join(path_src, "lib"), os.path.join(path_src, "lib", "handwriting")],
 }
 

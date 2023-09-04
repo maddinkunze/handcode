@@ -6,7 +6,7 @@ import tensorflow as tf
 tf.compat.v1.disable_v2_behavior()
 
 import drawing
-from data_frame import DataFrame
+#from data_frame import DataFrame
 from rnn_cell import LSTMAttentionCell
 from rnn_ops import rnn_free_run
 from tf_base_model import TFBaseModel
@@ -208,7 +208,7 @@ class rnn(TFBaseModel):
 
 
 if __name__ == '__main__':
-    dr = DataReader(data_dir='data/processed/')
+    #dr = DataReader(data_dir='data/processed/')
 
     nn = rnn(
         reader=dr,

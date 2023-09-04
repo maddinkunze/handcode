@@ -4,7 +4,7 @@ import sys
 import math
 import subprocess
 
-sys.path.append("lib") # for clean build reasons we dont include lib.handwriting
+sys.path.append(os.path.realpath("lib")) # for clean build reasons we dont include lib.handwriting
 import handwriting
 
 filename = "demo.txt"  # filename of the input file, should be located within the data subdirectory (if converttype == "file")
