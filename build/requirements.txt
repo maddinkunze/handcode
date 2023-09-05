@@ -1,1 +1,2 @@
 cx_Freeze
+lazy-loader
