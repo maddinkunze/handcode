@@ -5,69 +5,11 @@ import numpy as np
 import tensorflow as tf
 tf.compat.v1.disable_v2_behavior()
 
-import drawing
-#from data_frame import DataFrame
+from alphabet import alphabet
 from rnn_cell import LSTMAttentionCell
 from rnn_ops import rnn_free_run
 from tf_base_model import TFBaseModel
 from tf_utils import time_distributed_dense_layer
-
-
-class DataReader(object):
-
-    def __init__(self, data_dir):
-        data_cols = ['x', 'x_len', 'c', 'c_len']
-        data = [np.load(os.path.join(data_dir, '{}.npy'.format(i))) for i in data_cols]
-
-        self.test_df = DataFrame(columns=data_cols, data=data)
-        self.train_df, self.val_df = self.test_df.train_test_split(train_size=0.95, random_state=2018)
-
-        print('train size', len(self.train_df))
-        print('val size', len(self.val_df))
-        print('test size', len(self.test_df))
-
-    def train_batch_generator(self, batch_size):
-        return self.batch_generator(
-            batch_size=batch_size,
-            df=self.train_df,
-            shuffle=True,
-            num_epochs=10000,
-            mode='train'
-        )
-
-    def val_batch_generator(self, batch_size):
-        return self.batch_generator(
-            batch_size=batch_size,
-            df=self.val_df,
-            shuffle=True,
-            num_epochs=10000,
-            mode='val'
-        )
-
-    def test_batch_generator(self, batch_size):
-        return self.batch_generator(
-            batch_size=batch_size,
-            df=self.test_df,
-            shuffle=False,
-            num_epochs=1,
-            mode='test'
-        )
-
-    def batch_generator(self, batch_size, df, shuffle=True, num_epochs=10000, mode='train'):
-        gen = df.batch_generator(
-            batch_size=batch_size,
-            shuffle=shuffle,
-            num_epochs=num_epochs,
-            allow_smaller_final_batch=(mode == 'test')
-        )
-        for batch in gen:
-            batch['x_len'] = batch['x_len'] - 1
-            max_x_len = np.max(batch['x_len'])
-            max_c_len = np.max(batch['c_len'])
-            batch['y'] = batch['x'][:, 1:max_x_len + 1, :]
-            batch['x'] = batch['x'][:, :max_x_len, :]
-            batch['c'] = batch['c'][:, :max_c_len]
-            yield batch
 
 
 class rnn(TFBaseModel):
@@ -181,7 +123,7 @@ class rnn(TFBaseModel):
         cell = LSTMAttentionCell(
             lstm_size=self.lstm_size,
             num_attn_mixture_components=self.attention_mixture_components,
-            attention_values=tf.one_hot(self.c, len(drawing.alphabet)),
+            attention_values=tf.one_hot(self.c, len(alphabet)),
             attention_values_lengths=self.c_len,
             num_output_mixture_components=self.output_mixture_components,
             bias=self.bias
@@ -205,32 +147,3 @@ class rnn(TFBaseModel):
             false_fn=lambda: self.sample(cell)
         )
         return self.loss
-
-
-if __name__ == '__main__':
-    #dr = DataReader(data_dir='data/processed/')
-
-    nn = rnn(
-        reader=dr,
-        log_dir='logs',
-        checkpoint_dir='checkpoints',
-        prediction_dir='predictions',
-        learning_rates=[.0001, .00005, .00002],
-        batch_sizes=[32, 64, 64],
-        patiences=[1500, 1000, 500],
-        beta1_decays=[.9, .9, .9],
-        validation_batch_size=32,
-        optimizer='rms',
-        num_training_steps=100000,
-        warm_start_init_step=0,
-        regularization_constant=0.0,
-        keep_prob=1.0,
-        enable_parameter_averaging=False,
-        min_steps_to_checkpoint=2000,
-        log_interval=20,
-        grad_clip=10,
-        lstm_size=400,
-        output_mixture_components=20,
-        attention_mixture_components=10
-    )
-    nn.fit()
