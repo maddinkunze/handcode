@@ -1,8 +1,10 @@
 import os
 import sys
+import time
 import lzma
 import shutil
 import pkgutil
+import traceback
 
 path_build = os.path.join("dist", "handcode-win64")
 path_lib = os.path.join(path_build, "lib")
@@ -56,11 +58,38 @@ delfiles = [
   ("libcrypto-3.dll",),
   ("libssl-3.dll",),
   ("tensorflow", "python", "_pywrap_tensorflow_internal.lib"),
+  ("tensorflow", "python", "framework", "_errors_test_helper.pyd"),
+  ("tensorflow", "python", "framework", "_op_def_util.pyd"),
+  ("tensorflow", "python", "framework", "_python_memory_checker_helper.pyd"),
+  ("tensorflow", "python", "framework", "_pywrap_python_api_info.pyd"),
+  ("tensorflow", "python", "frameword", "_pywrap_python_api_parameter_converter.pyd"),
+  ("tensorflow", "python", "grappler", "_pywrap_tf_item.pyd"),
+  ("tensorflow", "python", "util", "_pywrap_kernel_registry.pyd"),
+  ("tensorflow", "python", "util", "_pywrap_stat_summarizer.pyd"),
+  ("tensorflow", "python", "util", "_pywrap_transform_graph.pyd"),
+  ("tensorflow", "lite", "python", "optimize", "_pywrap_tensorflow_lite_calibration_wrapper.pyd"),
+  ("tensorflow", "tsl", "python", "lib", "core", "bfloat16.so"),
+  ("numpy", "core", "_simd.cp311-win_amd64.pyd"),
+  ("certifi", "cacert.pem"),
 ]
 
 for path in delfiles:
     try: os.remove(os.path.join(path_lib, *path))
     except: pass
+
+
+def deletefilestemplate(path, filterf):
+    for item in os.listdir(path):
+        path_item = os.path.join(path, item)
+
+        if os.path.isdir(path_item):
+            deletefilestemplate(path_item, filterf)
+            continue
+
+        if os.path.isfile(path_item) and filterf(path, item):
+            os.remove(path_item)
+
+deletefilestemplate(os.path.join(path_lib, "numpy"), lambda _, f: f.endswith("pyi") or f.endswith("pxd"))
 
 print("Done")
 
@@ -84,14 +113,11 @@ deldirs = [
   ("numpy", "testing", "tests"),
   ("dateutil", "zoneinfo"),
   ("pytz", "zoneinfo"),
-  ("scipy", "_build_utils"),
   ("tensorboard",),
   ("google", "_upb"),
   ("google", "auth"),
   ("google", "oauth"),
   ("importlib", "metadata"),
-  ("matplotlib","backends"),
-  ("matplotlib","sphinxext"),
   ("tcl8",),
   ("tcl8.6", "encoding"),
   ("tcl8.6", "http1.0"),
@@ -103,26 +129,17 @@ deldirs = [
   ("tk8.6", "msgs"),
   ("tkinter", "test"),
   ("tensorflow", "include"),
-  ("pkg_ressources", "_vendor"),
+  ("tensorflow", "xla_aot_runtime_src"),
+  ("pkg_ressources",),
+  ("html",),
+  ("google", "oauth2"),
+  ("PIL",),
+  ("pyparsing",),
   ("requests", "packages"),
 ]
 
 for item in deldirs:
     shutil.rmtree(os.path.join(path_lib, *item), ignore_errors=True)
-
-path_mpl_data = os.path.join(path_lib, "matplotlib", "mpl-data")
-for item in os.listdir(path_mpl_data):
-    path_item = os.path.join(path_mpl_data, item)
-    if not os.path.isdir(path_item):
-        continue
-    shutil.rmtree(path_item, ignore_errors=True)
-
-path_scipy = os.path.join(path_lib, "scipy")
-for item in os.listdir(path_scipy):
-    path_item = os.path.join(path_scipy, item, "tests")
-    if not os.path.isdir(path_item):
-        continue
-    shutil.rmtree(path_item, ignore_errors=True)
 
 def removeunneccessaryfolders(basedir):
     if not os.path.isdir(basedir):
@@ -149,8 +166,88 @@ removeunneccessaryfolders(path_lib)
 print("Done")
 
 
-print("Compressing large files (this may take a few minutes)... ", end="")
-sys.stdout.flush()
+print("Optimizing libraries... ")
+
+# tensorflow_prob
+try:
+    # raise NotImplemented()
+    print("tensorflow_probability... ", end="")
+    path_tf_prob = os.path.join(path_lib, "tensorflow_probability")
+
+    import tensorflow_probability as tf_prob
+    tf_prob_init = os.path.realpath(tf_prob.__file__)
+    tf_prob_init_to = os.path.join(path_tf_prob, "__init__.py")
+
+    try: os.remove(f"{tf_prob_init_to}c")
+    except: pass
+
+    file_from = open(tf_prob_init, "r")
+    file_to = open(tf_prob_init_to, "w")
+    _i = 0
+    for line in file_from.read().split("\n"):
+        if _i:
+            file_to.write("\n")
+        if "from tensorflow_probability import substrates" in line:
+            continue
+
+        file_to.write(line)
+        _i = 1
+    file_from.close()
+    file_to.close()
+
+    shutil.rmtree(os.path.join(path_tf_prob, "substrates"), ignore_errors=True)
+    print("Done")
+except NotImplemented:
+    pass
+except:
+    print(f"\ntensorflow_probability failed:\n{traceback.format_exc()}")
+
+# remove unused files (open program and look which files were not accessed since opening the program)
+def removefilesthathavenotbeenaccessed(path, since, excludes):
+    for item in os.listdir(path):
+        path_item = os.path.join(path, item)
+
+        exclude = False
+        for ep in excludes:
+            if path_item.endswith(os.path.join(*ep)):
+                exclude = True
+                break
+        if exclude:
+            continue
+
+        if os.path.isdir(path_item):
+            removefilesthathavenotbeenaccessed(path_item, since, excludes)
+        if os.path.isfile(path_item):
+            if os.path.getatime(path_item) > since:
+                continue
+            
+            try: os.remove(path_item)
+            except: pass
+
+try:
+    # raise NotImplemented()
+    start = time.time() - 5
+    print("automatic removal... ")
+    time.sleep(5)
+    path_exe = os.path.join(path_build, "HandCode.exe")
+    os.system(f"start {path_exe}")
+    skip = input("Please wait for the program to open and then press enter or q+enter to skip: ")
+    if skip.lower().strip() == "q":
+        raise NotImplemented
+
+    excludes_autoremove = [
+        ("handwriting", "styles"),
+        ("handwriting", "checkpoints")
+    ]
+    removefilesthathavenotbeenaccessed(path_lib, start, excludes_autoremove)
+except NotImplemented:
+    pass
+except:
+    print(f"automatic removal failed:\n{traceback.format_exc()}")
+print("Done")
+
+
+print("Compressing large files (this may take a few minutes)... ")
 
 def compresslargefiles(basedir, minsize, compressfactor, excludes, maxlevel):
     if maxlevel < 0:

@@ -1,6 +1,3 @@
-import os, sys
-sys.path.append(os.path.dirname(os.path.realpath(__file__)))
-
-import gcode
-import commands
-from alphabet import alphabet
+from . import gcode
+from . import commands
+from .alphabet import alphabet

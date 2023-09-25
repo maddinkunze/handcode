@@ -26,4 +26,5 @@ if getattr(sys, "frozen", False):
             
                 os.remove(path_item)
 
-    decompresslargefiles("lib", 3)
+        
+    decompresslargefiles(os.path.join(os.path.dirname(os.path.realpath(sys.executable)), "lib"), 3)

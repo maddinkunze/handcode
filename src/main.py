@@ -14,7 +14,10 @@ import tkinter.font as tkf
 import tkinter.filedialog as tkfd
 import tkinter.messagebox as tkmb
 
-sys.path.append(os.path.realpath("lib")) # for clean build reasons we dont include lib.handwriting
+
+path_exe = os.path.dirname(os.path.realpath(sys.executable if getattr(sys, "frozen", False) else __file__))
+path_lib = os.path.join(path_exe, "lib")
+sys.path.append(path_lib) # for clean build reasons we dont include lib.handwriting
 import tkwidgets as tkw
 
 # This is just the GUI for this program, dont be intimidated.
@@ -48,7 +51,7 @@ def main():
     window.geometry(f"{wsize[0]}x{wsize[1]}")
     window.title("HandCode")
     window.configure(bg=style["bg_window"])
-    window.iconbitmap(os.path.join("lib", "icon.ico"))
+    window.iconbitmap(os.path.join(path_lib, "icon.ico"))
 
     fontTooltip = tkf.Font(size=7)
     fontText = tkf.Font(size=9)

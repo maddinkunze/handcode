@@ -5,11 +5,11 @@ import numpy as np
 import tensorflow as tf
 tf.compat.v1.disable_v2_behavior()
 
-from alphabet import alphabet
-from rnn_cell import LSTMAttentionCell
-from rnn_ops import rnn_free_run
-from tf_base_model import TFBaseModel
-from tf_utils import time_distributed_dense_layer
+from .alphabet import alphabet
+from .rnn_cell import LSTMAttentionCell
+from .rnn_ops import rnn_free_run
+from .tf_base_model import TFBaseModel
+from .tf_utils import time_distributed_dense_layer
 
 
 class rnn(TFBaseModel):

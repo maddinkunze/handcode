@@ -5,7 +5,7 @@ from tensorflow_probability import distributions as tfd
 #import tensorflow.contrib.distributions as tfd
 import numpy as np
 
-from tf_utils import dense_layer, shape
+from .tf_utils import dense_layer, shape
 
 
 LSTMAttentionCellState = namedtuple(
