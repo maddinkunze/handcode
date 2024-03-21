@@ -30,6 +30,15 @@ class Checkbox:
         if "state" in kwargs:
             ccheck["state"] = kwargs["state"]
 
+        if "bd" in kwargs:
+            ccheck["bd"] = kwargs["bd"]
+
+        if "highlightthickness" in kwargs:
+            ccheck["highlightthickness"] = kwargs["highlightthickness"]
+
+        if "relief" in kwargs:
+            ccheck["relief"] = kwargs["relief"]
+
         if ccheck:
             self.chk.configure(**ccheck)
         

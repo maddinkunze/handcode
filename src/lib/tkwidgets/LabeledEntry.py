@@ -44,6 +44,15 @@ class LabeledEntry:
         if "unit" in kwargs:
             centry["unit"] = kwargs["unit"]
 
+        if "bd" in kwargs:
+            centry["bd"] = kwargs["bd"]
+
+        if "highlightthickness" in kwargs:
+            centry["highlightthickness"] = kwargs["highlightthickness"]
+
+        if "relief" in kwargs:
+            centry["relief"] = kwargs["relief"]
+
         if clabel:
             self.label.configure(**clabel)
         if centry:

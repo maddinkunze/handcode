@@ -42,6 +42,15 @@ class ScrolledEntry:
         if "stylescrolly" in kwargs:
             cscrollY["style"] = kwargs["stylescrolly"]
 
+        if "bd" in kwargs:
+            centry["bd"] = kwargs["bd"]
+
+        if "highlightthickness" in kwargs:
+            centry["highlightthickness"] = kwargs["highlightthickness"]
+
+        if "relief" in kwargs:
+            centry["relief"] = kwargs["relief"]
+
         if centry:
             self.entry.configure(centry)
         if cscrollX:

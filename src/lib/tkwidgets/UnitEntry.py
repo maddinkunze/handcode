@@ -39,6 +39,15 @@ class UnitEntry:
             cunit["text"] = self.unittext
             self.unitwidth = self.font.measure(self.unittext) + 5
 
+        if "bd" in kwargs:
+            centry["bd"] = kwargs["bd"]
+
+        if "highlightthickness" in kwargs:
+            centry["highlightthickness"] = kwargs["highlightthickness"]
+
+        if "relief" in kwargs:
+            centry["relief"] = kwargs["relief"]
+
         if centry:
             self.entry.configure(**centry)
         if cunit:

@@ -42,7 +42,8 @@ style = {
   "fg_hint": "#A0A0A0",
   "fg_progress": "#409040",
   "relief": "flat",
-  "borderwidth": 0
+  "borderwidth": 0,
+  "highlightthickness": 0,
 }
 
 def main():
@@ -64,32 +65,43 @@ def main():
         "font": fontLabel,
         "bg": style["bg_window"],
         "fg": style["fg_label"],
+        "bd": style["borderwidth"],
+        "highlightthickness": style["highlightthickness"],
     }
 
     styleLabelInput = {
         "font": fontText,
         "bg": style["bg_window"],
         "fg": style["fg_label"],
+        "bd": style["borderwidth"],
+        "highlightthickness": style["highlightthickness"],
     }
 
     styleLabelTooltip = {
         "font": fontTooltip,
         "bg": style["bg_window"],
-        "fg": style["fg_label"]
+        "fg": style["fg_label"],
+        "bd": style["borderwidth"],
+        "highlightthickness": style["highlightthickness"],
     }
 
     styleEntryDefault = {
         "bg": style["bg_inner"],
         "fg": style["fg_text"],
         "insertbackground": style["fg_hint"],
-        "relief": tk.FLAT
+        "relief": tk.FLAT,
+        "bd": style["borderwidth"],
+        "highlightthickness": style["highlightthickness"],
     }
 
     _styleEntryCustom = {
         "bgentry": style["bg_inner"],
         "fgentry": style["fg_text"],
         "bgcursor": style["fg_hint"],
-        "font": fontText
+        "font": fontText,
+        "relief": tk.FLAT,
+        "bd": style["borderwidth"],
+        "highlightthickness": style["highlightthickness"],
     }
 
     styleEntryScrolled = {
@@ -106,20 +118,24 @@ def main():
     styleEntryLabeled = {
         **styleEntryUnit,
         "bglabel": style["bg_window"],
-        "fglabel": style["fg_label"]
+        "fglabel": style["fg_label"],
     }
 
     styleButtonDefault = {
         "bg": style["bg_button"],
         "fg": style["fg_button"],
-        "relief": tk.FLAT
+        "relief": tk.FLAT,
+        "bd": style["borderwidth"],
+        "highlightthickness": style["highlightthickness"],
     }
 
     styleButtonStart = {
         "font": fontStart,
         "bg": style["bg_button_start"],
         "fg": style["fg_button_start"],
-        "relief": tk.FLAT
+        "relief": tk.FLAT,
+        "bd": style["borderwidth"],
+        "highlightthickness": style["highlightthickness"],
     }
 
     styleScaleLabeled = {
@@ -130,7 +146,9 @@ def main():
         "fgscale": style["bg_button"],
         "fgscale:hover": style["bg_button_hover"],
         "font": fontText,
-        "fonttooltip": fontTooltip
+        "fonttooltip": fontTooltip,
+        "bd": style["borderwidth"],
+        "highlightthickness": style["highlightthickness"],
     }
 
     styleSelectLabeled = {
@@ -139,7 +157,9 @@ def main():
         "bgselect": style["bg_button"],
         "bgselect:hover": style["bg_button_hover"],
         "fgselect": style["fg_button"],
-        "fgselect:hover": style["fg_button_hover"]
+        "fgselect:hover": style["fg_button_hover"],
+        "bd": style["borderwidth"],
+        "highlightthickness": style["highlightthickness"],
     }
 
     styleCheckboxDefault = {
@@ -147,6 +167,8 @@ def main():
         "bgcheck": style["bg_inner"],
         "fg": style["fg_label"],
         "font": fontText,
+        "bd": style["borderwidth"],
+        "highlightthickness": style["highlightthickness"],
     }
 
     styleCheckboxSmall = {
