@@ -4,6 +4,7 @@ import os
 import re
 import sys
 import json
+import queue
 import random
 import legacy
 import threading
@@ -51,7 +52,8 @@ def main():
     window.geometry(f"{wsize[0]}x{wsize[1]}")
     window.title("HandCode")
     window.configure(bg=style["bg_window"])
-    window.iconbitmap(os.path.join(path_lib, "icon.ico"))
+    if os.name == "nt":
+        window.iconbitmap(os.path.join(path_lib, "icon.ico"))
 
     fontTooltip = tkf.Font(size=7)
     fontText = tkf.Font(size=9)
@@ -375,6 +377,19 @@ def main():
         y += height + ymargin + 2 * ymargin
         btnStart.place(x=x, y=y, width=220, height=2*height+2*ymargin)
 
+    uiQueue = queue.Queue()
+    uiPollInterval = 100
+    def updateUIQueue():
+        try:
+            cb = uiQueue.get(0)
+            cb()
+        except queue.Empty:
+            pass
+        except Exception as e:
+            tkmb.showerror("Error in the UI polling loop", f"The following unhandled exception occured: {e}\n\n{traceback.format_exc()}\n\n{sys.exc_info()}")
+
+        window.after(uiPollInterval, updateUIQueue)
+
     def startConvert():
         if convertEvent.is_set():
             return
@@ -392,24 +407,27 @@ def main():
 
     def threadConvert():
         try:
-            report("log", "Loading tensorflow... ")
+            reportThreadSafe("log", "Loading tensorflow... ")
             import handwriting
-            report("log", "Done\nLoading neural network... ")
-            gcode = handwriting.gcode.HandGCode(logger=lambda s: report("log", s))
-            report("log", "Done\nLoading helper functions... ")
+            reportThreadSafe("log", "Done\nLoading neural network... ")
+            gcode = handwriting.gcode.HandGCode(logger=lambda s: reportThreadSafe("log", s))
+            reportThreadSafe("log", "Done\nLoading helper functions... ")
             _pensettingsgen["gcode"] = handwriting.commands.gcode
-            report("log", "Done\n")
-            report("success")
+            reportThreadSafe("log", "Done\n")
+            reportThreadSafe("success")
             while True:
                 convertEvent.wait()
                 try:
                     gcode.generate(convertData)
                     report("success")
                 except Exception as e:
-                    report("error", e)
+                    reportThreadSafe("error", e)
                 convertEvent.clear()
         except Exception as e:
-            tkmb.showerror("Error in the neural network thread", f"The following unhandled exception occured: {e}\n\n{traceback.format_exc()}\n\n{sys.exc_info()}")      
+            tkmb.showerror("Error in the neural network thread", f"The following unhandled exception occured: {e}\n\n{traceback.format_exc()}\n\n{sys.exc_info()}")
+
+    def reportThreadSafe(event, data=None):
+        uiQueue.put(lambda: report(event, data=data))
 
     def report(event, data=None):
         if (event == "log") and data:
@@ -702,7 +720,7 @@ def main():
     loadSettingsFromFile()
     writeSettingsToUI()
 
-
+    window.after(2*uiPollInterval, updateUIQueue)
     window.mainloop()
 
 if __name__ == "__main__":
