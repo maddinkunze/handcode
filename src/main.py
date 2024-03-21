@@ -17,6 +17,7 @@ import tkinter.messagebox as tkmb
 
 
 path_exe = os.path.dirname(os.path.realpath(sys.executable if getattr(sys, "frozen", False) else __file__))
+path_data = os.path.join(path_exe, "data")
 path_lib = os.path.join(path_exe, "lib")
 sys.path.append(path_lib) # for clean build reasons we dont include lib.handwriting
 import tkwidgets as tkw
@@ -309,6 +310,12 @@ def main():
             chkFeatureImitateDAM.configure(state=state)
         chkFeatureImitate.addListener("change", updateFeatureImitate)
 
+        def showFolder():
+            if os.name == "nt":
+                os.startfile(path_data)
+            elif sys.platform.startswith("linux"):
+                os.system(f"xdg-open \"{path_data}\"") # TODO: dangerous, we assume the path does not contain any quotes
+        btnShow.configure(command=showFolder)
         btnStart.configure(command=startConvert)
 
         
