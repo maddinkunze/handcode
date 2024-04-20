@@ -31,7 +31,7 @@ def gcode_laser(pendraw=0, pentravel=None, penpause=None, feeddraw=1000, feedtra
         },
         "page": {
             "start": None,
-            "next": f"M0\n",
-            "end": None
+            "next": (f"M5" if penpause is None else f"M3 S{penpause}") + f"M0\n",
+            "end": f"M5" if penpause is None else f"M3 S{penpause}"
         }
     }
