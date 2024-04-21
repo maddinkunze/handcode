@@ -1,6 +1,8 @@
 import os
 import numpy as np
-from .rnn import rnn
+import tensorflow as tf
+#from .rnn import rnn
+#import tflite_runtime.interpreter as tflite
 from .alphabet import alphabet as rnn_alphabet
 from collections import defaultdict
 from .savgol_np import savgol_filter
@@ -78,7 +80,7 @@ class HandGCode:
     _cached_styles = {}
 
     def __init__(self, logger=print):
-        self._nn = rnn(
+        """self._nn = rnn(
             log_dir=os.path.join(type(self)._directory, 'logs'),
             checkpoint_dir=os.path.join(type(self)._directory, 'checkpoints'),
             prediction_dir=os.path.join(type(self)._directory, 'predictions'),
@@ -100,7 +102,13 @@ class HandGCode:
             output_mixture_components=20,
             attention_mixture_components=10
         )
-        self._nn.restore()
+        self._nn.restore()"""
+        
+        #self._model = tf.saved_model.load("/home/user/handcode/build/pbexport").signatures["classify"]
+        pathDir = os.path.dirname(os.path.abspath(__file__))
+        pathModel = os.path.join(pathDir, "model.tflite")
+        self._model = tf.lite.Interpreter(pathModel).get_signature_runner("classify")
+        
         self.logger = logger
 
 
@@ -204,8 +212,8 @@ class HandGCode:
             biases.append(bias)
             if len(word) > tsteps_max:
                 tsteps_max = len(word)
-
-        strokes = self._nn.session.run(
+                
+        """strokes = self._nn.session.run(
             [self._nn.sampled_sequence],
             feed_dict = {
                 self._nn.prime: True,
@@ -217,7 +225,19 @@ class HandGCode:
                 self._nn.c_len: chars_len,
                 self._nn.bias: biases
             }
-        )[0]
+        )[0]"""
+        
+        strokes = self._model(
+            prime = tf.constant(True),
+            x_prime = tf.constant(prime.astype("float32")),
+            x_prime_len = tf.constant(prime_len.astype("int32")),
+            num_samples = tf.constant(words_len),
+            sample_tsteps = tf.constant(40 * tsteps_max),
+            chars = tf.constant(chars.astype("int32")),
+            chars_len = tf.constant(chars_len.astype("int32")),
+            bias = tf.constant(biases)
+        )["strokes"] # when using saved model instead of tflite, .numpy() should be called afterwards
+        
         strokes = [stroke[~np.all(stroke == 0.0, axis=1)] for stroke in strokes]
         passalong["strokes"] = strokes 
 

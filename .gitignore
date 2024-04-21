@@ -162,6 +162,12 @@ cython_debug/
 
 # Ignore files to be deleted but kept temporarily as a backup
 _del/
+*_del.*
+
+# Ignore built protobuf files describing the model (built using build/checkpoint2proto.py)
+# These pb models are then usually only used to create the tflite model, so we can safely ignore them
+/build/*/pbexport/
+/build/*/*.tflite
 
 # Ignore data files (except demo.txt)
 /src/data/*

@@ -25,7 +25,7 @@ import tkwidgets as tkw
 # This is just the GUI for this program, dont be intimidated.
 # For the main part of the program have a look at the HandGCode class in the src/lib/handwriting/gcode.py file
 
-versionSettingsCurrent = "0.4.0"
+versionSettingsCurrent = "0.5.0"
 style = {
   "bg_window": "#303030",
   "bg_button": "#505050",

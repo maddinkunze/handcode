@@ -3,7 +3,7 @@ import os
 
 import numpy as np
 import tensorflow as tf
-tf.compat.v1.disable_v2_behavior()
+#tf.compat.v1.disable_v2_behavior()
 
 from .alphabet import alphabet
 from .rnn_cell import LSTMAttentionCell
@@ -60,14 +60,14 @@ class rnn(TFBaseModel):
         gmm_likelihood = tf.reduce_sum(input_tensor=pis * gaussian_likelihoods, axis=2)
         gmm_likelihood = tf.clip_by_value(gmm_likelihood, eps, np.inf)
 
-        bernoulli_likelihood = tf.squeeze(tf.compat.v1.where(tf.equal(tf.ones_like(y_3), y_3), es, 1 - es))
+        bernoulli_likelihood = tf.squeeze(tf.where(tf.equal(tf.ones_like(y_3), y_3), es, 1 - es))
 
         nll = -(tf.math.log(gmm_likelihood) + tf.math.log(bernoulli_likelihood))
         sequence_mask = tf.logical_and(
             tf.sequence_mask(lengths, maxlen=tf.shape(input=y)[1]),
             tf.logical_not(tf.math.is_nan(nll)),
         )
-        nll = tf.compat.v1.where(sequence_mask, nll, tf.zeros_like(nll))
+        nll = tf.where(sequence_mask, nll, tf.zeros_like(nll))
         num_valid = tf.reduce_sum(input_tensor=tf.cast(sequence_mask, tf.float32), axis=1)
 
         sequence_loss = tf.reduce_sum(input_tensor=nll, axis=1) / tf.maximum(num_valid, 1.0)
