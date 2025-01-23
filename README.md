@@ -104,7 +104,7 @@ This checkbox should be set if you want to mount the paper perpendicular to your
 
 ## Features
 
-This project is based on great work from Sean Vasquez, who published his work on handwriting synthesis (see contributions). It ensures the uniqueness of each letter and the natural flow from each letter to the next. You can choose between 12 sampled handwritings or (if you _really_ want to, i dont know how though) sample your own handwriting to use with this program.
+This project is based on great work from Sean Vasquez, who published his work on handwriting synthesis (see attributions). It ensures the uniqueness of each letter and the natural flow from each letter to the next. You can choose between 12 sampled handwritings or (if you _really_ want to, i dont know how though) sample your own handwriting to use with this program.
 
 ## Building
 
@@ -126,7 +126,7 @@ The provided script will do the following:
 I have not tested nor built this project on other platforms then mentioned. If you wish to build this for other platforms, you have to include the [svg2gcode binary](https://github.com/sameer/svg2gcode/releases/) for your platform in the `src/lib/svg2gcode` subdirectory and change the `os.system(...)` call in `converttogcode(...)` within `src/convert.py` to point to your platform-specific binary.
 
 
-## Contributions
+## Attributions
 
 This project is written in [Python](https://python.org) and uses the following projects:
  - [svg2gcode](https://github.com/sameer/svg2gcode)
