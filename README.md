@@ -128,6 +128,8 @@ I have not tested nor built this project on other platforms then mentioned. If y
 
 ## Attributions
 
-This project is written in [Python](https://python.org) and uses the following projects:
- - [svg2gcode](https://github.com/sameer/svg2gcode)
- - [handwriting-synthesis](https://github.com/sjvasquez/handwriting-synthesis)
+This project is written in [Python](https://python.org) and uses the following project:
+ - [handwriting-synthesis](https://github.com/sjvasquez/handwriting-synthesis) (No License, but use like this seems to be in reasonable scope)
+
+Previous versions additionally relied on the following project:
+ - [svg2gcode](https://github.com/sameer/svg2gcode) (MIT License)
