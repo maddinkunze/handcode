@@ -131,5 +131,5 @@ I have not tested nor built this project on other platforms then mentioned. If y
 This project is written in [Python](https://python.org) and uses the following project:
  - [handwriting-synthesis](https://github.com/sjvasquez/handwriting-synthesis) (No License, but use like this seems to be in reasonable scope)
 
-Previous versions additionally relied on the following project:
+Previous versions used to rely on the following project:
  - [svg2gcode](https://github.com/sameer/svg2gcode) (MIT License)
