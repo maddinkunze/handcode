@@ -24,7 +24,7 @@ Lastly, it is recommended that you build a toolholder that can firmly hold your 
 
 #### Using HandCode
 
-Open HandCode and wait until the neural network finished loading, this may take a few minutes. While waiting, you can take the text you want to convert to handwriting and save it in a plain text file. After the program finished loading you can open your text file by clicking the `...` button. If you want, you can change the settings (see below for all options) or edit your input if you noticed a mistake. After editing, changes will be saved to the file. Probably the most interesting options are the font options, which can be tested in this [web demo](https://caligrapher.ai). Note, that the font size setting is not accurate and does not represent any real life metric. See "Calibrating" below for more information.
+Install HandCode by downloading the latest release or by following the guide below. Open HandCode and wait until the neural network finished loading, this may take a few minutes. While waiting, you can take the text you want to convert to handwriting and save it in a plain text file. After the program finished loading you can open your text file by clicking the `...` button. If you want, you can change the settings (see below for all options) or edit your input if you noticed a mistake. After editing, changes will be saved to the file. Probably the most interesting options are the font options, which can be tested in this [web demo](https://caligrapher.ai). Note, that the font size setting is not accurate and does not represent any real life metric. See "Calibrating" below for more information.
 
 After changing the settings to your liking you can click `Start` to start the conversion process. During this process, command prompts may open. These are for converting the handwriting to gcode and should not concern you. Please do not close them manually, they should close themselves.
 
@@ -105,6 +105,24 @@ This checkbox should be set if you want to mount the paper perpendicular to your
 ## Features
 
 This project is based on great work from Sean Vasquez, who published his work on handwriting synthesis (see attributions). It ensures the uniqueness of each letter and the natural flow from each letter to the next. You can choose between 12 sampled handwritings or (if you _really_ want to, i dont know how though) sample your own handwriting to use with this program.
+
+## Installation
+
+For installing HandCode you have the following options:
+
+### Release
+
+Head to the release section and download the latest binary for your platform.
+At the moment, there are only binaries for Windows available.
+
+### Source
+
+1. Clone this repository, either using `git` (`git clone https://github.com/maddinkunze/handcode`) or by downloading it manually (top left, Code -> Download as zip)
+2. Install `python3` for your platform (see https://python.org for more info). After this step, you should be able to call `python3 --version` from your terminal or command line (sometimes you only need to call `python --version`, but make sure it returns a `3.x.x` version). This version will be called the global python installation and be referenced as `python3`. If your python installation is called using `python`, adapt the following calls accordingly
+3. Ensure `pip` (`python3 -m ensurepip`) and install `uv` (`python3 -m pip install uv`)
+4. Sync dependencies (`python3 -m uv sync`), this may take some time when doing it at first
+5. Activate virtual environment (`source .venv/bin/activate` on macOS and Linux, `.venv\Scripts\activate` on Windows). You should now see that your terminal has changed slightly to indicate that you are now acting from within the venv. Within your venv, you should have a new local python installation, which will be referenced from now on as just `python` (without the 3). To exit the venv, you can always call `deactivate`
+6. Start HandCode (`python src/main.py` on macOS and Linux, `python src\main.py` on Windows), you should now see the program starting
 
 ## Building
 

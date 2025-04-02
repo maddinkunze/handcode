@@ -9,6 +9,7 @@ import random
 import legacy
 import threading
 import traceback
+import pkg_ressources
 import tkinter as tk
 import tkinter.ttk as ttk
 import tkinter.font as tkf
@@ -16,6 +17,7 @@ import tkinter.filedialog as tkfd
 import tkinter.messagebox as tkmb
 
 
+version_handcode = pkg_ressources.get_distribution(projectname).version
 path_exe = os.path.dirname(os.path.realpath(sys.executable if getattr(sys, "frozen", False) else __file__))
 path_data = os.path.join(path_exe, "data")
 path_lib = os.path.join(path_exe, "lib")
@@ -25,7 +27,7 @@ import tkwidgets as tkw
 # This is just the GUI for this program, dont be intimidated.
 # For the main part of the program have a look at the HandGCode class in the src/lib/handwriting/gcode.py file
 
-versionSettingsCurrent = "0.5.0"
+versionSettingsCurrent = version_handcode
 style = {
   "bg_window": "#303030",
   "bg_button": "#505050",

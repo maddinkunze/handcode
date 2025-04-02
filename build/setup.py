@@ -1,4 +1,5 @@
 import os, sys
+import pkg_ressources
 from cx_Freeze import setup, Executable
 
 path_src = os.path.join("..", "src")
@@ -9,8 +10,10 @@ includes = ["handwriting"]
 includefiles = [(os.path.join(path_src, "data", "demo.txt"), os.path.join("data", "demo.txt")), (os.path.join(path_src, "lib", "icon.ico"), os.path.join("lib", "icon.ico"))]
 excludes = ["cachetools", "contourpy", "curses", "fontTools", "google_auth_oauthlib", "grpc", "h5py", "lib2to3", "markdown", "markupsafe", "matplotlib", "oauthlib", "pasta", "pkg_ressources", "pyasn1", "pyasn1_modules", "pydoc_data", "pytz", "requests_oauthlib", "rsa", "scipy", "setuptools", "tensorboard_data_server", "tensorflow_estimator", "tensorflow_io_gcs_filesystem", "test", "werkzeug", "wheel", "wsgiref", "xmlrpc", "zoneinfo"]
 optimization = 1
-buildversion = "0.4.0"
-buildpath = os.path.join("dist", "handcode-win64")
+projectname = "handcode"
+projectarch = "win64"
+buildversion = pkg_ressources.get_distribution(projectname).version
+buildpath = os.path.join("dist", f"{projectname}-{projectarch}")
 build_exe_options = {
     'build_exe': buildpath,
     'packages': packages,
