@@ -9,7 +9,6 @@ import random
 import legacy
 import threading
 import traceback
-import pkg_resources
 import tkinter as tk
 import tkinter.ttk as ttk
 import tkinter.font as tkf
@@ -17,7 +16,7 @@ import tkinter.filedialog as tkfd
 import tkinter.messagebox as tkmb
 
 
-version_handcode = pkg_resources.get_distribution("handcode").version
+version_handcode = "0.4.1"
 path_exe = os.path.dirname(os.path.realpath(sys.executable if getattr(sys, "frozen", False) else __file__))
 path_data = os.path.join(path_exe, "data")
 path_lib = os.path.join(path_exe, "lib")
