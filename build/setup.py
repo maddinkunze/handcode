@@ -1,5 +1,5 @@
 import os, sys
-import pkg_ressources
+import pkg_resources
 from cx_Freeze import setup, Executable
 
 path_src = os.path.join("..", "src")
@@ -12,7 +12,7 @@ excludes = ["cachetools", "contourpy", "curses", "fontTools", "google_auth_oauth
 optimization = 1
 projectname = "handcode"
 projectarch = "win64"
-buildversion = pkg_ressources.get_distribution(projectname).version
+buildversion = pkg_resources.get_distribution(projectname).version
 buildpath = os.path.join("dist", f"{projectname}-{projectarch}")
 build_exe_options = {
     'build_exe': buildpath,
