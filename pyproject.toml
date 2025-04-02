@@ -7,6 +7,7 @@ requires-python = "==3.10.4"
 dependencies = [
     "numpy==1.26.4",
     "tensorflow==2.11.0",
+    "tensorflow-intel==2.11.0",
     "tensorflow-probability==0.19.0",
     "tf-keras==2.14.1",
     "numpy==1.26.4",
