@@ -14,5 +14,6 @@ dependencies = [
 
 [tool.uv]
 override-dependencies = [
+    "tensorflow-intel; sys_platform == 'win32'",
     "tensorflow-io-gcs-filesystem; sys_platform == 'never'",
 ]
