@@ -170,7 +170,7 @@ print("Optimizing libraries... ")
 
 # tensorflow_prob
 try:
-    # raise NotImplemented()
+    # raise NotImplementedError()
     print("tensorflow_probability... ", end="")
     path_tf_prob = os.path.join(path_lib, "tensorflow_probability")
 
@@ -197,7 +197,7 @@ try:
 
     shutil.rmtree(os.path.join(path_tf_prob, "substrates"), ignore_errors=True)
     print("Done")
-except NotImplemented:
+except NotImplementedError:
     pass
 except:
     print(f"\ntensorflow_probability failed:\n{traceback.format_exc()}")
@@ -225,7 +225,7 @@ def removefilesthathavenotbeenaccessed(path, since, excludes):
             except: pass
 
 try:
-    # raise NotImplemented()
+    # raise NotImplementedError()
     start = time.time() - 5
     print("automatic removal... ")
     time.sleep(5)
@@ -233,14 +233,14 @@ try:
     os.system(f"start {path_exe}")
     skip = input("Please wait for the program to open and then press enter or q+enter to skip: ")
     if skip.lower().strip() == "q":
-        raise NotImplemented
+        raise NotImplementedError
 
     excludes_autoremove = [
         ("handwriting", "styles"),
         ("handwriting", "checkpoints")
     ]
     removefilesthathavenotbeenaccessed(path_lib, start, excludes_autoremove)
-except NotImplemented:
+except NotImplementedError:
     pass
 except:
     print(f"automatic removal failed:\n{traceback.format_exc()}")
@@ -250,7 +250,7 @@ print("Done")
 print("Compressing large files (this may take a few minutes)... ")
 
 filters_compression = [
-    {"id": lzma.FILTER_LZMA, "preset": 9 | lzma.PRESET_EXTREME},
+    {"id": lzma.FILTER_LZMA2, "preset": 9 | lzma.PRESET_EXTREME},
 ]
 
 def compresslargefiles(basedir, minsize, compressfactor, excludes, maxlevel):
