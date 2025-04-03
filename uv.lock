@@ -3,7 +3,10 @@ revision = 1
 requires-python = "==3.10.4"
 
 [manifest]
-overrides = [{ name = "tensorflow-io-gcs-filesystem", marker = "sys_platform == 'never'" }]
+overrides = [
+    { name = "tensorflow-intel", marker = "sys_platform == 'win32'" },
+    { name = "tensorflow-io-gcs-filesystem", marker = "sys_platform == 'never'" },
+]
 
 [[package]]
 name = "absl-py"
@@ -210,6 +213,7 @@ source = { virtual = "." }
 dependencies = [
     { name = "numpy" },
     { name = "tensorflow" },
+    { name = "tensorflow-intel", marker = "sys_platform == 'win32'" },
     { name = "tensorflow-probability" },
     { name = "tf-keras" },
 ]
@@ -218,6 +222,7 @@ dependencies = [
 requires-dist = [
     { name = "numpy", specifier = "==1.26.4" },
     { name = "tensorflow", specifier = "==2.11.0" },
+    { name = "tensorflow-intel", specifier = "==2.11.0" },
     { name = "tensorflow-probability", specifier = "==0.19.0" },
     { name = "tf-keras", specifier = "==2.14.1" },
 ]
@@ -499,6 +504,37 @@ version = "2.11.0"
 source = { registry = "https://pypi.org/simple" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/bb/e2/8bf618c7c30a525054230ee6d40b036d3e5abc2c4ff67cf7c7420a519204/tensorflow_estimator-2.11.0-py2.py3-none-any.whl", hash = "sha256:ea3b64acfff3d9a244f06178c9bdedcbdd3f125b67d0888dba8229498d06468b", size = 439214 },
+]
+
+[[package]]
+name = "tensorflow-intel"
+version = "2.11.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "absl-py" },
+    { name = "astunparse" },
+    { name = "flatbuffers" },
+    { name = "gast" },
+    { name = "google-pasta" },
+    { name = "grpcio" },
+    { name = "h5py" },
+    { name = "keras" },
+    { name = "libclang" },
+    { name = "numpy" },
+    { name = "opt-einsum" },
+    { name = "packaging" },
+    { name = "protobuf" },
+    { name = "setuptools" },
+    { name = "six" },
+    { name = "tensorboard" },
+    { name = "tensorflow-estimator" },
+    { name = "tensorflow-io-gcs-filesystem", marker = "sys_platform == 'never'" },
+    { name = "termcolor" },
+    { name = "typing-extensions" },
+    { name = "wrapt" },
+]
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/6f/ae/e5e8f99dd2ca656c5c2198c06d42bed52986faefa20350ab7ea391e664f4/tensorflow_intel-2.11.1-cp310-cp310-win_amd64.whl", hash = "sha256:10d3d95e35cb79aab6b63474ea0e7c854f1037315c9b5f7426355970d5557f8e", size = 266336026 },
 ]
 
 [[package]]

@@ -6,11 +6,11 @@ tf.disable_eager_execution()
 tf.enable_resource_variables()
 
 pathScript = os.path.dirname(os.path.realpath(__file__))
-pathLib = os.path.join(pathScript, os.path.pardir, "src", "lib")
+pathLib = os.path.join(pathScript, os.path.pardir, os.path.pardir, "src", "lib")
 sys.path.append(pathLib)
 import handwriting
 
-nn = handwriting.gcode.HandGCode()._nn
+nn = handwriting._get_nn()
 
 # thanks to https://stackoverflow.com/questions/48646459/tensorflow-savedmodelbuilder for parts of this code
 
@@ -18,21 +18,21 @@ nn = handwriting.gcode.HandGCode()._nn
 pathImport = os.path.join(pathLib, "handwriting", "checkpoints", "model-17900")
 pathImportMeta = f"{pathImport}.meta"
 pathExport = "./pbexport"
-builder = tf.compat.v1.saved_model.builder.SavedModelBuilder(pathExport)
+builder = tf.saved_model.builder.SavedModelBuilder(pathExport)
 
 #  Create classification signature - describes what model is being exported
-tensorInfoPrime = tf.compat.v1.saved_model.utils.build_tensor_info(nn.prime)
-tensorInfoXPrime = tf.compat.v1.saved_model.utils.build_tensor_info(nn.x_prime)
-tensorInfoXPrimeLen = tf.compat.v1.saved_model.utils.build_tensor_info(nn.x_prime_len)
-tensorInfoNumSamples = tf.compat.v1.saved_model.utils.build_tensor_info(nn.num_samples)
-tensorInfoSampleTSteps = tf.compat.v1.saved_model.utils.build_tensor_info(nn.sample_tsteps)
-tensorInfoChars = tf.compat.v1.saved_model.utils.build_tensor_info(nn.c)
-tensorInfoCharsLen = tf.compat.v1.saved_model.utils.build_tensor_info(nn.c_len)
-tensorInfoBias = tf.compat.v1.saved_model.utils.build_tensor_info(nn.bias)
-tensorInfoStrokes = tf.compat.v1.saved_model.utils.build_tensor_info(nn.sampled_sequence)
+tensorInfoPrime = tf.saved_model.utils.build_tensor_info(nn.prime)
+tensorInfoXPrime = tf.saved_model.utils.build_tensor_info(nn.x_prime)
+tensorInfoXPrimeLen = tf.saved_model.utils.build_tensor_info(nn.x_prime_len)
+tensorInfoNumSamples = tf.saved_model.utils.build_tensor_info(nn.num_samples)
+tensorInfoSampleTSteps = tf.saved_model.utils.build_tensor_info(nn.sample_tsteps)
+tensorInfoChars = tf.saved_model.utils.build_tensor_info(nn.c)
+tensorInfoCharsLen = tf.saved_model.utils.build_tensor_info(nn.c_len)
+tensorInfoBias = tf.saved_model.utils.build_tensor_info(nn.bias)
+tensorInfoStrokes = tf.saved_model.utils.build_tensor_info(nn.sampled_sequence)
 
 classification_signature = (
-  tf.compat.v1.saved_model.signature_def_utils.build_signature_def(
+  tf.saved_model.signature_def_utils.build_signature_def(
     inputs={
         "prime": tensorInfoPrime,
         "x_prime": tensorInfoXPrime,

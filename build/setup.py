@@ -1,5 +1,4 @@
 import os, sys
-import pkg_resources
 from cx_Freeze import setup, Executable
 
 path_src = os.path.join("..", "src")

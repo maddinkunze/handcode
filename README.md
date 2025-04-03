@@ -130,9 +130,19 @@ For building this project you need to do the following:
 
 ### Windows
 
-You should be simply able to run the `build.bat` script provided in the `build` subdirectory. Besides the libraries you installed for the project you need to install [cx_Freeze](https://cx-freeze.readthedocs.io/en/stable/). You can install cx_Freeze using
+You should be simply able to run the `build.bat` script provided in the `build` subdirectory. Besides the libraries you installed for the project you need to install build libraries such as [cx_Freeze](https://cx-freeze.readthedocs.io/en/stable/). You can install all needed libraries using `python3 -m uv pip install -r build\requirements.txt --python .venv\Scripts\python.exe`. Note, that you have to install the `requirements.txt` that is located within the `build` directory and you have to call `build.bat` with the virtual environment activated and whilst `build` directory. The `--python .venv\Scripts\python.exe` flag ensures, that the build requirements are installed into the virtual environment and not into your global python installation; you may have to change the location of your venv executable.
 
-    pip install cx_Freeze
+For completeness, here is a complete rundown of what you need to do, to build HandCode for Windows:
+1. Follow instructions for installation (source code); verify that the program starts and works without problems
+2. Make sure, you are at the project root (`cd C:\path\to\handcode`)
+3. Steps 4-5 are optional, if you have already installed the build tools in your virtual environment
+4. Make sure, you are outside of your virtual environment (you can leave your venv using `deactivate`)
+5. Install build requirements (`python3 -m uv pip install -r build\requirements.txt --python .venv\Scripts\python.exe`)
+6. Activate virtual environment (`.venv\Scripts\activate`)
+7. Go into `build` directory (`cd build`)
+8. Start the build process (`build.bat`); this will take some time
+9. Follow the instructions during the build, they are required to minimize the build size
+9. Optional: Package the built folder into a single zip file for distribution
 
 The provided script will do the following:
 1. Build and bundle the software to the best of cx_Freeze's capabilities, see [cx_Freezes documentation](https://cx-freeze.readthedocs.io/en/stable/) and my `build/setup.py` script for more information
