@@ -230,17 +230,14 @@ try:
     print("automatic removal... ")
     time.sleep(5)
     path_exe = os.path.join(path_build, "HandCode.exe")
-    os.system(f"start {path_exe}")
-    skip = input("Please wait for the program to open and then press enter or q+enter to skip: ")
-    if skip.lower().strip() == "q":
-        raise NotImplementedError
+    os.system(f"{path_exe} --test-start-behaviour")
 
     excludes_autoremove = [
         ("handwriting", "styles"),
-        ("handwriting", "checkpoints")
+        #("handwriting", "checkpoints")
     ]
     removefilesthathavenotbeenaccessed(path_lib, start, excludes_autoremove)
-except NotImplementedError:
+except KeyboardInterrupt:
     pass
 except:
     print(f"automatic removal failed:\n{traceback.format_exc()}")
@@ -285,6 +282,9 @@ def compresslargefiles(basedir, minsize, compressfactor, excludes, maxlevel):
 
 excludes_compress = [
   "lzma",
+  "tkinter",
+  "tcl86t.dll",
+  "tk86t.dll",
   "library.zip"
 ]
 compresslargefiles(path_lib, 500_000, 0.6, excludes_compress, 3)

@@ -4,6 +4,7 @@ import os
 import re
 import sys
 import json
+import time
 import queue
 import random
 import legacy
@@ -16,9 +17,10 @@ import tkinter.filedialog as tkfd
 import tkinter.messagebox as tkmb
 
 
-version_handcode = "0.4.1"
+version_handcode = "0.4.2"
 path_exe = os.path.dirname(os.path.realpath(sys.executable if getattr(sys, "frozen", False) else __file__))
 path_data = os.path.join(path_exe, "data")
+path_settings = os.path.join(path_data, "settings.json")
 path_lib = os.path.join(path_exe, "lib")
 sys.path.append(path_lib) # for clean build reasons we dont include lib.handwriting
 import tkwidgets as tkw
@@ -427,7 +429,8 @@ def main():
         edtLog.set("")
         prgLoading.start()
         readSettingsFromUI()
-        saveSettingsToFile()
+        if "--test-start-behaviour" not in sys.argv:
+            saveSettingsToFile()
         errors = convertSettingsToData()
         if errors:
             report("log", f"\n{errors} errors were encountered while parsing your current settings. Please see above for more information.\n")
@@ -439,12 +442,17 @@ def main():
         try:
             reportThreadSafe("log", "Loading tensorflow... ")
             import handwriting
-            reportThreadSafe("log", "Done\nLoading neural network... ")
             gcode = handwriting.gcode.HandGCode(logger=lambda s: reportThreadSafe("log", s))
+            reportThreadSafe("log", "Done\nLoading neural network... ")
+            gcode.load()
             reportThreadSafe("log", "Done\nLoading helper functions... ")
             _pensettingsgen["gcode"] = handwriting.commands.gcode
             reportThreadSafe("log", "Done\n")
             reportThreadSafe("success")
+
+            if "--test-start-behaviour" in sys.argv:
+                threading.Thread(target=threadTestStart).start()
+
             while True:
                 convertEvent.wait()
                 try:
@@ -473,8 +481,16 @@ def main():
             report("log", f"\nUnhandled error: {data}\n")
             print(f"An error occurred:\n{traceback.format_exc()}\n\n{sys.exc_info()}")
 
+    def threadTestStart():
+        time.sleep(3)
+        window.after(0, lambda*_: edtInput.insert(0, "Hello World"))
+        time.sleep(1)
+        startConvert()
+        time.sleep(30)
+        window.after(0, window.destroy)
+
     def selectInputFile():
-        filename = tkfd.askopenfilename(title="Open text file...", initialdir="data")
+        filename = tkfd.askopenfilename(title="Open text file...", initialdir=path_data)
         if not filename:
             report("log", "No file selected!\n")
             return
@@ -623,10 +639,9 @@ def main():
                     report("log", f" Using default value instead: {default}\n")
                     return default
                 report("log", "\n")
-                raise
             try:
                 value = value[p]
-            except Exception as e:
+            except:
                 report("log", f"Error while accessing part \"{p}\" of field {formatPath(path)}:\n{traceback.format_exc()}")
                 if default is not None:
                     report("log", f"Using default value instead: {default}\n")
@@ -638,7 +653,7 @@ def main():
         value = getConvertSetting(path, default=default)
         try:
             value = dtype(value)
-        except Exception as e:
+        except:
             report("log", f"Unable to parse value \"{value}\" from field {formatPath(path)} to {dtype}:\n{traceback.format_exc()}")
             try:
                 value = dtype(default)
@@ -665,7 +680,7 @@ def main():
     def convertSettingsToData():
         errors = 0
         errors += convertSettingToData(["input", "text"], str, default="Lorem ipsum (there was an error parsing the input field)")
-        errors += convertSettingToData(["output", "file"], lambda p: os.path.join("data", p), default="demo.gcode")
+        errors += convertSettingToData(["output", "file"], lambda p: os.path.join(path_data, p), default="demo.gcode")
 
         errors += convertSettingToData(["font", "size"], float, default=formatFloat(10))
         errors += convertSettingToData(["font", "style"], parseFontStyle, default=formatFontStyleName(1))
@@ -714,14 +729,13 @@ def main():
 
         return errors
 
-    _pathSettings = os.path.join("data", "settings.json")
     def loadSettingsFromFile():
-        if not os.path.isfile(_pathSettings):
+        if not os.path.isfile(path_settings):
             return
         
         file = None
         try:
-            file = open(_pathSettings, "r")
+            file = open(path_settings, "r")
             settings = json.load(file)
             settings = legacy.convertSettingsLegacy(settings, versionSettingsCurrent)
             convertSettings.update(settings)
@@ -733,7 +747,7 @@ def main():
 
     def saveSettingsToFile():
         report("log", "Saving settings... ")
-        file = open(_pathSettings, "w")
+        file = open(path_settings, "w")
         json.dump(convertSettings, file)
         file.close()
         report("log", "Done\n")

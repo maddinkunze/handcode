@@ -1,6 +1,6 @@
 [project]
 name = "handcode"
-version = "0.4.1"
+version = "0.4.2"
 description = "Handwriting GCode Generator"
 readme = "README.md"
 requires-python = "==3.10.4"

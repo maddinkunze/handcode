@@ -1,11 +1,9 @@
 import os
 import numpy as np
-import tensorflow as tf
-#from .rnn import rnn
-#import tflite_runtime.interpreter as tflite
 from .alphabet import alphabet as rnn_alphabet
 from collections import defaultdict
 from .savgol_np import savgol_filter
+from .model_runner import get_optimal_runner
 
 class HandGCode:
     settings_default = {
@@ -80,37 +78,12 @@ class HandGCode:
     _cached_styles = {}
 
     def __init__(self, logger=print):
-        """self._nn = rnn(
-            log_dir=os.path.join(type(self)._directory, 'logs'),
-            checkpoint_dir=os.path.join(type(self)._directory, 'checkpoints'),
-            prediction_dir=os.path.join(type(self)._directory, 'predictions'),
-            learning_rates=[.0001, .00005, .00002],
-            batch_sizes=[32, 64, 64],
-            patiences=[1500, 1000, 500],
-            beta1_decays=[.9, .9, .9],
-            validation_batch_size=32,
-            optimizer='rms',
-            num_training_steps=100000,
-            warm_start_init_step=17900,
-            regularization_constant=0.0,
-            keep_prob=1.0,
-            enable_parameter_averaging=False,
-            min_steps_to_checkpoint=2000,
-            log_interval=20,
-            grad_clip=10,
-            lstm_size=400,
-            output_mixture_components=20,
-            attention_mixture_components=10
-        )
-        self._nn.restore()"""
-        
-        #self._model = tf.saved_model.load("/home/user/handcode/build/pbexport").signatures["classify"]
-        pathDir = os.path.dirname(os.path.abspath(__file__))
-        pathModel = os.path.join(pathDir, "model.tflite")
-        self._model = tf.lite.Interpreter(pathModel).get_signature_runner("classify")
+        self._model = get_optimal_runner()
         
         self.logger = logger
 
+    def load(self):
+        self._model.load()
 
     def generate(self, settings):
         passalong = dict()
@@ -212,33 +185,18 @@ class HandGCode:
             biases.append(bias)
             if len(word) > tsteps_max:
                 tsteps_max = len(word)
-                
-        """strokes = self._nn.session.run(
-            [self._nn.sampled_sequence],
-            feed_dict = {
-                self._nn.prime: True,
-                self._nn.x_prime: prime,
-                self._nn.x_prime_len: prime_len,
-                self._nn.num_samples: words_len,
-                self._nn.sample_tsteps: 40*tsteps_max,
-                self._nn.c: chars,
-                self._nn.c_len: chars_len,
-                self._nn.bias: biases
-            }
-        )[0]"""
         
-        strokes = self._model(
-            prime = tf.constant(True),
-            x_prime = tf.constant(prime.astype("float32")),
-            x_prime_len = tf.constant(prime_len.astype("int32")),
-            num_samples = tf.constant(words_len),
-            sample_tsteps = tf.constant(40 * tsteps_max),
-            chars = tf.constant(chars.astype("int32")),
-            chars_len = tf.constant(chars_len.astype("int32")),
-            bias = tf.constant(biases)
-        )["strokes"] # when using saved model instead of tflite, .numpy() should be called afterwards
-        
-        strokes = [stroke[~np.all(stroke == 0.0, axis=1)] for stroke in strokes]
+        strokes = self._model.invoke(
+            prime = True,
+            x_prime = prime,
+            prime_len = prime_len,
+            num_samples = words_len,
+            sample_tsteps = 40 * tsteps_max,
+            chars = chars,
+            chars_len = chars_len,
+            biases = biases
+        )
+
         passalong["strokes"] = strokes 
 
     def _draw(self, settings, passalong):
