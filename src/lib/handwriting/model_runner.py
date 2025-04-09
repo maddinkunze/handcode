@@ -24,7 +24,7 @@ def get_optimal_runner() -> ModelRunner:
     """
     Get optimal ModelRunner for this platform/execution environment
     """
-    if sys.platform.lower() in ["linux", "linux2", "macos"]:
+    if sys.platform.lower() in []: # ["linux", "linux2", "macos"]: # tflite runtime is disabled, because no platform seems to include the flex operators by default in the tflite_runtime
         try:
             return get_tflite_runner()
         except: 
