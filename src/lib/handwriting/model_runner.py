@@ -63,12 +63,12 @@ def get_tflite_runner() -> ModelRunner:
         strokes = interpreter(
             prime=np.array([prime]),
             x_prime=x_prime,
-            prime_len=prime_len,
+            x_prime_len=prime_len,
             num_samples=np.array([num_samples]),
             sample_tsteps=np.array([sample_tsteps]),
             chars=chars,
             chars_len=chars_len,
-            biases=np.array(biases)
+            bias=np.array(biases)
         )["strokes"]
         return filter_strokes(strokes)
 
