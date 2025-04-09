@@ -143,7 +143,23 @@ Here is a rundown on how to achieve this on Debian/Ubuntu-based systems:
 1. `curl -fsSL https://pyenv.run | bash` (see https://github.com/pyenv/pyenv?tab=readme-ov-file#a-getting-pyenv for other operating systems)
 2. You may want to follow the other steps given in the instructions for `pyenv` in step 1, but I was able to skip those and go straigt to installing the python dependencies (step 3)
 3. `sudo apt update; sudo apt install build-essential libssl-dev zlib1g-dev libbz2-dev libreadline-dev libsqlite3-dev curl git libncursesw5-dev xz-utils tk-dev libxml2-dev libxmlsec1-dev libffi-dev liblzma-dev` (see https://github.com/pyenv/pyenv/wiki#suggested-build-environment for other operating systems)
-4. 
+4. `pyenv install 3.10.16` (Note: if you skipped the other installation steps, like me, `pyenv` may not be in your path, so instead of `pyenv` you'd have to specify the full path. For me, the following worked `$HOME/.pyenv/bin/pyenv`, simply replace all `pyenv ...` commands with `your/path/to/pyenv ...`)
+5. `cd path/to/handcode`
+5. `rm -rf .venv` (removes your existing virtual environment, only needed if you have encountered errors already)
+6. `python3 -m uv sync --python path/to/python3.10` (replace the `python3.10` path with the installation directory of your newly installed python. For me, this was `$HOME/.pyenv/versions/3.10.16/bin`)
+
+#### Tensorflow errors
+
+You may encounter errors related to tensorflow. Such errors include:
+ - `The TensorFlow library was compiled to use AVX instructions, but these aren't available on your machine. Aborted.`
+ - `The TensorFlow library was compiled to use AVX512F instructions, but these aren't available on your machine. Aborted.`
+
+You may have to reinstall tensorflow within your venv, try the following:
+1. `deactivate` (leave your venv, only needed if your venv is currently active)
+2. `python3 -m uv remove tensorflow tensorflow-intel tensorflow-cpu` (may throw errors about packages not being installed, obviously only remove the packages that are installed)
+3. `python3 -m uv add tensorflow==2.11.0 tensorflow-intel==2.11.0 tensorflow-cpu==2.11.0` (note, you may have to change the library versions from `2.11.0` to whatever is used in the project. Simply take a look into the projects `pyproject.toml` file, to see which version exactly to install)
+
+See https://stackoverflow.com/a/78280136 for more info
 
 ## Building
 

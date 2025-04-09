@@ -53,6 +53,7 @@ def get_tflite_runner() -> ModelRunner:
     Creates a model runner using only the tflite runtime, only works an machines, where the flex delegate was compiled into tflite
     """
     import tflite_runtime.interpreter as tflite
+    import numpy as np
 
     
     def load_model():
@@ -60,14 +61,14 @@ def get_tflite_runner() -> ModelRunner:
 
     def invoke_model(interpreter, prime: bool, x_prime: np.ndarray, prime_len: np.ndarray, num_samples: int, sample_tsteps: int, chars: np.ndarray, chars_len: np.ndarray, biases: list[float]) -> list[list[float]]:
         strokes = interpreter(
-            prime=prime,
+            prime=np.array([prime]),
             x_prime=x_prime,
             prime_len=prime_len,
-            num_samples=num_samples,
-            sample_tsteps=sample_tsteps,
+            num_samples=np.array([num_samples]),
+            sample_tsteps=np.array([sample_tsteps]),
             chars=chars,
             chars_len=chars_len,
-            biases=biases
+            biases=np.array(biases)
         )["strokes"]
         return filter_strokes(strokes)
 

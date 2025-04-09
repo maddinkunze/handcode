@@ -462,8 +462,8 @@ def main():
                     reportThreadSafe("error", e)
                 convertEvent.clear()
         except Exception as e:
-            tkmb.showerror("Error in the neural network thread", f"The following unhandled exception occured: {e}\n\n{traceback.format_exc()}\n\n{sys.exc_info()}")
-
+            reportThreadSafe("critical", f"The following unhandled exception occured: {e}\n\n{traceback.format_exc()}\n\n{sys.exc_info()}")
+            
     def reportThreadSafe(event, data=None):
         uiQueue.put(lambda: report(event, data=data))
 
@@ -480,6 +480,9 @@ def main():
             prgLoading.stop()
             report("log", f"\nUnhandled error: {data}\n")
             print(f"An error occurred:\n{traceback.format_exc()}\n\n{sys.exc_info()}")
+
+        if (event == "critical"):
+            tkmb.showerror("Error in the neural network thread", data)
 
     def threadTestStart():
         time.sleep(3)
