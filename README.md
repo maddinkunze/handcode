@@ -154,12 +154,15 @@ You may encounter errors related to tensorflow. Such errors include:
  - `The TensorFlow library was compiled to use AVX instructions, but these aren't available on your machine. Aborted.`
  - `The TensorFlow library was compiled to use AVX512F instructions, but these aren't available on your machine. Aborted.`
 
-You may have to reinstall tensorflow within your venv, try the following:
+Check if your hardware (specifically your CPU) supports AVX/AVX2/... instructions. You can google this information.
+If your hardware does not support those instruction sets, you will have to compile the tensorflow library by yourself without AVX support. Good luck with that, I tried and did not get it to work (but please let me know if you did). You can also look around and hope that someone has already compiled tensorflow without AVX support for your system and your python version.
+
+If you are running in a VM and your hardware supports AVX, you have to enable AVX passthrough. Some VMs don't support that (like VirtualBox on Windows).
+
+Otherwise you can try to reinstall tensorflow within your venv. Execute the following commands in your terminal:
 1. `deactivate` (leave your venv, only needed if your venv is currently active)
 2. `python3 -m uv remove tensorflow tensorflow-intel tensorflow-cpu` (may throw errors about packages not being installed, obviously only remove the packages that are installed)
 3. `python3 -m uv add tensorflow==2.11.0 tensorflow-intel==2.11.0 tensorflow-cpu==2.11.0` (note, you may have to change the library versions from `2.11.0` to whatever is used in the project. Simply take a look into the projects `pyproject.toml` file, to see which version exactly to install)
-
-See https://stackoverflow.com/a/78280136 for more info
 
 ## Building
 
