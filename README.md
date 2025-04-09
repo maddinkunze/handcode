@@ -124,6 +124,27 @@ At the moment, there are only binaries for Windows available.
 5. Activate virtual environment (`source .venv/bin/activate` on macOS and Linux, `.venv\Scripts\activate` on Windows). You should now see that your terminal has changed slightly to indicate that you are now acting from within the venv. Within your venv, you should have a new local python installation, which will be referenced from now on as just `python` (without the 3). To exit the venv, you can always call `deactivate`
 6. Start HandCode (`python src/main.py` on macOS and Linux, `python src\main.py` on Windows), you should now see the program starting
 
+Please see troubleshooting if it does not work.
+
+### Troubleshooting
+
+#### Python errors
+
+You may encounter errors related to your python installation. They may be related to tkinter or other stdlib components that aren't installed correctly when using `uv`. Such errors include:
+ - `ModuleNotFoundError: no module named '_tkinter'`
+ - `ModuleNotFoundError: No module named '_ctypes'` (...)
+ - `This probably means that Tcl wasn't installed properly.`
+ - `[xcb] Unknown sequence number while appending request`
+ - `python: ../../src/xcb_io.c:157: append_pending_request: Assertion '!xcb_xlib_unknown_seq_number' failed`
+
+Since they are related to the `uv`-installed python, you will have to manually install or build the python version required for this project (at the time of writing 3.10.*, but you can find the currently needed python version in `pyproject.toml`).
+
+Here is a rundown on how to achieve this on Debian/Ubuntu-based systems:
+1. `curl -fsSL https://pyenv.run | bash` (see https://github.com/pyenv/pyenv?tab=readme-ov-file#a-getting-pyenv for other operating systems)
+2. You may want to follow the other steps given in the instructions for `pyenv` in step 1, but I was able to skip those and go straigt to installing the python dependencies (step 3)
+3. `sudo apt update; sudo apt install build-essential libssl-dev zlib1g-dev libbz2-dev libreadline-dev libsqlite3-dev curl git libncursesw5-dev xz-utils tk-dev libxml2-dev libxmlsec1-dev libffi-dev liblzma-dev` (see https://github.com/pyenv/pyenv/wiki#suggested-build-environment for other operating systems)
+4. 
+
 ## Building
 
 For building this project you need to do the following:

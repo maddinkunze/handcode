@@ -2,6 +2,7 @@ import os
 import sys
 import typing
 import numpy as np
+import traceback
 
 _T = typing.TypeVar("_T")
 
@@ -27,14 +28,25 @@ def get_optimal_runner() -> ModelRunner:
         try:
             return get_tflite_runner()
         except: 
-            pass
+            print("Could not load tflite runner:")
+            traceback.print_exc()
+            print("---\n")
 
     try:
         return get_tensorflow_runner()
     except:
-        pass
+        print("Could not load tensorflow runner:")
+        traceback.print_exc()
+        print("---\n")
 
-    return get_checkpoint_runner() # this will only work in very old versions of tensorflow (like <= 1.15 i think)
+    try:
+        return get_checkpoint_runner() # this will only work in very old versions of tensorflow (like <= 1.15 i think)
+    except:
+        print("Could not load checkpoint runner:")
+        traceback.print_exc()
+        print("---\n")
+
+    raise NotImplementedError("Could not load a model runner on this system. Please check the stdout (terminal) for more information.")
 
 def get_tflite_runner() -> ModelRunner:
     """
