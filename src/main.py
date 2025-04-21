@@ -1,4 +1,4 @@
-import prestart
+import prestart # type: ignore
 
 import os
 import re
@@ -7,7 +7,7 @@ import json
 import time
 import queue
 import random
-import legacy
+import legacy # type: ignore
 import threading
 import traceback
 import tkinter as tk
@@ -23,7 +23,7 @@ path_data = os.path.join(path_exe, "data")
 path_settings = os.path.join(path_data, "settings.json")
 path_lib = os.path.join(path_exe, "lib")
 sys.path.append(path_lib) # for clean build reasons we dont include lib.handwriting
-import tkwidgets as tkw
+import tkwidgets as tkw # type: ignore
 
 # This is just the GUI for this program, dont be intimidated.
 # For the main part of the program have a look at the HandGCode class in the src/lib/handwriting/gcode.py file
@@ -413,7 +413,7 @@ def main():
     uiPollInterval = 100
     def updateUIQueue():
         try:
-            cb = uiQueue.get(0)
+            cb = uiQueue.get()
             cb()
         except queue.Empty:
             pass
@@ -441,7 +441,7 @@ def main():
     def threadConvert():
         try:
             reportThreadSafe("log", "Loading tensorflow... ")
-            import handwriting
+            import handwriting # type: ignore
             gcode = handwriting.gcode.HandGCode(logger=lambda s: reportThreadSafe("log", s))
             reportThreadSafe("log", "Done\nLoading neural network... ")
             gcode.load()
@@ -631,9 +631,9 @@ def main():
     _pensettingsgen = dict()
     def parsePenSettings(mode, **kwargs):
         if not _pensettingsgen:
-            raise NotImplemented("The handwriting library does not seem to have been fully loaded yet!")
+            raise NotImplementedError("The handwriting library does not seem to have been fully loaded yet!")
         if mode not in _pensettingsgen:
-            raise NotImplemented("The mode you requested does not seem to be implemented (yet?).")
+            raise NotImplementedError("The mode you requested does not seem to be implemented (yet?).")
 
         return _pensettingsgen[mode](**kwargs)
         
