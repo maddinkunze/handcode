@@ -1,7 +1,6 @@
 import os
 import numpy as np
 from .alphabet import alphabet as rnn_alphabet
-from collections import defaultdict
 from .savgol_np import savgol_filter
 from .model_runner import get_optimal_runner
 
@@ -72,7 +71,7 @@ class HandGCode:
         "ö": "o",
         "ü": "u"
     }
-    _alpha_to_num = defaultdict(int, list(map(reversed, enumerate(alphabet))))
+    _alpha_to_num = dict([(e, i) for i, e in enumerate(alphabet)])
 
     _directory = os.path.dirname(os.path.realpath(__file__))
     _cached_styles = {}
@@ -152,7 +151,8 @@ class HandGCode:
 
     def _sample(self, settings, passalong):
         settings_font = settings.get("font", {})
-        style = self._load_style(settings_font.get("style", self.settings_default["font"]["style"]))
+        style_index = settings_font.get("style", self.settings_default["font"]["style"])
+        style = self._load_style(style_index)
         style_strokes = style["strokes"]
         style_strokes_len = len(style_strokes)
         style_chars = style["chars"]
@@ -167,11 +167,14 @@ class HandGCode:
         chars = np.zeros([words_len, 120])
         chars_len = np.zeros([words_len])
 
+        prepend_style_chars = self._model.prepend_style_chars
         biases = []
         tsteps_max = 0
 
         for i, word in enumerate(words):
-            _chars = f"{style_chars.item().decode()} {word}"
+            _chars = word
+            if prepend_style_chars:
+                _chars = f"{style_chars.item().decode()} {_chars}"
             _chars = self._encode_ascii(_chars)
             _chars = np.array(_chars)
 
@@ -194,7 +197,8 @@ class HandGCode:
             sample_tsteps = 40 * tsteps_max,
             chars = chars,
             chars_len = chars_len,
-            biases = biases
+            biases = biases,
+            style_index = style_index,
         )
 
         passalong["strokes"] = strokes 
@@ -315,7 +319,7 @@ class HandGCode:
                                 movegen = MoveGenerator(file_out, states, "travel")
                                 
                             else:
-                                file_out.write(command_page_pause)
+                                file_out.write(command_page_next)
                     
 
                 # move the word to its correct position
@@ -326,6 +330,7 @@ class HandGCode:
                 # draw all strokes of the word itself and return to travel position afterwards
 
                 state = None
+                _move = None
                 for stroke in strokes_word:
                     if stroke[2] > 0:
                         state = "travel"
@@ -334,14 +339,18 @@ class HandGCode:
                         
                     _move = np.dot(page_rotation_mat, stroke[:2])
                     movegen.move(state, x=_move[0], y=_move[1])
-                movegen.move("travel", x=_move[0], y=_move[1])
+
+                if _move is not None:
+                    movegen.move("travel", x=_move[0], y=_move[1])
 
 
             # get the distance to the following word
 
-            word_spacing = font_word_spacing
+            word_spacing: float
             if callable(font_word_spacing):
-                word_spacing = font_word_spacing()
+                word_spacing = font_word_spacing() # type: ignore
+            else:
+                word_spacing = font_word_spacing
 
 
             # imitate special characters such as ä, ö, ü, +, /
@@ -458,7 +467,7 @@ class HandGCode:
         """
         encodes ascii string to array of ints
         """
-        return np.array(list(map(lambda x: cls._alpha_to_num[x], ascii_string)) + [0])
+        return np.array(list(map(lambda x: cls._alpha_to_num.get(x, 0), ascii_string)) + [0])
 
     @staticmethod
     def _denoise(coords):

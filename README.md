@@ -63,7 +63,7 @@ _Examples:_
 | Filename    | Export ext. | Exported file |
 |-------------|-------------|---------------|
 | demo.txt    | gcode       | demo.gcode    |
-| estlcam.txt | nc 	    | estlcam.nc    |
+| estlcam.txt | nc 	        | estlcam.nc    |
 | de.mo.txt   | gcode       | de.mo.gcode   |
 | otherext    | ext         | otherext.ext  |
 
@@ -96,9 +96,15 @@ This is the (absolute) Z-Position (in mm) of your CNC tool head when the pen sho
 
 #### Other Options
 
-##### Swap X/Y Axis (Rotate 90°)
+##### Rotation
 
-This checkbox should be set if you want to mount the paper perpendicular to your CNC/3D Printer. Usually the GCode generated will write each line along the X-Axis and lines below each other along the Y-Axis. By checking this box, the GCode will move the tool head along its Y Axis while writing each line and along the X axis when going to the next line.
+This field can be set if you want to mount the paper perpendicular to your CNC/3D Printer. Usually the GCode generated will write each line along the X-Axis and lines below each other along the Y-Axis. By entering a different value (e.g. 90°), the GCode will move the tool head along its Y Axis while writing each line and along the X axis when going to the next line. Note that the paper width and height are always given in respect to the writing direction, so you will have to rotate the paper accordingly. For a rotation of 0°, the width of the paper should run along the X-Axis and the height of the paper should run along the (negative) Y-Axis. Conversely, when using a 90° rotation, the width of the paper should run along the Y-Axis whereas the height of the paper should run along the X-Axis.
+
+<details>
+<summary>About the two images below</summary>
+This feature used to be called "Swap X/Y" before I implemented arbitrary rotation. The images still apply, whereas the left image shows a rotation of 0° (i.e. Swap X/Y off) and the right immage displays a rotation of 90° (i.e. Swap X/Y on).
+</details>
+
 
 <p align="center"><img src="doc/img/setting_swapxy_no.jpg" width="40%">&nbsp;<img src="doc/img/setting_swapxy_yes.jpg" width="40%"></p>
 
@@ -110,23 +116,54 @@ This project is based on great work from Sean Vasquez, who published his work on
 
 For installing HandCode you have the following options:
 
-### Release
+### Download Release (Easy)
 
-Head to the release section and download the latest binary for your platform.
+Head to the [release](https://github.com/maddinkunze/handcode/releases/latest) section and download the latest binary for your platform.
 At the moment, there are only binaries for Windows available.
 
-### Source
+### Using Docker (Advanced)
 
-1. Clone this repository, either using `git` (`git clone https://github.com/maddinkunze/handcode`) or by downloading it manually (top left, Code -> Download as zip)
-2. Install `python3` for your platform (see https://python.org for more info). After this step, you should be able to call `python3 --version` from your terminal or command line (sometimes you only need to call `python --version`, but make sure it returns a `3.x.x` version). This version will be called the global python installation and be referenced as `python3`. If your python installation is called using `python`, adapt the following calls accordingly
-3. Ensure `pip` (`python3 -m ensurepip`) and install `uv` (`python3 -m pip install uv`)
-4. Sync dependencies (`python3 -m uv sync`), this may take some time when doing it at first
-5. Activate virtual environment (`source .venv/bin/activate` on macOS and Linux, `.venv\Scripts\activate` on Windows). You should now see that your terminal has changed slightly to indicate that you are now acting from within the venv. Within your venv, you should have a new local python installation, which will be referenced from now on as just `python` (without the 3). To exit the venv, you can always call `deactivate`
-6. Start HandCode (`python src/main.py` on macOS and Linux, `python src\main.py` on Windows), you should now see the program starting
+In some cases you might want to install HandCode as a docker service. Note that this option is meant for my personal/internal development purposes and neither fully documented nor supported.
+To build and run the HandCode docker container you can follow these steps:
 
-Please see troubleshooting if it does not work.
+1. Download Docker for your system: https://www.docker.com/
+2. Get the link of the latest HandCode Dockerfile from the [releases](https://github.com/maddinkunze/handcode/releases/latest) page
+3. Build the Docker container: `docker build -t handcode:latest - < https://github.com/maddinkunze/releases/download/vX.X.X/handcode-docker-vX.X.X.dockerfile` (see https://docs.docker.com/build/concepts/context/#empty-context for more information)
+4. Run the docker container: `docker run -p 8000:8000 handcode:latest`
+5. You will now have access to the HandCode API (visit http://localhost:8000/info in your browser for the status), if I have gotten around to it until you read this, you might even be able to access a UI on http://localhost:8000/
+
+If you have any issues with this method, please inspect your docker logs and see [troubleshooting](#troubleshooting).
+
+### From Source (Advanced)
+
+If there is no release for your platform available but you want the native GUI experience, you can choose to follow these steps to run HandCode from source:
+
+1. Clone this repository, either using `git` (`git clone https://github.com/maddinkunze/handcode`) or by downloading it manually from GitHub (top left, Code -> Download ZIP)
+2. Install `uv` on your system. See https://docs.astral.sh/uv/getting-started/installation/ for more information, but in general you can use one of the following methods:
+   - `pip install uv` (or `python3 -m pip install uv`) on Windows with a `python3` installation
+   - `powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"` in a PowerShell on Windows
+   - `brew install uv` on macOS with [homebrew](https://brew.sh/) installed
+   - `curl -LsSf https://astral.sh/uv/install.sh | sh` on macOS without homebrew or Linux
+3. Open a terminal or command prompt (if not already open) and go to the HandCode directory: `cd path/to/handcode` (or `cd path\to\handcode` on Windows)
+4. Sync dependencies with uv: `uv sync`
+5. Start HandCode: `uv run src/main.py` (or `uv run src\main.py` on Windows); you should now see the HandCode user interface
+
+Please see [troubleshooting](#troubleshooting) if you encounter any errors during this process.
 
 ### Troubleshooting
+
+#### UV errors
+
+You may encounter errors related to installing uv. Such errors include:
+ - `error: externally-managed-environment`
+
+This error can usually be fixed by choosing a different installation method for installing `uv`. See https://docs.astral.sh/uv/getting-started/installation/ for more options.
+If you are trying to install `uv` using `pip`, try installing it with `pipx` instead (i.e. `pipx install uv`).
+
+You may also encounter errors related to installing packages using uv. They are usually along the lines of:
+ - `We can conclude that your projects requirements are not satisfiable.` (usually during `uv sync`)
+
+You can try to resolve the issues yourself, by changing some dependency versions in the pyproject.toml file, otherwise feel free to open an issue and I will look into it.
 
 #### Python errors
 
@@ -154,12 +191,15 @@ You may encounter errors related to tensorflow. Such errors include:
  - `The TensorFlow library was compiled to use AVX instructions, but these aren't available on your machine. Aborted.`
  - `The TensorFlow library was compiled to use AVX512F instructions, but these aren't available on your machine. Aborted.`
 
-You may have to reinstall tensorflow within your venv, try the following:
+Check if your hardware (specifically your CPU) supports AVX/AVX2/... instructions. You can google this information.
+If your hardware does not support those instruction sets, you will have to compile the tensorflow library by yourself without AVX support. Good luck with that, I tried and did not get it to work (but please let me know if you did). You can also look around and hope that someone has already compiled tensorflow without AVX support for your system and your python version.
+
+If you are running in a VM and your hardware supports AVX, you have to enable AVX passthrough. Some VMs don't support that (like VirtualBox on Windows).
+
+Otherwise you can try to reinstall tensorflow within your venv. Execute the following commands in your terminal:
 1. `deactivate` (leave your venv, only needed if your venv is currently active)
 2. `python3 -m uv remove tensorflow tensorflow-intel tensorflow-cpu` (may throw errors about packages not being installed, obviously only remove the packages that are installed)
 3. `python3 -m uv add tensorflow==2.11.0 tensorflow-intel==2.11.0 tensorflow-cpu==2.11.0` (note, you may have to change the library versions from `2.11.0` to whatever is used in the project. Simply take a look into the projects `pyproject.toml` file, to see which version exactly to install)
-
-See https://stackoverflow.com/a/78280136 for more info
 
 ## Building
 
@@ -167,34 +207,40 @@ For building this project you need to do the following:
 
 ### Windows
 
-You should be simply able to run the `build.bat` script provided in the `build` subdirectory. Besides the libraries you installed for the project you need to install build libraries such as [cx_Freeze](https://cx-freeze.readthedocs.io/en/stable/). You can install all needed libraries using `python3 -m uv pip install -r build\requirements.txt --python .venv\Scripts\python.exe`. Note, that you have to install the `requirements.txt` that is located within the `build` directory and you have to call `build.bat` with the virtual environment activated and whilst `build` directory. The `--python .venv\Scripts\python.exe` flag ensures, that the build requirements are installed into the virtual environment and not into your global python installation; you may have to change the location of your venv executable.
+You should be simply able to run the `build.bat` script provided in the `build` subdirectory. Besides the libraries you installed for the project you need to install the required build libraries such as [cx_Freeze](https://cx-freeze.readthedocs.io/en/stable/). You can install all needed libraries using `uv pip install -r build\requirements.txt --python .venv\Scripts\python.exe`. Note, that you have to install the `requirements.txt` located within the `build` directory and you have to call `build.bat` with the virtual environment activated and whilst inside the `build` directory. The `--python .venv\Scripts\python.exe` flag ensures, that the build requirements are installed into the virtual environment and not into your global python installation; you may have to change the location of your venv executable.
 
 For completeness, here is a complete rundown of what you need to do, to build HandCode for Windows:
 1. Follow instructions for installation (source code); verify that the program starts and works without problems
-2. Make sure, you are at the project root (`cd C:\path\to\handcode`)
+2. Make sure, you are at the project root: `cd C:\path\to\handcode`
 3. Steps 4-5 are optional, if you have already installed the build tools in your virtual environment
-4. Make sure, you are outside of your virtual environment (you can leave your venv using `deactivate`)
-5. Install build requirements (`python3 -m uv pip install -r build\requirements.txt --python .venv\Scripts\python.exe`)
-6. Activate virtual environment (`.venv\Scripts\activate`)
-7. Go into `build` directory (`cd build`)
-8. Start the build process (`build.bat`); this will take some time
+5. Install build requirements: `uv pip install -r build\requirements.txt --python .venv\Scripts\python.exe` (optional, if build tools are already installed in your venv)
+6. Activate virtual environment: `.venv\Scripts\activate`
+7. Go into `build` directory: `cd build`
+8. Start the build process: `build.bat` (this will take some time)
 9. Follow the instructions during the build, they are required to minimize the build size
 9. Optional: Package the built folder into a single zip file for distribution
 
-The provided script will do the following:
-1. Build and bundle the software to the best of cx_Freeze's capabilities, see [cx_Freezes documentation](https://cx-freeze.readthedocs.io/en/stable/) and my `build/setup.py` script for more information
-2. Add files (and folders) cx_Freeze did not copy correctly (mainly files from tensorflow since cx_Freeze somehow misses a few and i dont know how to force cx_Freeze to include the whole tensorflow library)
-3. Remove unneccessary files, especially library data, demos, tests, duplicate files and folders, especially pycache folders. This step is not strictly needed but it reduces the package size from initially ~400-500MB to 300MB (still very big but meh)
+The provided script ([`build.bat`](build/build.bat)) will do the following:
+1. Build and bundle the software to the best of cx_Freeze's capabilities, see [cx_Freezes documentation](https://cx-freeze.readthedocs.io/en/stable/) and my [`build/setup.py`](build/setup.py) script for more information
+2. Remove unneccessary files, especially library data, demos, tests, duplicate files and folders, such as pycache folders.
+3. It starts the program, tracks which files are actually accessed and removes files that are not accessed by the exported binary.
+4. Finally, it compresses large files using lzma.
+5. Steps 2-4 (see [`build/finish.py`](build/finish.py)) are not strictly necessary but it reduces the package size from initially ~600-800MB to 130MB (still very big but meh)
 
 ### Other
 
-I have not tested nor built this project on other platforms then mentioned. If you wish to build this for other platforms, you have to include the [svg2gcode binary](https://github.com/sameer/svg2gcode/releases/) for your platform in the `src/lib/svg2gcode` subdirectory and change the `os.system(...)` call in `converttogcode(...)` within `src/convert.py` to point to your platform-specific binary.
+I have not tested nor built this project on other platforms then mentioned. If you managed to build it for another platform, feel free to share your steps and code modifications.
 
 
 ## Attributions
 
-This project is written in [Python](https://python.org) and uses the following project:
- - [handwriting-synthesis](https://github.com/sjvasquez/handwriting-synthesis) (No License, but use like this seems to be in reasonable scope)
+This project is written in [Python](https://python.org) and relies on the following projects directly:
+ - [handwriting-synthesis](https://github.com/sjvasquez/handwriting-synthesis) (No License, but usage like this seems to be in reasonable scope)
+ - [tensorflow](https://github.com/tensorflow/tensorflow) (Apache License, Version 2.0)
+
+It also indirectly relies on these awesome projects:
+ - [uv](https://github.com/astral-sh/uv) (Apache License, Version 2.0 or MIT License)
+ - [cx_Freeze](https://github.com/marcelotduarte/cx_Freeze) (modified Python Software Foundation License)
 
 Previous versions used to rely on the following project:
  - [svg2gcode](https://github.com/sameer/svg2gcode) (MIT License)

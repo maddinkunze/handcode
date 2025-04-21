@@ -479,7 +479,11 @@ def main():
             btnStart.configure(state=tk.NORMAL)
             prgLoading.stop()
             report("log", f"\nUnhandled error: {data}\n")
-            print(f"An error occurred:\n{traceback.format_exc()}\n\n{sys.exc_info()}")
+            try:
+                print(f"An error occurred:\n{traceback.format_exception(data)}\n\n{sys.exc_info()}")
+            except:
+                print(f"An error occurred:\n{traceback.format_exc()}\n\n{sys.exc_info()}")
+
 
         if (event == "critical"):
             tkmb.showerror("Error in the neural network thread", data)
@@ -609,7 +613,7 @@ def main():
     def formatPath(path):
         return "->".join(path)
 
-    _fontstylere = re.compile("^\s*Style (\d+)\s*$")
+    _fontstylere = re.compile(r"^\s*Style (\d+)\s*$")
     def parseFontStyle(style):
         style = _fontstylere.findall(style)
         try:
