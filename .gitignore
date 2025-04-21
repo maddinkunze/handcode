@@ -159,6 +159,9 @@ cython_debug/
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
 
+# macOS hidden files
+.DS_Store
+
 
 # Ignore files to be deleted but kept temporarily as a backup
 _del/
