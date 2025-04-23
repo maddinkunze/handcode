@@ -5,9 +5,11 @@ import numpy as np
 import traceback
 
 _T = typing.TypeVar("_T")
+_ProgressF = typing.Callable[[str, float|int, float|int], typing.Any]
+_InvokeF = typing.Callable[[_T, bool, np.ndarray, np.ndarray, int, int, np.ndarray, np.ndarray, list[float], int, _ProgressF], list[list[float]]]
 
 class ModelRunner(typing.Generic[_T]):
-    def __init__(self, load_f: typing.Callable[[], _T], invoke_f: typing.Callable[[_T, bool, np.ndarray, np.ndarray, int, int, np.ndarray, np.ndarray, list[float], int], list[list[float]]], prepend_style_chars: bool = True):
+    def __init__(self, load_f: typing.Callable[[], _T], invoke_f: _InvokeF, prepend_style_chars: bool = True):
         self.load_f = load_f
         self.invoke_f = invoke_f
         self.prepend_style_chars = prepend_style_chars
@@ -15,8 +17,8 @@ class ModelRunner(typing.Generic[_T]):
     def load(self):
         self._model = self.load_f()
 
-    def invoke(self, prime: bool, x_prime: np.ndarray, prime_len: np.ndarray, num_samples: int, sample_tsteps: int, chars: np.ndarray, chars_len: np.ndarray, biases: list[float], style_index: int) -> list[list[float]]:
-        return self.invoke_f(self._model, prime, x_prime, prime_len, num_samples, sample_tsteps, chars, chars_len, biases, style_index)
+    def invoke(self, prime: bool, x_prime: np.ndarray, prime_len: np.ndarray, num_samples: int, sample_tsteps: int, chars: np.ndarray, chars_len: np.ndarray, biases: list[float], style_index: int, progress_cb: _ProgressF) -> list[list[float]]:
+        return self.invoke_f(self._model, prime, x_prime, prime_len, num_samples, sample_tsteps, chars, chars_len, biases, style_index, progress_cb)
 
 path_dir = os.path.dirname(os.path.abspath(__file__))
 path_model_ulw = os.path.join(path_dir, "model.ulw")
@@ -67,13 +69,14 @@ def get_ultralightweight_runner() -> ModelRunner:
     def load_model():
         return load_ulw_model(path_model_ulw)
     
-    def invoke_model(model, prime: bool, x_prime: np.ndarray, prime_len: np.ndarray, num_samples: int, sample_tsteps: int, chars: np.ndarray, chars_len: np.ndarray, biases: list[float], style_index: int) -> list[list[float]]:
+    def invoke_model(model, prime: bool, x_prime: np.ndarray, prime_len: np.ndarray, num_samples: int, sample_tsteps: int, chars: np.ndarray, chars_len: np.ndarray, biases: list[float], style_index: int, progress_cb: _ProgressF) -> list[list[float]]:
         strokes = run_ulw_model(
             model,
             chars,
             style_index,
             biases,
             sample_tsteps,
+            progress_cb,
         )
         return filter_strokes(strokes)
     
@@ -89,7 +92,7 @@ def get_tflite_runner() -> ModelRunner:
     def load_model():
         return tflite.Interpreter(path_model_tflite).get_signature_runner("classify")
 
-    def invoke_model(interpreter, prime: bool, x_prime: np.ndarray, prime_len: np.ndarray, num_samples: int, sample_tsteps: int, chars: np.ndarray, chars_len: np.ndarray, biases: list[float], style_index: int) -> list[list[float]]:
+    def invoke_model(interpreter, prime: bool, x_prime: np.ndarray, prime_len: np.ndarray, num_samples: int, sample_tsteps: int, chars: np.ndarray, chars_len: np.ndarray, biases: list[float], style_index: int, progress_cb: _ProgressF) -> list[list[float]]:
         strokes = interpreter(
             prime=np.array([prime]),
             x_prime=x_prime,
@@ -110,7 +113,7 @@ def get_tensorflow_runner() -> ModelRunner:
     def load_model():
         return tf.lite.Interpreter(path_model_tflite).get_signature_runner("classify")
 
-    def invoke_model(interpreter, prime: bool, x_prime: np.ndarray, prime_len: np.ndarray, num_samples: int, sample_tsteps: int, chars: np.ndarray, chars_len: np.ndarray, biases: list[float], style_index: int) -> list[list[float]]:
+    def invoke_model(interpreter, prime: bool, x_prime: np.ndarray, prime_len: np.ndarray, num_samples: int, sample_tsteps: int, chars: np.ndarray, chars_len: np.ndarray, biases: list[float], style_index: int, progress_cb: _ProgressF) -> list[list[float]]:
         strokes = interpreter(
             prime = tf.constant(prime),
             x_prime = tf.constant(x_prime.astype("float32")),
@@ -155,7 +158,7 @@ def get_checkpoint_runner() -> ModelRunner:
         model.restore()
         return model
 
-    def invoke_model(interpreter, prime: bool, x_prime: np.ndarray, prime_len: np.ndarray, num_samples: int, sample_tsteps: int, chars: np.ndarray, chars_len: np.ndarray, biases: list[float], style_index: int) -> list[list[float]]:
+    def invoke_model(interpreter, prime: bool, x_prime: np.ndarray, prime_len: np.ndarray, num_samples: int, sample_tsteps: int, chars: np.ndarray, chars_len: np.ndarray, biases: list[float], style_index: int, progress_cb: _ProgressF) -> list[list[float]]:
         strokes = interpreter.session.run(
             [interpreter.sampled_sequence],
             feed_dict = {
