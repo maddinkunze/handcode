@@ -54,7 +54,6 @@ def get_tflite_runner() -> ModelRunner:
     """
     import tflite_runtime.interpreter as tflite
     import numpy as np
-
     
     def load_model():
         return tflite.Interpreter(path_model_tflite).get_signature_runner("classify")
@@ -82,7 +81,7 @@ def get_tensorflow_runner() -> ModelRunner:
 
     def invoke_model(interpreter, prime: bool, x_prime: np.ndarray, prime_len: np.ndarray, num_samples: int, sample_tsteps: int, chars: np.ndarray, chars_len: np.ndarray, biases: list[float]) -> list[list[float]]:
         strokes = interpreter(
-            prime = tf.constant(True),
+            prime = tf.constant(prime),
             x_prime = tf.constant(x_prime.astype("float32")),
             x_prime_len = tf.constant(prime_len.astype("int32")),
             num_samples = tf.constant(num_samples),

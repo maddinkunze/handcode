@@ -77,15 +77,17 @@ class HandGCode:
     _directory = os.path.dirname(os.path.realpath(__file__))
     _cached_styles = {}
 
-    def __init__(self, logger=print):
+    def __init__(self, logger=print, progress=lambda *_: ...):
         self._model = get_optimal_runner()
         
         self.logger = logger
+        self.progress = progress
 
     def load(self):
         self._model.load()
 
     def generate(self, settings):
+        self.progress("Starting...", None, None)
         passalong = dict()
         self.logger("Preprocessing input... ")
         self._preprocess(settings, passalong)
@@ -94,6 +96,7 @@ class HandGCode:
         self.logger("Done\nDraw strokes... ")
         self._draw(settings, passalong)
         self.logger("Done\nAll Done!\n\n")
+        self.progress(None, None, None)
 
     def _preprocess(self, settings, passalong):
         settings_features = settings.get("features", {})
@@ -104,7 +107,9 @@ class HandGCode:
         
         _ignore = "\n"
         _text = ""
-        for c in text:
+        _num_chars = len(text)
+        for i, c in enumerate(text):
+            self.progress("Filtering characters...", i, _num_chars)
             _text += c
             if replace_enabled and (c not in self.alphabet) and (c not in self.replacements) and (c not in _ignore):
                 _text += " "
@@ -113,7 +118,11 @@ class HandGCode:
         newlines_before_words = []
         replacedcharacters = {}
 
-        for line in _text.split("\n"):
+        _lines = _text.split("\n")
+        _num_lines = len(_lines)
+        for i, line in enumerate(_lines):
+            self.progress("Splitting words and lines...", i, _num_lines)
+
             newlines_before_words.append(len(words))
             if not line:
                 continue
@@ -131,6 +140,8 @@ class HandGCode:
                 if _rchar:
                     replacedcharacters[len(words)] = _rchar
                 words.append(_word)
+
+        self.progress(None, None)
         
         passalong["words"] = words
         passalong["newlines"] = newlines_before_words[1:]
@@ -151,6 +162,8 @@ class HandGCode:
         return cached_style
 
     def _sample(self, settings, passalong):
+        self.progress("Preparing stroke generation...", None, None)
+
         settings_font = settings.get("font", {})
         style = self._load_style(settings_font.get("style", self.settings_default["font"]["style"]))
         style_strokes = style["strokes"]
@@ -170,7 +183,11 @@ class HandGCode:
         biases = []
         tsteps_max = 0
 
+        _num_words = len(words)
+
         for i, word in enumerate(words):
+            self.progress("Preparing stroke generation...", i, _num_words)
+
             _chars = f"{style_chars.item().decode()} {word}"
             _chars = self._encode_ascii(_chars)
             _chars = np.array(_chars)
@@ -186,6 +203,8 @@ class HandGCode:
             if len(word) > tsteps_max:
                 tsteps_max = len(word)
         
+        self.progress("Generating strokes...", None, None)
+
         strokes = self._model.invoke(
             prime = True,
             x_prime = prime,
@@ -200,6 +219,8 @@ class HandGCode:
         passalong["strokes"] = strokes 
 
     def _draw(self, settings, passalong):
+        self.progress("Preparing draw...", None, None)
+
         words = passalong["words"]
         strokes_words = passalong["strokes"]
         replacedcharacters = passalong["replacedcharacters"]
@@ -248,7 +269,11 @@ class HandGCode:
 
         word_heights = []
 
-        for i, word, strokes_word in zip(range(len(words)), words, strokes_words):
+        _num_words = len(words)
+
+        for i, word, strokes_word in zip(range(_num_words), words, strokes_words):
+            self.progress("Calculating word positions...", i, _num_words)
+
             if not strokes_word.size:
                 continue
 
@@ -278,7 +303,9 @@ class HandGCode:
         _startposY = -font_align_vertical*(font_line_height-font_size)
         position_word = np.array([0., _startposY])
 
-        for i, word, strokes_word in zip(range(len(words)), words, strokes_words):
+        for i, word, strokes_word in zip(range(_num_words), words, strokes_words):
+            self.progress("Drawing strokes...", i, _num_words)
+
             size_word = np.zeros(2)
             if strokes_word.size:
                 strokes_word[:, :2] = strokes_word[:, :2] * size_factor
@@ -315,7 +342,7 @@ class HandGCode:
                                 movegen = MoveGenerator(file_out, states, "travel")
                                 
                             else:
-                                file_out.write(command_page_pause)
+                                file_out.write(command_page_next)
                     
 
                 # move the word to its correct position
@@ -448,6 +475,8 @@ class HandGCode:
             # advance to the next word position
             
             position_word[0] += size_word[0] + word_spacing
+
+        self.progress("Finishing draw...", None, None)
 
         if command_page_end:
             file_out.write(command_page_end)

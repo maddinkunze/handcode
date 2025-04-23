@@ -16,13 +16,7 @@ import tkinter.font as tkf
 import tkinter.filedialog as tkfd
 import tkinter.messagebox as tkmb
 
-
-version_handcode = "0.4.2"
-path_exe = os.path.dirname(os.path.realpath(sys.executable if getattr(sys, "frozen", False) else __file__))
-path_data = os.path.join(path_exe, "data")
-path_settings = os.path.join(path_data, "settings.json")
-path_lib = os.path.join(path_exe, "lib")
-sys.path.append(path_lib) # for clean build reasons we dont include lib.handwriting
+from common import path_lib, path_data, path_settings, version_handcode
 import tkwidgets as tkw
 
 # This is just the GUI for this program, dont be intimidated.
@@ -627,9 +621,9 @@ def main():
     _pensettingsgen = dict()
     def parsePenSettings(mode, **kwargs):
         if not _pensettingsgen:
-            raise NotImplemented("The handwriting library does not seem to have been fully loaded yet!")
+            raise NotImplementedError("The handwriting library does not seem to have been fully loaded yet!")
         if mode not in _pensettingsgen:
-            raise NotImplemented("The mode you requested does not seem to be implemented (yet?).")
+            raise NotImplementedError("The mode you requested does not seem to be implemented (yet?).")
 
         return _pensettingsgen[mode](**kwargs)
         
