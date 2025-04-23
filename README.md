@@ -63,7 +63,7 @@ _Examples:_
 | Filename    | Export ext. | Exported file |
 |-------------|-------------|---------------|
 | demo.txt    | gcode       | demo.gcode    |
-| estlcam.txt | nc 	        | estlcam.nc    |
+| estlcam.txt | nc          | estlcam.nc    |
 | de.mo.txt   | gcode       | de.mo.gcode   |
 | otherext    | ext         | otherext.ext  |
 
