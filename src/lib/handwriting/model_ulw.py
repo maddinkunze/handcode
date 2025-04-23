@@ -1,5 +1,6 @@
 import math
 import numpy as np
+import typing
 import random
 
 def load_model(filepath: str) -> bytes:
@@ -197,12 +198,15 @@ writing_style_map = {
     12: 12,
 }
 
-def run_model(model: dict, text: np.ndarray, writing_style: int, biases: list[float], max_tsteps: int):
+def run_model(model: dict, text: np.ndarray, writing_style: int, biases: list[float], max_tsteps: int, progress_cb: typing.Callable[[str|None, float|int, float|int], typing.Any]):
+    num_words = text.shape[0]
+    progress_cb(None, 0, num_words)
+
     writing_style_index = writing_style_map[writing_style] # 44? 0-80?
 
     strokes_all = []
 
-    for word, bias in zip(text, biases):
+    for i, (word, bias) in enumerate(zip(text, biases)):
         word_stripped = np.trim_zeros(word)
         word_filtered = [character_remap.get(c, 0) for c in word_stripped]
         word_filtered = [c for c in word_filtered if c != 0]
@@ -241,6 +245,7 @@ def run_model(model: dict, text: np.ndarray, writing_style: int, biases: list[fl
             sample_tsteps += 1
             if (sample_tsteps > stop_condition) or (stop_certainty > .5):
                 break
+            progress_cb(None, i + sample_tsteps / max_tsteps, num_words)
             strokes.append(stroke)
 
         strokes_all.append(np.array(strokes))

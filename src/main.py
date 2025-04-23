@@ -406,13 +406,14 @@ def main():
     uiQueue = queue.Queue()
     uiPollInterval = 100
     def updateUIQueue():
-        try:
-            cb = uiQueue.get()
-            cb()
-        except queue.Empty:
-            pass
-        except Exception as e:
-            tkmb.showerror("Error in the UI polling loop", f"The following unhandled exception occured: {e}\n\n{traceback.format_exc()}\n\n{sys.exc_info()}")
+        for _ in range(5):
+            try:
+                cb = uiQueue.get(block=False)
+                cb()
+            except queue.Empty:
+                break
+            except Exception as e:
+                tkmb.showerror("Error in the UI polling loop", f"The following unhandled exception occured: {e}\n\n{traceback.format_exc()}\n\n{sys.exc_info()}")
 
         window.after(uiPollInterval, updateUIQueue)
 
@@ -432,11 +433,30 @@ def main():
             return
         convertEvent.set()
 
+    def updateProgress(description: str|None, value: int|float|None, maximum: int|float|None):
+        mode_changed = (progressData[0] != description) or ((maximum is None) != (progressData[2] is None))
+
+        if description is not None or value is None and maximum is None:
+            progressData[0] = description
+
+        if maximum:
+            madd = maximum / 20
+            value = (value or 0) + madd
+            maximum = maximum + madd
+        progressData[1] = value
+        progressData[2] = maximum
+
+        if progressData[3] or not mode_changed:
+            return
+
+        progressData[3] = True
+        reportThreadSafe("progress")
+
     def threadConvert():
         try:
             reportThreadSafe("log", "Loading tensorflow... ")
             import handwriting # type: ignore
-            gcode = handwriting.gcode.HandGCode(logger=lambda s: reportThreadSafe("log", s))
+            gcode = handwriting.gcode.HandGCode(logger=lambda s: reportThreadSafe("log", s), progress=updateProgress)
             reportThreadSafe("log", "Done\nLoading neural network... ")
             gcode.load()
             reportThreadSafe("log", "Done\nLoading helper functions... ")
@@ -461,6 +481,7 @@ def main():
     def reportThreadSafe(event, data=None):
         uiQueue.put(lambda: report(event, data=data))
 
+    progressData = [None, None, None, False, False]
     def report(event, data=None):
         if (event == "log") and data:
             edtLog.append(data)
@@ -481,6 +502,22 @@ def main():
 
         if (event == "critical"):
             tkmb.showerror("Error in the neural network thread", data)
+
+        if (event == "progress"):
+            progressData[3] = False
+            if not any(progressData[0:2]):
+                prgLoading.configure(mode="indeterminate")
+                prgLoading.stop()
+            elif progressData[2] is not None:
+                if not progressData[4]:
+                    prgLoading.stop()
+                prgLoading.configure(mode="determinate", value=progressData[1] or 0, maximum=progressData[2])
+                progressData[4] = True
+            else:
+                prgLoading.configure(mode="indeterminate")
+                progressData[4] = False
+                prgLoading.start()
+            
 
     def threadTestStart():
         time.sleep(3)

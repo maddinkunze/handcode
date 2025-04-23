@@ -107,8 +107,9 @@ class HandGCode:
         _ignore = "\n"
         _text = ""
         _num_chars = len(text)
+        self.progress("Filtering characters...", 0, _num_chars)
         for i, c in enumerate(text):
-            self.progress("Filtering characters...", i, _num_chars)
+            self.progress(None, i, _num_chars)
             _text += c
             if replace_enabled and (c not in self.alphabet) and (c not in self.replacements) and (c not in _ignore):
                 _text += " "
@@ -119,8 +120,9 @@ class HandGCode:
 
         _lines = _text.split("\n")
         _num_lines = len(_lines)
+        self.progress("Splitting words and lines...", 0, _num_lines)
         for i, line in enumerate(_lines):
-            self.progress("Splitting words and lines...", i, _num_lines)
+            self.progress(None, i, _num_lines)
 
             newlines_before_words.append(len(words))
             if not line:
@@ -140,7 +142,7 @@ class HandGCode:
                     replacedcharacters[len(words)] = _rchar
                 words.append(_word)
 
-        self.progress(None, None)
+        self.progress("Preparing sampling step...", None, None)
         
         passalong["words"] = words
         passalong["newlines"] = newlines_before_words[1:]
@@ -185,9 +187,10 @@ class HandGCode:
         tsteps_max = 0
 
         _num_words = len(words)
-
-        self.progress("Preparing stroke generation...", i, _num_words)
+        self.progress("Preparing stroke generation...", 0, _num_words)
         for i, word in enumerate(words):
+            self.progress(None, i, _num_words)
+
             _chars = word
             if prepend_style_chars:
                 _chars = f"{style_chars.item().decode()} {_chars}"
@@ -217,6 +220,7 @@ class HandGCode:
             chars_len = chars_len,
             biases = biases,
             style_index = style_index,
+            progress_cb = self.progress,
         )
 
         passalong["strokes"] = strokes 
@@ -273,9 +277,9 @@ class HandGCode:
         word_heights = []
 
         _num_words = len(words)
-
+        self.progress("Calculating word positions...", 0, _num_words)
         for i, word, strokes_word in zip(range(_num_words), words, strokes_words):
-            self.progress("Calculating word positions...", i, _num_words)
+            self.progress(None, i, _num_words)
 
             if not strokes_word.size:
                 continue
@@ -306,8 +310,9 @@ class HandGCode:
         _startposY = -font_align_vertical*(font_line_height-font_size)
         position_word = np.array([0., _startposY])
 
+        self.progress("Drawing strokes", 0, _num_words)
         for i, word, strokes_word in zip(range(_num_words), words, strokes_words):
-            self.progress("Drawing strokes...", i, _num_words)
+            self.progress(None, i, _num_words)
 
             size_word = np.zeros(2)
             if strokes_word.size:
