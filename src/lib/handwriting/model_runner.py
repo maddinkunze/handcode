@@ -7,23 +7,33 @@ import traceback
 _T = typing.TypeVar("_T")
 
 class ModelRunner(typing.Generic[_T]):
-    def __init__(self, load_f: typing.Callable[[], _T], invoke_f: typing.Callable[[_T, bool, np.ndarray, np.ndarray, int, int], list[float]]):
+    def __init__(self, load_f: typing.Callable[[], _T], invoke_f: typing.Callable[[_T, bool, np.ndarray, np.ndarray, int, int, np.ndarray, np.ndarray, list[float], int], list[list[float]]], prepend_style_chars: bool = True):
         self.load_f = load_f
         self.invoke_f = invoke_f
+        self.prepend_style_chars = prepend_style_chars
 
     def load(self):
         self._model = self.load_f()
 
-    def invoke(self, prime: bool, x_prime: np.ndarray, prime_len: np.ndarray, num_samples: int, sample_tsteps: int, chars: np.ndarray, chars_len: np.ndarray, biases: list[float]) -> list[list[float]]:
-        return self.invoke_f(self._model, prime, x_prime, prime_len, num_samples, sample_tsteps, chars, chars_len, biases)
+    def invoke(self, prime: bool, x_prime: np.ndarray, prime_len: np.ndarray, num_samples: int, sample_tsteps: int, chars: np.ndarray, chars_len: np.ndarray, biases: list[float], style_index: int) -> list[list[float]]:
+        return self.invoke_f(self._model, prime, x_prime, prime_len, num_samples, sample_tsteps, chars, chars_len, biases, style_index)
 
 path_dir = os.path.dirname(os.path.abspath(__file__))
+path_model_ulw = os.path.join(path_dir, "model.ulw")
 path_model_tflite = os.path.join(path_dir, "model.tflite")
 
 def get_optimal_runner() -> ModelRunner:
     """
     Get optimal ModelRunner for this platform/execution environment
     """
+
+    try:
+        return get_ultralightweight_runner()
+    except:
+        print("Could not load ultralightweight model runner:")
+        traceback.print_exc()
+        print("---\n")
+
     if sys.platform.lower() in []: # ["linux", "linux2", "macos"]: # tflite runtime is disabled, because no platform seems to include the flex operators by default in the tflite_runtime
         try:
             return get_tflite_runner()
@@ -48,17 +58,38 @@ def get_optimal_runner() -> ModelRunner:
 
     raise NotImplementedError("Could not load a model runner on this system. Please check the stdout (terminal) for more information.")
 
+def get_ultralightweight_runner() -> ModelRunner:
+    """
+    Creates a model runner using an ultra-lightweight model, that depends on numpy only
+    """
+    from .model_ulw import parse_model as load_ulw_model, run_model as run_ulw_model
+
+    def load_model():
+        return load_ulw_model(path_model_ulw)
+    
+    def invoke_model(model, prime: bool, x_prime: np.ndarray, prime_len: np.ndarray, num_samples: int, sample_tsteps: int, chars: np.ndarray, chars_len: np.ndarray, biases: list[float], style_index: int) -> list[list[float]]:
+        strokes = run_ulw_model(
+            model,
+            chars,
+            style_index,
+            biases,
+            sample_tsteps,
+        )
+        return filter_strokes(strokes)
+    
+    return ModelRunner(load_model, invoke_model, prepend_style_chars=False)
+
 def get_tflite_runner() -> ModelRunner:
     """
     Creates a model runner using only the tflite runtime, only works an machines, where the flex delegate was compiled into tflite
     """
-    import tflite_runtime.interpreter as tflite
+    import tflite_runtime.interpreter as tflite # type: ignore
     import numpy as np
     
     def load_model():
         return tflite.Interpreter(path_model_tflite).get_signature_runner("classify")
 
-    def invoke_model(interpreter, prime: bool, x_prime: np.ndarray, prime_len: np.ndarray, num_samples: int, sample_tsteps: int, chars: np.ndarray, chars_len: np.ndarray, biases: list[float]) -> list[list[float]]:
+    def invoke_model(interpreter, prime: bool, x_prime: np.ndarray, prime_len: np.ndarray, num_samples: int, sample_tsteps: int, chars: np.ndarray, chars_len: np.ndarray, biases: list[float], style_index: int) -> list[list[float]]:
         strokes = interpreter(
             prime=np.array([prime]),
             x_prime=x_prime,
@@ -74,12 +105,12 @@ def get_tflite_runner() -> ModelRunner:
     return ModelRunner(load_model, invoke_model)
     
 def get_tensorflow_runner() -> ModelRunner:
-    import tensorflow as tf
+    import tensorflow as tf # type: ignore
 
     def load_model():
         return tf.lite.Interpreter(path_model_tflite).get_signature_runner("classify")
 
-    def invoke_model(interpreter, prime: bool, x_prime: np.ndarray, prime_len: np.ndarray, num_samples: int, sample_tsteps: int, chars: np.ndarray, chars_len: np.ndarray, biases: list[float]) -> list[list[float]]:
+    def invoke_model(interpreter, prime: bool, x_prime: np.ndarray, prime_len: np.ndarray, num_samples: int, sample_tsteps: int, chars: np.ndarray, chars_len: np.ndarray, biases: list[float], style_index: int) -> list[list[float]]:
         strokes = interpreter(
             prime = tf.constant(prime),
             x_prime = tf.constant(x_prime.astype("float32")),
@@ -96,7 +127,7 @@ def get_tensorflow_runner() -> ModelRunner:
     
 def get_checkpoint_runner() -> ModelRunner:
     from .rnn import rnn
-    import tensorflow as tf
+    import tensorflow as tf # type: ignore
     
     def load_model():
         model = rnn(
@@ -124,7 +155,7 @@ def get_checkpoint_runner() -> ModelRunner:
         model.restore()
         return model
 
-    def invoke_model(interpreter, prime: bool, x_prime: np.ndarray, prime_len: np.ndarray, num_samples: int, sample_tsteps: int, chars: np.ndarray, chars_len: np.ndarray, biases: list[float]) -> list[list[float]]:
+    def invoke_model(interpreter, prime: bool, x_prime: np.ndarray, prime_len: np.ndarray, num_samples: int, sample_tsteps: int, chars: np.ndarray, chars_len: np.ndarray, biases: list[float], style_index: int) -> list[list[float]]:
         strokes = interpreter.session.run(
             [interpreter.sampled_sequence],
             feed_dict = {

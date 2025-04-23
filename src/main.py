@@ -1,4 +1,4 @@
-import prestart
+import prestart # type: ignore
 
 import os
 import re
@@ -7,7 +7,7 @@ import json
 import time
 import queue
 import random
-import legacy
+import legacy # type: ignore
 import threading
 import traceback
 import tkinter as tk
@@ -17,7 +17,7 @@ import tkinter.filedialog as tkfd
 import tkinter.messagebox as tkmb
 
 from common import path_lib, path_data, path_settings, version_handcode
-import tkwidgets as tkw
+import tkwidgets as tkw # type: ignore
 
 # This is just the GUI for this program, dont be intimidated.
 # For the main part of the program have a look at the HandGCode class in the src/lib/handwriting/gcode.py file
@@ -407,7 +407,7 @@ def main():
     uiPollInterval = 100
     def updateUIQueue():
         try:
-            cb = uiQueue.get(0)
+            cb = uiQueue.get()
             cb()
         except queue.Empty:
             pass
@@ -435,7 +435,7 @@ def main():
     def threadConvert():
         try:
             reportThreadSafe("log", "Loading tensorflow... ")
-            import handwriting
+            import handwriting # type: ignore
             gcode = handwriting.gcode.HandGCode(logger=lambda s: reportThreadSafe("log", s))
             reportThreadSafe("log", "Done\nLoading neural network... ")
             gcode.load()
@@ -473,7 +473,11 @@ def main():
             btnStart.configure(state=tk.NORMAL)
             prgLoading.stop()
             report("log", f"\nUnhandled error: {data}\n")
-            print(f"An error occurred:\n{traceback.format_exc()}\n\n{sys.exc_info()}")
+            try:
+                print(f"An error occurred:\n{traceback.format_exception(data)}\n\n{sys.exc_info()}")
+            except:
+                print(f"An error occurred:\n{traceback.format_exc()}\n\n{sys.exc_info()}")
+
 
         if (event == "critical"):
             tkmb.showerror("Error in the neural network thread", data)
@@ -603,7 +607,7 @@ def main():
     def formatPath(path):
         return "->".join(path)
 
-    _fontstylere = re.compile("^\s*Style (\d+)\s*$")
+    _fontstylere = re.compile(r"^\s*Style (\d+)\s*$")
     def parseFontStyle(style):
         style = _fontstylere.findall(style)
         try:
