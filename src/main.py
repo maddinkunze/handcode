@@ -19,6 +19,10 @@ import tkinter.messagebox as tkmb
 from common import path_lib, path_data, path_settings, version_handcode
 import tkwidgets as tkw # type: ignore
 
+tkm = tk
+if sys.platform == "darwin":
+    import tkmacosx as tkm # type: ignore
+
 # This is just the GUI for this program, dont be intimidated.
 # For the main part of the program have a look at the HandGCode class in the src/lib/handwriting/gcode.py file
 
@@ -51,8 +55,13 @@ def main():
     window.geometry(f"{wsize[0]}x{wsize[1]}")
     window.title("HandCode")
     window.configure(bg=style["bg_window"])
-    if os.name == "nt":
+    if sys.platform == "win32":
         window.iconbitmap(os.path.join(path_lib, "icon.ico"))
+    else:
+        try:
+            img = tk.PhotoImage(file=os.path.join(path_lib, "icon.png"))
+            window.iconphoto(True, img)
+        except: pass
 
     fontTooltip = tkf.Font(size=7)
     fontText = tkf.Font(size=9)
@@ -184,7 +193,7 @@ def main():
 
 
     lblFileIn = tk.Label(window, text="Input File (opt):", **styleLabelSection)
-    btnFileIn = tk.Button(window, text="Open File...", **styleButtonDefault)
+    btnFileIn = tkm.Button(window, text="Open File...", **styleButtonDefault)
     lblFileProcess = tk.Label(window, text="↴   ↱", **{**styleLabelSection, "font": fontStart})
     lblFileOut = tk.Label(window, text="Output File:", **styleLabelSection)
     edtFileOut = tk.Entry(window, **styleEntryDefault)
@@ -197,8 +206,8 @@ def main():
     edtLog = tkw.ScrolledEntry(window, **styleEntryScrolled)
     
     prgLoading = ttk.Progressbar(window, orient="horizontal", mode="indeterminate", style="Maddin.HC.Horizontal.TProgressbar")
-    btnShow = tk.Button(window, text="Open input/output folder", **styleButtonDefault)
-    btnStart = tk.Button(window, text="Start", **styleButtonStart, state=tk.DISABLED)
+    btnShow = tkm.Button(window, text="Open input/output folder", **styleButtonDefault)
+    btnStart = tkm.Button(window, text="Start", **styleButtonStart, state=tk.DISABLED)
     
 
     segLeftRight = tk.Frame(window, bd=0, bg=style["bg_separator"])

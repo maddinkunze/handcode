@@ -6,6 +6,7 @@ requires-python = "==3.10.*"
 overrides = [
     { name = "tensorflow-intel", marker = "sys_platform == 'win32'" },
     { name = "tensorflow-io-gcs-filesystem", marker = "sys_platform == 'never'" },
+    { name = "tkmacosx", marker = "sys_platform == 'darwin'" },
 ]
 
 [[package]]
@@ -86,6 +87,15 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/52/39/069100b84d7418bc358d81669d5748efb14b9cceacd2f9c75f550424132f/cloudpickle-3.1.1.tar.gz", hash = "sha256:b216fa8ae4019d5482a8ac3c95d8f6346115d8835911fd4aefd1a445e4242c64", size = 22113 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/7e/e8/64c37fadfc2816a7701fa8a6ed8d87327c7d54eacfbfb6edab14a2f2be75/cloudpickle-3.1.1-py3-none-any.whl", hash = "sha256:c8c5a44295039331ee9dad40ba100a9c7297b6f988e50e87ccdf3765a668350e", size = 20992 },
+]
+
+[[package]]
+name = "colour"
+version = "0.1.5"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/a0/d4/5911a7618acddc3f594ddf144ecd8a03c29074a540f4494670ad8f153efe/colour-0.1.5.tar.gz", hash = "sha256:af20120fefd2afede8b001fbef2ea9da70ad7d49fafdb6489025dae8745c3aee", size = 24776 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/74/46/e81907704ab203206769dee1385dc77e1407576ff8f50a0681d0a6b541be/colour-0.1.5-py2.py3-none-any.whl", hash = "sha256:33f6db9d564fadc16e59921a56999b79571160ce09916303d35346dddc17978c", size = 23772 },
 ]
 
 [[package]]
@@ -212,6 +222,11 @@ version = "0.4.2"
 source = { virtual = "." }
 dependencies = [
     { name = "numpy" },
+    { name = "tkmacosx", marker = "sys_platform == 'darwin'" },
+]
+
+[package.optional-dependencies]
+tf = [
     { name = "tensorflow" },
     { name = "tensorflow-intel", marker = "sys_platform == 'win32'" },
     { name = "tensorflow-probability" },
@@ -221,11 +236,13 @@ dependencies = [
 [package.metadata]
 requires-dist = [
     { name = "numpy", specifier = "==1.26.4" },
-    { name = "tensorflow", specifier = "==2.11.0" },
-    { name = "tensorflow-intel", specifier = "==2.11.0" },
-    { name = "tensorflow-probability", specifier = "==0.19.0" },
-    { name = "tf-keras", specifier = "==2.14.1" },
+    { name = "tensorflow", marker = "extra == 'tf'", specifier = "==2.11.0" },
+    { name = "tensorflow-intel", marker = "extra == 'tf'", specifier = "==2.11.0" },
+    { name = "tensorflow-probability", marker = "extra == 'tf'", specifier = "==0.19.0" },
+    { name = "tf-keras", marker = "extra == 'tf'", specifier = "==2.14.1" },
+    { name = "tkmacosx" },
 ]
+provides-extras = ["tf"]
 
 [[package]]
 name = "idna"
@@ -575,6 +592,18 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/57/e7/883de3afc2032c89d6351fca7eb119ee197de21a2189e3889e9171d64862/tf_keras-2.14.1.tar.gz", hash = "sha256:4ae6871c4989720ea335d771b75b2e520d789ec1600302800bb5ed1a855af2fe", size = 1250245 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/a0/61/c7a98446afd921b7c4a0688e6eb30bf8f48040d069c349c772e7763636e6/tf_keras-2.14.1-py3-none-any.whl", hash = "sha256:903cf3f1739d3f92d2de80e07d2b36b32cc79f60b7affcee09a7f4721c02fca6", size = 1714936 },
+]
+
+[[package]]
+name = "tkmacosx"
+version = "1.0.5"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "colour" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/8d/f7/3bf185485e95dd5a85f04a3576c6e76e7d4b81078e42484f076e596edd38/tkmacosx-1.0.5.tar.gz", hash = "sha256:d4719ec27121b7e7f381efd9c5484966fab64e62685c2d24d1f1f5fd888d90b6", size = 87405 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/69/22/412542b886110116830eae2ebc9b193b7b622b12318882a04816cdd8a3bf/tkmacosx-1.0.5-py3-none-any.whl", hash = "sha256:106de675ee308a57a05409313cbd4c0845737f7b1f18a5094e7e402ea8154d9c", size = 73091 },
 ]
 
 [[package]]
