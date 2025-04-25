@@ -6,15 +6,24 @@ readme = "README.md"
 requires-python = "==3.10.*"
 dependencies = [
     "numpy==1.26.4",
+    "tkmacosx",
+]
+
+[project.optional-dependencies]
+tf = [
     "tensorflow==2.11.0",
     "tensorflow-intel==2.11.0",
     "tensorflow-probability==0.19.0",
     "tf-keras==2.14.1",
-    "numpy==1.26.4",
+]
+build = [
+    "cx_Freeze==6.12",
+    "lazy-loader==0.2.0",
 ]
 
 [tool.uv]
 override-dependencies = [
+    "tkmacosx; sys_platform == 'darwin'",
     "tensorflow-intel; sys_platform == 'win32'",
     "tensorflow-io-gcs-filesystem; sys_platform == 'never'",
 ]
