@@ -440,7 +440,7 @@ def main():
             progressData[0] = description
 
         if maximum:
-            madd = maximum / 20
+            madd = maximum / 25
             value = (value or 0) + madd
             maximum = maximum + madd
         progressData[1] = value
