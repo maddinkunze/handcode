@@ -1,1 +1,17 @@
-TODO: next commit
+TLDR (not legally binding): All code files outside src/lib/handwriting/* are licensed under MIT. The license of files within src/lib/handwriting/* is undefined. Releases and outputs of this program are strictly for non-commercial purposes only. 
+
+
+Long version:
+This project is based on the handwriting_synthesis project and includes modified sources from it. At the time of writing this note, no license is specified for the handwriting_synthesis project. However, the following assumptioms are made:
+ - Based on the wording in the README of handwriting_synthesis, usage like this seems reasonable. If a license is specified later on, the same license will apply to parts of the code that are specified in the next part.
+ - It is likely that the checkpoints included in the handwriting_synthesis project were trained on a dataset that only allows non-commercial use. As such the same non-commercial license will apply to all checkpoints and models derived from these checkpoints.
+
+As such, the following restrictions apply:
+1. All code files in this repository, except for files that apply to the the following restrictions, are licensed under the MIT License given in the LICENSE file
+2.1. If the license of handwriting_synthesis turns out to be MIT, all code files within src/lib/handwriting/* will also be licensed under MIT license
+2.2. If the license of handwriting_synthesis turns out to not be MIT, all code files within src/lib/handwriting/* will be licensed under the same license as handwriting_synthesis. 
+2.3. If the license of handwriting_synthesis turns out to not be MIT, I hereby grant an alternative license (MIT) to all changes made by me to all code files within src/lib/handwriting/*. This includes files that were added (as opposed to changed) by me. 
+3. All non-code files (i.e. checkpoints, models, styles, other binary formats) within src/lib/handwriting/* are distributed under the datasets license, that explicitly prohibits commercial use. 
+4. All releases of this program are licensed under the same license as handwriting_synthesis. However, independently of the license of handwriting_synthesis, commercial use is explicitly prohibited. 
+5. All outputs created by this program are strictly limited to non-commercial use.
+6. Independently of the license of handwriting_synthesis, if the license of handwriting_synthesis is incompatible with the license of this program, any license agreement between you (the user) and me will be null and void, until both licenses are compatible again. 
