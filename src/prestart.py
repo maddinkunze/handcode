@@ -1,6 +1,6 @@
-def _prestart():
-    import sys
+import sys
 
+def unpack_relevant_files():
     if not getattr(sys, "frozen", False):
         # if this is not a built package, skip prestart (i.e. dont unpack compressed files)
         return
@@ -75,5 +75,3 @@ def _prestart():
 
     threading.Thread(target=decompress_thread).start()
     root.mainloop()
-
-_prestart()

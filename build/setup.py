@@ -2,15 +2,25 @@ import os, sys
 from cx_Freeze import setup, Executable
 
 path_src = os.path.join("..", "src")
+path_lib = os.path.join(path_src, "lib")
+path_icon = os.path.join(path_lib, "icon.ico")
+
+# Metadata
+buildname = "HandCode"
+buildversion = "0.4.2"
+buildcpr = "© Martin Kunze - https://github.com/maddinkunze/handcode"
+buildpath = os.path.join("dist", f"handcode-win64")
 
 # Dependencies are automatically detected, but it might need fine tuning.
-packages = ["tensorflow", "tensorflow_probability"]
-includes = ["handwriting"]
-includefiles = [(os.path.join(path_src, "data", "demo.txt"), os.path.join("data", "demo.txt")), (os.path.join(path_src, "lib", "icon.ico"), os.path.join("lib", "icon.ico"))]
-excludes = ["cachetools", "contourpy", "curses", "fontTools", "google_auth_oauthlib", "grpc", "h5py", "lib2to3", "markdown", "markupsafe", "matplotlib", "oauthlib", "pasta", "pkg_ressources", "pyasn1", "pyasn1_modules", "pydoc_data", "pytz", "requests_oauthlib", "rsa", "scipy", "setuptools", "tensorboard_data_server", "tensorflow_estimator", "tensorflow_io_gcs_filesystem", "test", "werkzeug", "wheel", "wsgiref", "xmlrpc", "zoneinfo"]
+path_main = os.path.join(path_src, "main.py")
+packages = []
+includes = ["handwriting", "tkwidgets"]
+includefiles = [
+    (os.path.join(path_src, "data", "demo.txt"), os.path.join("data", "demo.txt")),
+    (path_icon, os.path.join("lib", "icon.ico"))
+]
+excludes = []
 optimization = 1
-buildversion = "0.4.2"
-buildpath = os.path.join("dist", f"handcode-win64")
 build_exe_options = {
     'build_exe': buildpath,
     'packages': packages,
@@ -20,7 +30,7 @@ build_exe_options = {
     'excludes': excludes,
     'optimize': optimization,
     'replace_paths': [("*", "")],
-    'path': [*sys.path, path_src, os.path.join(path_src, "lib"), os.path.join(path_src, "lib", "handwriting")],
+    'path': [*sys.path, path_src, path_lib],
 }
 
 # base="Win32GUI" should be used only for Windows GUI app
@@ -37,5 +47,5 @@ setup(
     version=buildversion,
     description="HandCode: Handwriting GCode Generator",
     options={"build_exe": build_exe_options},
-    executables=[Executable(os.path.join(path_src, "main.py"), base=base, icon=os.path.join(path_src, "lib", "icon.ico"), target_name="HandCode", copyright="© Martin Kunze - https://github.com/maddinkunze/handcode")],
+    executables=[Executable(path_main, base=base, icon=path_icon, target_name=buildname, copyright=buildcpr)],
 )

@@ -1,4 +1,20 @@
-def gcode(pendraw=0, pentravel=5, penpause=50, feeddraw=1000, feedtravel=1000):
+import typing
+
+_CommandItem = str|typing.Callable[[], str]|None
+class _MoveCommand(typing.TypedDict):
+    start: _CommandItem
+    move: _CommandItem
+    end: _CommandItem
+class _PageCommand(typing.TypedDict):
+    start: _CommandItem
+    next: _CommandItem
+    end: _CommandItem
+class CommandDict(typing.TypedDict):
+    draw: _MoveCommand
+    travel: _MoveCommand
+    page: _PageCommand
+
+def gcode(pendraw=0, pentravel=5, penpause=50, feeddraw=1000, feedtravel=1000) -> CommandDict:
     return {
         "draw": {
             "start": None,
@@ -17,7 +33,7 @@ def gcode(pendraw=0, pentravel=5, penpause=50, feeddraw=1000, feedtravel=1000):
         }
     }
 
-def gcode_laser(pendraw=0, pentravel=None, penpause=None, feeddraw=1000, feedtravel=1000):
+def gcode_laser(pendraw=0, pentravel=5, penpause=50, feeddraw=1000, feedtravel=1000, speeddraw=None, speedtravel=None):
     return {
         "draw": {
             "start": f"M3 S{pendraw}",
@@ -33,5 +49,24 @@ def gcode_laser(pendraw=0, pentravel=None, penpause=None, feeddraw=1000, feedtra
             "start": None,
             "next": (f"M5" if penpause is None else f"M3 S{penpause}") + f"M0\n",
             "end": f"M5" if penpause is None else f"M3 S{penpause}"
+        }
+    }
+
+def svg(pendraw=None, pentravel=None, penpause=None, feeddraw=None, feedtravel=None) -> CommandDict:
+    return {
+        "draw": {
+            "start": None,
+            "move": lambda x, y, **_: f"L {x:f} {-y:f} ",
+            "end": None,
+        },
+        "travel": {
+            "start": None,
+            "move": lambda x, y, **_: f"M {x:f} {-1*y:f} ",
+            "end": None,
+        },
+        "page": {
+            "start": "<!DOCTYPE svg><svg xmlns=\"http://www.w3.org/2000/svg\"><g><path d=\"",
+            "next": "\" style=\"fill:none;stroke:green;stroke-width:1;stroke-linejoin:round;stroke-linecap:round;\" /></g><g><path d=\"",
+            "end": "\" style=\"fill:none;stroke:green;stroke-width:1;stroke-linejoin:round;stroke-linecap:round;\" /></g></svg>"
         }
     }

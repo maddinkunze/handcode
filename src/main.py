@@ -1,4 +1,5 @@
 import prestart # type: ignore
+prestart.unpack_relevant_files()
 
 import os
 import re
@@ -8,8 +9,10 @@ import time
 import queue
 import random
 import legacy # type: ignore
+import typing
 import threading
 import traceback
+import dataclasses
 import tkinter as tk
 import tkinter.ttk as ttk
 import tkinter.font as tkf
@@ -23,760 +26,833 @@ tkm = tk
 if sys.platform == "darwin":
     import tkmacosx as tkm # type: ignore
 
+T = typing.TypeVar("T")
+
 # This is just the GUI for this program, dont be intimidated.
 # For the main part of the program have a look at the HandGCode class in the src/lib/handwriting/gcode.py file
 
-versionSettingsCurrent = version_handcode
-style = {
-  "bg_window": "#303030",
-  "bg_button": "#505050",
-  "bg_button_hover": "#404040",
-  "bg_button_start": "#409040",
-  "bg_scroll": "#202020",
-  "bg_inner": "#101010",
-  "bg_separator": "#606060",
-  "fg_button": "#D0D0D0",
-  "fg_button_hover": "#D0D0D0",
-  "fg_button_start": "#004000",
-  "fg_scroll": "#808080",
-  "fg_label": "#D0D0D0",
-  "fg_text": "#F0F0F0",
-  "fg_hint": "#A0A0A0",
-  "fg_progress": "#409040",
-  "relief": "flat",
-  "borderwidth": 0,
-  "highlightthickness": 0,
-}
-
-def main():
-    window = tk.Tk()
-    window.resizable(False, False)
-    wsize = (660, 650)
-    window.geometry(f"{wsize[0]}x{wsize[1]}")
-    window.title("HandCode")
-    window.configure(bg=style["bg_window"])
-    if sys.platform == "win32":
-        window.iconbitmap(os.path.join(path_lib, "icon.ico"))
-    else:
-        try:
-            img = tk.PhotoImage(file=os.path.join(path_lib, "icon.png"))
-            window.iconphoto(True, img)
-        except: pass
-
-    fontTooltip = tkf.Font(size=7)
-    fontText = tkf.Font(size=9)
-    fontLabel = tkf.Font(size=10, weight="bold")
-    fontStart = tkf.Font(size=24, weight="bold")
-
-    styleLabelSection = {
-        "font": fontLabel,
-        "bg": style["bg_window"],
-        "fg": style["fg_label"],
-        "bd": style["borderwidth"],
-        "highlightthickness": style["highlightthickness"],
+class HandCodeApp:
+    VERSION_SETTINGS_HANDCODE = version_handcode
+    STYLE = {
+      "bg_window": "#303030",
+      "bg_button": "#505050",
+      "bg_button_hover": "#404040",
+      "bg_button_start": "#409040",
+      "bg_scroll": "#202020",
+      "bg_inner": "#101010",
+      "bg_separator": "#606060",
+      "fg_button": "#D0D0D0",
+      "fg_button_hover": "#D0D0D0",
+      "fg_button_start": "#004000",
+      "fg_scroll": "#808080",
+      "fg_label": "#D0D0D0",
+      "fg_text": "#F0F0F0",
+      "fg_hint": "#A0A0A0",
+      "fg_progress": "#409040",
+      "relief": "flat",
+      "borderwidth": 0,
+      "highlightthickness": 0,
     }
 
-    styleLabelInput = {
-        "font": fontText,
-        "bg": style["bg_window"],
-        "fg": style["fg_label"],
-        "bd": style["borderwidth"],
-        "highlightthickness": style["highlightthickness"],
+    _MAP_FILETYPES = {
+        "gcode": "GCode",
+        "svg": "SVG",
     }
 
-    styleLabelTooltip = {
-        "font": fontTooltip,
-        "bg": style["bg_window"],
-        "fg": style["fg_label"],
-        "bd": style["borderwidth"],
-        "highlightthickness": style["highlightthickness"],
-    }
+    def _load_fonts(self) -> None:
+        self._font_tooltip = tkf.Font(size=7)
+        self._font_text = tkf.Font(size=9)
+        self._font_label = tkf.Font(size=10, weight="bold")
+        self._font_start = tkf.Font(size=24, weight="bold")
 
-    styleEntryDefault = {
-        "bg": style["bg_inner"],
-        "fg": style["fg_text"],
-        "insertbackground": style["fg_hint"],
-        "relief": tk.FLAT,
-        "bd": style["borderwidth"],
-        "highlightthickness": style["highlightthickness"],
-    }
+    def _load_styles(self) -> None:
+        self._style_window = {
+            "bg": self.STYLE["bg_window"],
+        }
 
-    _styleEntryCustom = {
-        "bgentry": style["bg_inner"],
-        "fgentry": style["fg_text"],
-        "bgcursor": style["fg_hint"],
-        "font": fontText,
-        "relief": tk.FLAT,
-        "bd": style["borderwidth"],
-        "highlightthickness": style["highlightthickness"],
-    }
+        _style_label = {
+            "bg": self.STYLE["bg_window"],
+            "fg": self.STYLE["fg_label"],
+            "bd": self.STYLE["borderwidth"],
+            "highlightthickness": self.STYLE["highlightthickness"],
+        }
 
-    styleEntryScrolled = {
-        **_styleEntryCustom,
-        "stylescrollx": "Maddin.HC.Horizontal.TScrollbar",
-        "stylescrolly": "Maddin.HC.Vertical.TScrollbar",
-    }
+        self._style_label_section = {
+            **_style_label,
+            "font": self._font_label,
+        }
 
-    styleEntryUnit = {
-        **_styleEntryCustom,
-        "fgunit": style["fg_hint"]
-    }
-    
-    styleEntryLabeled = {
-        **styleEntryUnit,
-        "bglabel": style["bg_window"],
-        "fglabel": style["fg_label"],
-    }
+        self._style_label_input = {
+            **_style_label,
+            "font": self._font_text,
+        }
 
-    styleButtonDefault = {
-        "bg": style["bg_button"],
-        "fg": style["fg_button"],
-        "relief": tk.FLAT,
-        "bd": style["borderwidth"],
-        "highlightthickness": style["highlightthickness"],
-    }
+        self._style_label_tooltip = {
+            **_style_label,
+            "font": self._font_tooltip,
+        }
 
-    styleButtonStart = {
-        "font": fontStart,
-        "bg": style["bg_button_start"],
-        "fg": style["fg_button_start"],
-        "relief": tk.FLAT,
-        "bd": style["borderwidth"],
-        "highlightthickness": style["highlightthickness"],
-    }
+        self._style_entry_default = {
+            "bg": self.STYLE["bg_inner"],
+            "fg": self.STYLE["fg_text"],
+            "insertbackground": self.STYLE["fg_hint"],
+            "relief": tk.FLAT,
+            "bd": self.STYLE["borderwidth"],
+            "highlightthickness": self.STYLE["highlightthickness"],
+        }
 
-    styleScaleLabeled = {
-        "bglabel": style["bg_window"],
-        "fglabel": style["fg_label"],
-        "fgtooltip": style["fg_hint"],
-        "bgscale": style["bg_inner"],
-        "fgscale": style["bg_button"],
-        "fgscale:hover": style["bg_button_hover"],
-        "font": fontText,
-        "fonttooltip": fontTooltip,
-        "bd": style["borderwidth"],
-        "highlightthickness": style["highlightthickness"],
-    }
+        _style_entry_custom = {
+            "bgentry": self.STYLE["bg_inner"],
+            "fgentry": self.STYLE["fg_text"],
+            "bgcursor": self.STYLE["fg_hint"],
+            "font": self._font_text,
+            "relief": tk.FLAT,
+            "bd": self.STYLE["borderwidth"],
+            "highlightthickness": self.STYLE["highlightthickness"],
+        }
 
-    styleSelectLabeled = {
-        "bglabel": style["bg_window"],
-        "fglabel": style["fg_label"],
-        "bgselect": style["bg_button"],
-        "bgselect:hover": style["bg_button_hover"],
-        "fgselect": style["fg_button"],
-        "fgselect:hover": style["fg_button_hover"],
-        "bd": style["borderwidth"],
-        "highlightthickness": style["highlightthickness"],
-    }
+        self._style_entry_scrolled = {
+            **_style_entry_custom,
+            "stylescrollx": "Maddin.HC.Horizontal.TScrollbar",
+            "stylescrolly": "Maddin.HC.Vertical.TScrollbar",
+        }
 
-    styleCheckboxDefault = {
-        "bglabel": style["bg_window"],
-        "bgcheck": style["bg_inner"],
-        "fg": style["fg_label"],
-        "font": fontText,
-        "bd": style["borderwidth"],
-        "highlightthickness": style["highlightthickness"],
-    }
+        self._style_entry_unit = {
+            **_style_entry_custom,
+            "fgunit": self.STYLE["fg_hint"]
+        }
 
-    styleCheckboxSmall = {
-        **styleCheckboxDefault,
-        "font": fontTooltip
-    }
-    
-    ttkStyle = ttk.Style()
-    ttkStyle.theme_use("default")
-    ttkStyle.configure("Maddin.HC.Horizontal.TProgressbar", borderwidth=style["borderwidth"], troughcolor=style["bg_inner"], background=style["fg_progress"], troughrelief=style["relief"])
-    ttkStyle.configure('Maddin.HC.Horizontal.TScrollbar', troughcolor=style["bg_window"], background=style["bg_button"], arrowcolor=style["fg_hint"], relief=style["relief"], troughrelief=style["relief"])
-    ttkStyle.map('Maddin.HC.Horizontal.TScrollbar', background=[('pressed', '!disabled', 'active', style["bg_button_hover"])])
-    ttkStyle.configure('Maddin.HC.Vertical.TScrollbar', troughcolor=style["bg_window"], background=style["bg_button"], arrowcolor=style["fg_hint"], relief=style["relief"], troughrelief=style["relief"])
-    ttkStyle.map('Maddin.HC.Vertical.TScrollbar', background=[('pressed', '!disabled', 'active', style["bg_button_hover"])])
+        self._style_entry_labeled = {
+            **self._style_entry_unit,
+            "bglabel": self.STYLE["bg_window"],
+            "fglabel": self.STYLE["fg_label"],
+        }
 
+        self._style_button_default = {
+            "bg": self.STYLE["bg_button"],
+            "fg": self.STYLE["fg_button"],
+            "relief": tk.FLAT,
+            "bd": self.STYLE["borderwidth"],
+            "highlightthickness": self.STYLE["highlightthickness"],
+        }
 
-    lblFileIn = tk.Label(window, text="Input File (opt):", **styleLabelSection)
-    btnFileIn = tkm.Button(window, text="Open File...", **styleButtonDefault)
-    lblFileProcess = tk.Label(window, text="↴   ↱", **{**styleLabelSection, "font": fontStart})
-    lblFileOut = tk.Label(window, text="Output File:", **styleLabelSection)
-    edtFileOut = tk.Entry(window, **styleEntryDefault)
-    sltFileType = tkw.LabeledSelect(window, label="Format", options=["GCode"], **styleSelectLabeled)
-    
-    lblInput = tk.Label(window, text="Input Text:", **styleLabelSection)
-    edtInput = tkw.ScrolledEntry(window, **styleEntryScrolled)
+        self._style_button_start = {
+            "font": self._font_start,
+            "bg": self.STYLE["bg_button_start"],
+            "fg": self.STYLE["fg_button_start"],
+            "relief": tk.FLAT,
+            "bd": self.STYLE["borderwidth"],
+            "highlightthickness": self.STYLE["highlightthickness"],
+        }
 
-    lblLog = tk.Label(window, text="Event Log:", **styleLabelSection)
-    edtLog = tkw.ScrolledEntry(window, **styleEntryScrolled)
-    
-    prgLoading = ttk.Progressbar(window, orient="horizontal", mode="indeterminate", style="Maddin.HC.Horizontal.TProgressbar")
-    btnShow = tkm.Button(window, text="Open input/output folder", **styleButtonDefault)
-    btnStart = tkm.Button(window, text="Start", **styleButtonStart, state=tk.DISABLED)
-    
+        self._style_scale_labeled = {
+            "bglabel": self.STYLE["bg_window"],
+            "fglabel": self.STYLE["fg_label"],
+            "fgtooltip": self.STYLE["fg_hint"],
+            "bgscale": self.STYLE["bg_inner"],
+            "fgscale": self.STYLE["bg_button"],
+            "fgscale:hover": self.STYLE["bg_button_hover"],
+            "font": self._font_text,
+            "fonttooltip": self._font_tooltip,
+            "bd": self.STYLE["borderwidth"],
+            "highlightthickness": self.STYLE["highlightthickness"],
+        }
 
-    segLeftRight = tk.Frame(window, bd=0, bg=style["bg_separator"])
+        self._style_select_labeled = {
+            "bglabel": self.STYLE["bg_window"],
+            "fglabel": self.STYLE["fg_label"],
+            "bgselect": self.STYLE["bg_button"],
+            "bgselect:hover": self.STYLE["bg_button_hover"],
+            "fgselect": self.STYLE["fg_button"],
+            "fgselect:hover": self.STYLE["fg_button_hover"],
+            "bd": self.STYLE["borderwidth"],
+            "highlightthickness": self.STYLE["highlightthickness"],
+        }
 
+        self._style_checkbox_default = {
+            "bglabel": self.STYLE["bg_window"],
+            "bgcheck": self.STYLE["bg_inner"],
+            "fg": self.STYLE["fg_label"],
+            "font": self._font_text,
+            "bd": self.STYLE["borderwidth"],
+            "highlightthickness": self.STYLE["highlightthickness"],
+        }
 
-    lblFont = tk.Label(window, text="Font Settings:", **styleLabelSection)
-    edtFontSize = tkw.LabeledEntry(window, label="Size", unit="mm", **styleEntryLabeled)
-    sltFontStyle = tkw.LabeledSelect(window, label="Style", options=[f"Style {i+1}" for i in range(12)], **styleSelectLabeled)
-    edtFontBias = tkw.LabeledEntry(window, label="Legibility", unit="%", **styleEntryLabeled)
-    
-    edtFontLineHeight = tkw.LabeledEntry(window, label="Line Height", unit="mm", **styleEntryLabeled)
-    lblFontWordSpacing = tk.Label(window, text="Word Spacing", **styleLabelInput)
-    edtFontWordSpacing = tkw.UnitEntry(window, unit="mm", **styleEntryUnit)
-    lblFontWordSpacingVar = tk.Label(window, text="±", **styleLabelInput)
-    edtFontWordSpacingVar = tkw.UnitEntry(window, unit="mm", **styleEntryUnit)
+        self._style_checkbox_small = {
+            **self._style_checkbox_default,
+            "font": self._font_tooltip,
+        }
 
-    chkFontLineHeightRecalc = tkw.Checkbox(window, label="Recalc on f...", **styleCheckboxSmall)
-    chkFontWordSpacingRecalc = tkw.Checkbox(window, label="Recalc on font size cha...", **styleCheckboxSmall)
-    
-    sclFontAlignHorizontal = tkw.LabeledScale(window, label="Horzontal Align", description="Left      Center    Right", start=0, end=1, step=0.1, **styleScaleLabeled, state=tk.DISABLED)
-    sclFontAlignVertical = tkw.LabeledScale(window, label="Vertical Align", description="Top      Center  Bottom", start=0, end=1, step=0.1, **styleScaleLabeled)
-    
-    lblPen = tk.Label(window, text="Pen Settings:", **styleLabelSection)
-    edtPenZDraw = tkw.LabeledEntry(window, label="Z Draw", unit="mm", **styleEntryLabeled)
-    edtPenZTravel = tkw.LabeledEntry(window, label="Z Travel", unit="mm", **styleEntryLabeled)
-    edtPenZPause = tkw.LabeledEntry(window, label="Z Pause", unit="mm", **styleEntryLabeled)
+        self._style_separator = {
+            "bd": 0,
+            "bg": self.STYLE["bg_separator"],
+        }
 
-    edtPenFDraw = tkw.LabeledEntry(window, label="Feedrate Draw", unit="mm/min", **styleEntryLabeled)
-    edtPenFTravel = tkw.LabeledEntry(window, label="Feedrate Travel", unit="mm/min", **styleEntryLabeled)
+        self._style_ttk = ttk.Style()
+        self._style_ttk.theme_use("default")
+        self._style_ttk.configure("Maddin.HC.Horizontal.TProgressbar", borderwidth=self.STYLE["borderwidth"], troughcolor=self.STYLE["bg_inner"], background=self.STYLE["fg_progress"], troughrelief=self.STYLE["relief"])
+        self._style_ttk.configure('Maddin.HC.Horizontal.TScrollbar', troughcolor=self.STYLE["bg_window"], background=self.STYLE["bg_button"], arrowcolor=self.STYLE["fg_hint"], relief=self.STYLE["relief"], troughrelief=self.STYLE["relief"])
+        self._style_ttk.map('Maddin.HC.Horizontal.TScrollbar', background=[('pressed', '!disabled', 'active', self.STYLE["bg_button_hover"])])
+        self._style_ttk.configure('Maddin.HC.Vertical.TScrollbar', troughcolor=self.STYLE["bg_window"], background=self.STYLE["bg_button"], arrowcolor=self.STYLE["fg_hint"], relief=self.STYLE["relief"], troughrelief=self.STYLE["relief"])
+        self._style_ttk.map('Maddin.HC.Vertical.TScrollbar', background=[('pressed', '!disabled', 'active', self.STYLE["bg_button_hover"])])
 
+    def _create_window(self) -> None:
+        self.window = tk.Tk()
 
-    lblPage = tk.Label(window, text="Page Settings:", **styleLabelSection)
-    edtPageWidth = tkw.LabeledEntry(window, label="Width (o≃∞)", unit="mm", **styleEntryLabeled)
-    edtPageHeight = tkw.LabeledEntry(window, label="Height (o≃∞)", unit="mm", **styleEntryLabeled)
-    edtPageRotation = tkw.LabeledEntry(window, label="Rotation", unit="°", **styleEntryLabeled)
-    
-    lblOther = tk.Label(window, text="Other Features:", **styleLabelSection)
-    chkFeatureReplace = tkw.Checkbox(window, label="Replace unknown characters", **styleCheckboxDefault)
-    lblFeatureReplace = tk.Label(window, text="(e.g. ä -> a, Q -> O)", **styleLabelTooltip)
-    chkFeatureImitate = tkw.Checkbox(window, label="Imitate some unknown characters", **styleCheckboxDefault)
-    chkFeatureImitateDAM = tkw.Checkbox(window, label="Imitate diaresis as macron (ä -> ā)", **styleCheckboxSmall)
-    chkFeatureSplitPages = tkw.Checkbox(window, label="One output file for each page", **styleCheckboxDefault)
+    def _init_window(self) -> None:
+        self.window.resizable(False, False)
+        self._window_size = (660, 650)
+        self.window.geometry(f"{self._window_size[0]}x{self._window_size[1]}")
+        self.window.title("HandCode")
+        self.window.configure(**self._style_window)
 
-    def reloadUI():
-        # set listeners
-
-        _fontfactors = dict()
-        def recalculateFontSize(base, entry, name, digits=-1):
-            if name not in _fontfactors:
-                return
-            template = "{size}"
-            if digits > 0:
-                template = f"{{size:.0{digits}f}}"
-            size = base * _fontfactors[name]
-            entry.set(template.format(size=size).rstrip("0").rstrip("."))
-
-        def getFontSize(entry):
-            size = -1
+        # Add icon to window/taskbar
+        if sys.platform == "win32":
+            self.window.iconbitmap(os.path.join(path_lib, "icon.ico"))
+        else:
             try:
-                size = float(entry.get().strip())
-            except:
-                pass # bad, i know...
+                img = tk.PhotoImage(file=os.path.join(path_lib, "icon.png"))
+                self.window.iconphoto(True, img)
+            except Exception:
+                pass
 
-            return size
-            
-        def recalculateFontSizes():
-            _fontSize = getFontSize(edtFontSize)
-            if _fontSize < 0:
-                return
+    def _init_widgets(self) -> None:
+        self._lbl_file_in = tk.Label(self.window, text="Input File (opt):", **self._style_label_section)
+        self._btn_file_in = tkm.Button(self.window, text="Open File...", **self._style_button_default)
+        self._lbl_file_process = tk.Label(self.window, text="↴   ↱", **{**self._style_label_section, "font": self._font_start})
+        self._lbl_file_out = tk.Label(self.window, text="Output File:", **self._style_label_section)
+        self._edt_file_out = tk.Entry(self.window, **self._style_entry_default)
+        self._slt_file_type = tkw.LabeledSelect(self.window, label="Format", options=[*self._MAP_FILETYPES.values()], **self._style_select_labeled)
 
-            if chkFontLineHeightRecalc.get():
-                recalculateFontSize(_fontSize, edtFontLineHeight, "lineheight", digits=4)
-            if chkFontWordSpacingRecalc.get():
-                recalculateFontSize(_fontSize, edtFontWordSpacing, "wordspacing", digits=2)
-                recalculateFontSize(_fontSize, edtFontWordSpacingVar, "wordspacingvar", digits=1)
+        self._lbl_input = tk.Label(self.window, text="Input Text:", **self._style_label_section)
+        self._edt_input = tkw.ScrolledEntry(self.window, **self._style_entry_scrolled)
 
-        def recalculateFontFactor(base, entry, name):
-            size = getFontSize(entry)
-            _fontfactors[name] = size/base
-        def recalculateFontFactors():
-            _fontSize = getFontSize(edtFontSize)
-            if _fontSize <= 0:
-                return
-            
-            if chkFontLineHeightRecalc.get():
-                recalculateFontFactor(_fontSize, edtFontLineHeight, "lineheight")
-            else:
-                _fontfactors.pop("lineheight", None)
-            if chkFontWordSpacingRecalc.get():
-                recalculateFontFactor(_fontSize, edtFontWordSpacing, "wordspacing")
-                recalculateFontFactor(_fontSize, edtFontWordSpacingVar, "wordspacingvar")
-            else:
-                _fontfactors.pop("wordspacing", None)
-                _fontfactors.pop("wordspacingvar", None)
-        
-        edtFontSize.addListener("change", recalculateFontSizes)
-        edtFontLineHeight.addListener("change", recalculateFontFactors)
-        edtFontWordSpacing.addListener("change", recalculateFontFactors)
-        edtFontWordSpacingVar.addListener("change", recalculateFontFactors)
-        chkFontLineHeightRecalc.addListener("change", recalculateFontFactors)
-        chkFontWordSpacingRecalc.addListener("change", recalculateFontFactors)
-        
+        self._lbl_log = tk.Label(self.window, text="Event Log:", **self._style_label_section)
+        self._edt_log = tkw.ScrolledEntry(self.window, **self._style_entry_scrolled)
 
-        def updateFeatureImitate():
-            state = tk.NORMAL if chkFeatureImitate.get() else tk.DISABLED
-            chkFeatureImitateDAM.configure(state=state)
-        chkFeatureImitate.addListener("change", updateFeatureImitate)
+        self._prg_loading = ttk.Progressbar(self.window, orient="horizontal", mode="indeterminate", style="Maddin.HC.Horizontal.TProgressbar")
+        self._btn_show = tkm.Button(self.window, text="Open input/output folder", **self._style_button_default)
+        self._btn_start = tkm.Button(self.window, text="Start", **self._style_button_start, state=tk.DISABLED)
 
-        def showFolder():
-            if os.name == "nt":
-                os.startfile(path_data)
-            elif sys.platform.startswith("linux"):
-                os.system(f"xdg-open \"{path_data}\"") # TODO: dangerous, we assume the path does not contain any quotes
-        btnShow.configure(command=showFolder)
-        btnStart.configure(command=startConvert)
 
-        
+        self._seg_left_right = tk.Frame(self.window, self._style_separator)
+
+
+        self._lbl_font = tk.Label(self.window, text="Font Settings:", **self._style_label_section)
+        self._edt_font_size = tkw.LabeledEntry(self.window, label="Size", unit="mm", **self._style_entry_labeled)
+        self._slt_font_style = tkw.LabeledSelect(self.window, label="Style", options=[], **self._style_select_labeled)
+        self._edt_font_bias = tkw.LabeledEntry(self.window, label="Legibility", unit="%", **self._style_entry_labeled)
+
+        self._edt_font_line_height = tkw.LabeledEntry(self.window, label="Line Height", unit="mm", **self._style_entry_labeled)
+        self._lbl_font_word_spacing = tk.Label(self.window, text="Word Spacing", **self._style_label_input)
+        self._edt_font_word_spacing = tkw.UnitEntry(self.window, unit="mm", **self._style_entry_unit)
+        self._lbl_font_word_spacing_var = tk.Label(self.window, text="±", **self._style_label_input)
+        self._edt_font_word_spacing_var = tkw.UnitEntry(self.window, unit="mm", **self._style_entry_unit)
+
+        self._chk_font_line_height_recalc = tkw.Checkbox(self.window, label="Recalc on f...", **self._style_checkbox_small)
+        self._chk_font_word_spacing_recalc = tkw.Checkbox(self.window, label="Recalc on font size cha...", **self._style_checkbox_small)
+
+        self._scl_font_align_horizontal = tkw.LabeledScale(self.window, label="Horzontal Align", description="Left      Center    Right", start=0, end=1, step=0.1, **self._style_scale_labeled, state=tk.DISABLED)
+        self._scl_font_align_vertical = tkw.LabeledScale(self.window, label="Vertical Align", description="Top      Center  Bottom", start=0, end=1, step=0.1, **self._style_scale_labeled)
+
+        self._lbl_pen = tk.Label(self.window, text="Pen Settings:", **self._style_label_section)
+        self._edt_pen_z_draw = tkw.LabeledEntry(self.window, label="Z Draw", unit="mm", **self._style_entry_labeled)
+        self._edt_pen_z_travel = tkw.LabeledEntry(self.window, label="Z Travel", unit="mm", **self._style_entry_labeled)
+        self._edt_pen_z_pause = tkw.LabeledEntry(self.window, label="Z Pause", unit="mm", **self._style_entry_labeled)
+
+        self._edt_pen_f_draw = tkw.LabeledEntry(self.window, label="Feedrate Draw", unit="mm/min", **self._style_entry_labeled)
+        self._edt_pen_f_travel = tkw.LabeledEntry(self.window, label="Feedrate Travel", unit="mm/min", **self._style_entry_labeled)
+
+
+        self._lbl_page = tk.Label(self.window, text="Page Settings:", **self._style_label_section)
+        self._edt_page_width = tkw.LabeledEntry(self.window, label="Width (o≃∞)", unit="mm", **self._style_entry_labeled)
+        self._edt_page_height = tkw.LabeledEntry(self.window, label="Height (o≃∞)", unit="mm", **self._style_entry_labeled)
+        self._edt_page_rotation = tkw.LabeledEntry(self.window, label="Rotation", unit="°", **self._style_entry_labeled)
+
+        self._lbl_other = tk.Label(self.window, text="Other Features:", **self._style_label_section)
+        self._chk_feature_replace = tkw.Checkbox(self.window, label="Replace unknown characters", **self._style_checkbox_default)
+        self._lbl_feature_replace = tk.Label(self.window, text="(e.g. ä -> a, Q -> O)", **self._style_label_tooltip)
+        self._chk_feature_imitate = tkw.Checkbox(self.window, label="Imitate some unknown characters", **self._style_checkbox_default)
+        self._chk_feature_imitate_dam = tkw.Checkbox(self.window, label="Imitate diaresis as macron (ä -> ā)", **self._style_checkbox_small)
+        self._chk_feature_split_pages = tkw.Checkbox(self.window, label="One output file for each page", **self._style_checkbox_default)
+
+    def _update_layout(self) -> None:
         # actually display all the ui stuff
-
-        xstart = 10; ystart = 5
-        xmargin = 10; ymargin = 5
+        xstart = 10
+        ystart = 5
+        
+        xmargin = 10
+        ymargin = 5
+        
         height = 20
-        x = xstart; y = ystart
         
-        lblFileIn.place(x=x, y=y, height=height)
-        btnFileIn.place(x=x, y=y+height, width=120, height=height)
-        btnFileIn.configure(command=selectInputFile)
-        lblFileProcess.place(x=x+120, y=y+height-2)
-        lblFileOut.place(x=x+120+70, y=y, height=height)
-        edtFileOut.place(x=x+120+70, y=y+height, width=120, height=height)
-        sltFileType.place(x=x+120+70+120+xmargin, y=y, width=80)
+        x = xstart
+        y = ystart
 
+        self._lbl_file_in.place(x=x, y=y, height=height)
+        self._btn_file_in.place(x=x, y=y+height, width=120, height=height)
+        self._lbl_file_process.place(x=x+120, y=y+height-2)
+        self._lbl_file_out.place(x=x+120+70, y=y, height=height)
+        self._edt_file_out.place(x=x+120+70, y=y+height, width=120, height=height)
+        self._slt_file_type.place(x=x+120+70+120+xmargin, y=y, width=80)
         y += height + height + ymargin
-        lblInput.place(x=x, y=y, height=height)
+        self._lbl_input.place(x=x, y=y, height=height)
         y += height
-        edtInput.place(x=x, y=y, width=400, height=430)
-
+        self._edt_input.place(x=x, y=y, width=400, height=430)
         y += 430 + ymargin
-        lblLog.place(x=x, y=y, height=height)
+        self._lbl_log.place(x=x, y=y, height=height)
         y += height
-        edtLog.place(x=x, y=y, width=400, height=114)
+        self._edt_log.place(x=x, y=y, width=400, height=114)
         
-        x += 400 + xmargin; y = ystart
-        segLeftRight.place(x=x-1, y=y+ymargin, width=2, height=wsize[1]-2*(ystart+ymargin))
-        
+        x += 400 + xmargin
+        y = ystart
+        self._seg_left_right.place(x=x-1, y=y+ymargin, width=2, height=self._window_size[1]-2*(ystart+ymargin))
         x += xmargin
-        lblFont.place(x=x, y=y, height=20)
+        self._lbl_font.place(x=x, y=y, height=20)
         y += height
-        edtFontSize.place(x=x, y=y, width=60)
-        sltFontStyle.place(x=x+60+xmargin, y=y, width=80)
-        edtFontBias.place(x=x+60+xmargin+80+xmargin, y=y, width=60)
-
+        self._edt_font_size.place(x=x, y=y, width=60)
+        self._slt_font_style.place(x=x+60+xmargin, y=y, width=80)
+        self._edt_font_bias.place(x=x+60+xmargin+80+xmargin, y=y, width=60)
         y += 2 * height + ymargin
-        edtFontLineHeight.place(x=x, y=y, width=80)
-        lblFontWordSpacing.place(x=x+80+xmargin, y=y, width=100, height=height)
-        edtFontWordSpacing.place(x=x+80+xmargin, y=y+height, width=65)
-        lblFontWordSpacingVar.place(x=x+80+xmargin+65, y=y+height, width=15, height=height)
-        edtFontWordSpacingVar.place(x=x+80+xmargin+65+15, y=y+height, width=50)
+        self._edt_font_line_height.place(x=x, y=y, width=80)
+        self._lbl_font_word_spacing.place(x=x+80+xmargin, y=y, width=100, height=height)
+        self._edt_font_word_spacing.place(x=x+80+xmargin, y=y+height, width=65)
+        self._lbl_font_word_spacing_var.place(x=x+80+xmargin+65, y=y+height, width=15, height=height)
+        self._edt_font_word_spacing_var.place(x=x+80+xmargin+65+15, y=y+height, width=50)
         y += 2 * height
-        chkFontLineHeightRecalc.place(x=x-3, y=y, height=height)
-        chkFontWordSpacingRecalc.place(x=x+80+xmargin-3, y=y, height=height)
-
+        self._chk_font_line_height_recalc.place(x=x-3, y=y, height=height)
+        self._chk_font_word_spacing_recalc.place(x=x+80+xmargin-3, y=y, height=height)
         y += height + ymargin
-        sclFontAlignHorizontal.place(x=x, y=y, width=105)
-        sclFontAlignVertical.place(x=x+105+xmargin, y=y, width=105)
-
+        self._scl_font_align_horizontal.place(x=x, y=y, width=105)
+        self._scl_font_align_vertical.place(x=x+105+xmargin, y=y, width=105)
         y += 2 * height + 10 + 3 * ymargin  # + 10 since the LabeledScale is 10px larger than 2 * height
-        lblPen.place(x=x, y=y, height=height)
+        self._lbl_pen.place(x=x, y=y, height=height)
         y += height
-        edtPenZDraw.place(x=x, y=y, width=67)
-        edtPenZTravel.place(x=x+67+xmargin, y=y, width=66)
-        edtPenZPause.place(x=x+67+xmargin+66+xmargin, y=y, width=67)
-
+        self._edt_pen_z_draw.place(x=x, y=y, width=67)
+        self._edt_pen_z_travel.place(x=x+67+xmargin, y=y, width=66)
+        self._edt_pen_z_pause.place(x=x+67+xmargin+66+xmargin, y=y, width=67)
         y += 2 * height + ymargin
-        edtPenFDraw.place(x=x, y=y, width=105)
-        edtPenFTravel.place(x=x+105+xmargin, y=y, width=105)
-
+        self._edt_pen_f_draw.place(x=x, y=y, width=105)
+        self._edt_pen_f_travel.place(x=x+105+xmargin, y=y, width=105)
         y += 2 * height + 3 * ymargin
-        lblPage.place(x=x, y=y, height=height)
+        self._lbl_page.place(x=x, y=y, height=height)
         y += height
-        edtPageWidth.place(x=x, y=y, width=75)
-        edtPageHeight.place(x=x+75+xmargin, y=y, width=75)
-        edtPageRotation.place(x=x+75+xmargin+75+xmargin, y=y, width=50)
-
+        self._edt_page_width.place(x=x, y=y, width=75)
+        self._edt_page_height.place(x=x+75+xmargin, y=y, width=75)
+        self._edt_page_rotation.place(x=x+75+xmargin+75+xmargin, y=y, width=50)
         y += 2 * height + 3 * ymargin
-        lblOther.place(x=x, y=y, height=height)
+        self._lbl_other.place(x=x, y=y, height=height)
         y += height
-        chkFeatureReplace.place(x=x, y=y, height=height)
+        self._chk_feature_replace.place(x=x, y=y, height=height)
         y += height
-        lblFeatureReplace.place(x=x+height, y=y, height=height//2)
+        self._lbl_feature_replace.place(x=x+height, y=y, height=height//2)
         y += height//2 + ymargin
-        chkFeatureImitate.place(x=x, y=y, height=height)
+        self._chk_feature_imitate.place(x=x, y=y, height=height)
         y += height
-        chkFeatureImitateDAM.place(x=x+height, y=y, height=height-5)
+        self._chk_feature_imitate_dam.place(x=x+height, y=y, height=height-5)
         y += height + ymargin
-        chkFeatureSplitPages.place(x=x, y=y, height=height)
-
+        self._chk_feature_split_pages.place(x=x, y=y, height=height)
         y += height + 3 * ymargin - 2
-        prgLoading.place(x=x, y=y, width=220, height=height)
+        self._prg_loading.place(x=x, y=y, width=220, height=height)
         y += height + ymargin + 2
-        btnShow.place(x=x, y=y, width=220, height=height+ymargin)
+        self._btn_show.place(x=x, y=y, width=220, height=height+ymargin)
         y += height + ymargin + 2 * ymargin
-        btnStart.place(x=x, y=y, width=220, height=2*height+2*ymargin)
+        self._btn_start.place(x=x, y=y, width=220, height=2*height+2*ymargin)
 
-    uiQueue = queue.Queue()
-    uiPollInterval = 100
-    def updateUIQueue():
-        for _ in range(5):
+    def _init_handlers(self) -> None:
+        self._edt_font_size.addListener("change", self._recalculate_font_sizes)
+        self._edt_font_line_height.addListener("change", self._recalculate_font_factors)
+        self._edt_font_word_spacing.addListener("change", self._recalculate_font_factors)
+        self._edt_font_word_spacing_var.addListener("change", self._recalculate_font_factors)
+        self._chk_font_line_height_recalc.addListener("change", self._recalculate_font_factors)
+        self._chk_font_word_spacing_recalc.addListener("change", self._recalculate_font_factors)
+
+        self._chk_feature_imitate.addListener("change", self._update_feature_imitate)
+
+        self._btn_file_in.configure(command=self._select_input_file)
+        self._btn_show.configure(command=self._show_folder)
+        self._btn_start.configure(command=self.start_convert)
+
+    def _init_state_vars(self) -> None:
+        self._font_factors = dict[str, float]()
+        self._ui_queue = queue.Queue[typing.Callable[[], typing.Any]]()
+        self._ui_poll_tries = 5 # number of callbacks to call at most during one ui update run
+        self._ui_poll_interval = 100
+        self._convert_event = threading.Event()
+
+        @dataclasses.dataclass
+        class _ProgressData:
+            description: str|None
+            value: int|float|None
+            maximum: int|float|None
+            was_update_requested: bool
+            is_animation_stopped: bool
+            @property
+            def is_stopped(self):
+                return (self.description is None) and (self.value is None) and (self.maximum is None)
+            def mark_stopped(self):
+                self.description = None
+                self.value = None
+                self.maximum = None
+        self._progress_data = _ProgressData(description=None, value=None, maximum=None, was_update_requested=False, is_animation_stopped=False)
+
+        self._pen_settings_generators = dict[str, typing.Callable]()
+        self._convert_settings = dict[str, typing.Any]()
+        self._convert_data = dict[str, typing.Any]()
+        self._re_font_style = re.compile(r"^\s*Style (\d+)\s*$")
+        self._gcode = None
+
+    def _get_font_size(self, entry) -> float:
+        try:
+            return float(entry.get().strip())
+        except Exception:
+            return -1
+
+    def _recalculate_font_size(self, base: float, entry: tk.Entry, name: str, digits: int=-1) -> None:
+        if name not in self._font_factors:
+            return
+        template = "{size}"
+        if digits > 0:
+            template = f"{{size:.0{digits}f}}"
+        size = base * self._font_factors[name]
+        entry.set(template.format(size=size).rstrip("0").rstrip("."))
+
+    def _recalculate_font_sizes(self):
+        font_size = self._get_font_size(self._edt_font_size)
+        if font_size <= 0:
+            return
+        
+        if self._chk_font_line_height_recalc.get():
+            self._recalculate_font_size(font_size, self._edt_font_line_height, "lineheight", digits=4)
+        if self._chk_font_word_spacing_recalc.get():
+            self._recalculate_font_size(font_size, self._edt_font_word_spacing, "wordspacing", digits=2)
+            self._recalculate_font_size(font_size, self._edt_font_word_spacing_var, "wordspacingvar", digits=1)
+
+    def _recalculate_font_factor(self, base: float, entry: tk.Entry, name: str) -> None:
+        size = self._get_font_size(entry)
+        self._font_factors[name] = size/base
+
+    def _recalculate_font_factors(self):
+        font_size = self._get_font_size(self._edt_font_size)
+        if font_size <= 0:
+            return
+        
+        if self._chk_font_line_height_recalc.get():
+            self._recalculate_font_factor(font_size, self._edt_font_line_height, "lineheight")
+        else:
+            self._font_factors.pop("lineheight", None)
+        if self._chk_font_word_spacing_recalc.get():
+            self._recalculate_font_factor(font_size, self._edt_font_word_spacing, "wordspacing")
+            self._recalculate_font_factor(font_size, self._edt_font_word_spacing_var, "wordspacingvar")
+        else:
+            self._font_factors.pop("wordspacing", None)
+            self._font_factors.pop("wordspacingvar", None)
+
+    def _update_feature_imitate(self):
+        state = tk.NORMAL if self._chk_feature_imitate.get() else tk.DISABLED
+        self._chk_feature_imitate_dam.configure(state=state)
+
+    def _select_input_file(self):
+        filename = tkfd.askopenfilename(title="Open text file...", initialdir=path_data)
+        if not filename:
+            self._report("log", "No file selected!\n")
+            return
+        self._read_input_file(filename)
+
+    def _read_input_file(self, filename):
+        if not filename:
+            return
+        
+        file = None
+        try:
+            file = open(filename, "r")
+            self._edt_input.set(file.read())
+        except Exception as e:
+            self._report("log", f"Unknown error reading file: {e}")
+        finally:
+            if file:
+                file.close()
+
+    def _show_folder(self):
+        if os.name == "nt":
+            os.startfile(path_data)
+        elif sys.platform.startswith("linux"):
+            os.system(f"xdg-open \"{path_data}\"") # TODO: dangerous, we assume the path does not contain any quotes
+
+    def _update_ui_queue(self):
+        for _ in range(self._ui_poll_tries):
             try:
-                cb = uiQueue.get(block=False)
+                cb = self._ui_queue.get(block=False)
                 cb()
             except queue.Empty:
                 break
             except Exception as e:
                 tkmb.showerror("Error in the UI polling loop", f"The following unhandled exception occured: {e}\n\n{traceback.format_exc()}\n\n{sys.exc_info()}")
 
-        window.after(uiPollInterval, updateUIQueue)
+        self.window.update()
+        self._schedule_ui_update()
 
-    def startConvert():
-        if convertEvent.is_set():
+    def _schedule_ui_update(self):
+        self.window.after(self._ui_poll_interval, self._update_ui_queue)
+
+    def start_convert(self):
+        if self._convert_event.is_set():
             return
-        btnStart.configure(state=tk.DISABLED)
-        edtLog.set("")
-        prgLoading.start()
-        readSettingsFromUI()
-        if "--test-start-behaviour" not in sys.argv:
-            saveSettingsToFile()
-        errors = convertSettingsToData()
+        
+        self._btn_start.configure(state=tk.DISABLED)
+        self._edt_log.set("")
+        self._prg_loading.start()
+
+        self._read_settings_from_ui()
+        if not self.is_test_start_behaviour:
+            self._save_settings_to_file()
+
+        errors = self._convert_settings_to_data()
         if errors:
-            report("log", f"\n{errors} errors were encountered while parsing your current settings. Please see above for more information.\n")
-            prgLoading.stop()
+            self._report("log", f"\n{errors} errors were encountered while parsing your current settings. Please see above for more information.\n")
+            self._prg_loading.stop()
             return
-        convertEvent.set()
+        
+        self._convert_event.set()
 
-    def updateProgress(description: str|None, value: int|float|None, maximum: int|float|None):
-        mode_changed = (progressData[0] != description) or ((maximum is None) != (progressData[2] is None))
+    @property
+    def is_test_start_behaviour(self) -> bool:
+        return "--test-start-behaviour" in sys.argv
 
-        if description is not None or value is None and maximum is None:
-            progressData[0] = description
-
-        if maximum:
-            madd = maximum / 20
-            value = (value or 0) + madd
-            maximum = maximum + madd
-        progressData[1] = value
-        progressData[2] = maximum
-
-        if progressData[3] or not mode_changed:
-            return
-
-        progressData[3] = True
-        reportThreadSafe("progress")
-
-    def threadConvert():
-        try:
-            reportThreadSafe("log", "Loading tensorflow... ")
-            import handwriting # type: ignore
-            gcode = handwriting.gcode.HandGCode(logger=lambda s: reportThreadSafe("log", s), progress=updateProgress)
-            reportThreadSafe("log", "Done\nLoading neural network... ")
-            gcode.load()
-            reportThreadSafe("log", "Done\nLoading helper functions... ")
-            _pensettingsgen["gcode"] = handwriting.commands.gcode
-            reportThreadSafe("log", "Done\n")
-            reportThreadSafe("success")
-
-            if "--test-start-behaviour" in sys.argv:
-                threading.Thread(target=threadTestStart).start()
-
-            while True:
-                convertEvent.wait()
-                try:
-                    gcode.generate(convertData)
-                    report("success")
-                except Exception as e:
-                    reportThreadSafe("error", e)
-                convertEvent.clear()
-        except Exception as e:
-            reportThreadSafe("critical", f"The following unhandled exception occured: {e}\n\n{traceback.format_exc()}\n\n{sys.exc_info()}")
-            
-    def reportThreadSafe(event, data=None):
-        uiQueue.put(lambda: report(event, data=data))
-
-    progressData = [None, None, None, False, False]
-    def report(event, data=None):
+    def _report(self, event, data=None):
         if (event == "log") and data:
-            edtLog.append(data)
+            self._edt_log.append(data)
+
+        if (event == "model_imported"):
+            self._write_settings_to_ui()
 
         if (event == "success"):
-            btnStart.configure(state=tk.NORMAL)
-            prgLoading.stop()
-            
+            self._btn_start.configure(state=tk.NORMAL)
+            self._progress_data.mark_stopped()
+            self._report("progress")
+
         if (event == "error"):
-            btnStart.configure(state=tk.NORMAL)
-            prgLoading.stop()
-            report("log", f"\nUnhandled error: {data}\n")
+            self._btn_start.configure(state=tk.NORMAL)
+            self._progress_data.mark_stopped()
+            self._report("progress")
+            self._report("log", f"\nUnhandled error: {data}\n")
             try:
                 print(f"An error occurred:\n{traceback.format_exception(data)}\n\n{sys.exc_info()}")
-            except:
+            except Exception:
                 print(f"An error occurred:\n{traceback.format_exc()}\n\n{sys.exc_info()}")
-
 
         if (event == "critical"):
             tkmb.showerror("Error in the neural network thread", data)
 
         if (event == "progress"):
-            progressData[3] = False
-            if not any(progressData[0:2]):
-                prgLoading.configure(mode="indeterminate")
-                prgLoading.stop()
-            elif progressData[2] is not None:
-                if not progressData[4]:
-                    prgLoading.stop()
-                prgLoading.configure(mode="determinate", value=progressData[1] or 0, maximum=progressData[2])
-                progressData[4] = True
+            self._progress_data.was_update_requested = False
+            if (self._progress_data.is_stopped):
+                self._prg_loading.configure(mode="indeterminate")
+                self._prg_loading.stop()
+                self._progress_data.is_animation_stopped = True
+            elif self._progress_data.maximum is not None:
+                if not self._progress_data.is_animation_stopped:
+                    self._prg_loading.stop()
+                self._prg_loading.configure(mode="determinate", value=self._progress_data.value or 0, maximum=self._progress_data.maximum)
+                self._progress_data.is_animation_stopped = True
             else:
-                prgLoading.configure(mode="indeterminate")
-                progressData[4] = False
-                prgLoading.start()
-            
+                self._prg_loading.configure(mode="indeterminate")
+                self._prg_loading.start()
+                self._progress_data.is_animation_stopped = False
 
-    def threadTestStart():
-        time.sleep(3)
-        window.after(0, lambda*_: edtInput.insert(0, "Hello World"))
-        time.sleep(1)
-        startConvert()
-        time.sleep(30)
-        window.after(0, window.destroy)
+    def _report_thread_safe(self, event, data=None):
+        self._ui_queue.put(lambda: self._report(event, data=data))
 
-    def selectInputFile():
-        filename = tkfd.askopenfilename(title="Open text file...", initialdir=path_data)
-        if not filename:
-            report("log", "No file selected!\n")
+    def _update_progress_bar(self, description: str|None, value: int|float|None, maximum: int|float|None):
+        has_mode_changed = (self._progress_data.description != description) or ((maximum is None) != (self._progress_data.maximum is None))
+
+        if (description is not None) or ((value is None) and (maximum is None)):
+            self._progress_data.description = description
+
+        if maximum:
+            add_for_start_pos = maximum / 25
+            value = (value or 0) + add_for_start_pos
+            maximum = maximum + add_for_start_pos
+        self._progress_data.value = value
+        self._progress_data.maximum = maximum
+
+        if self._progress_data.was_update_requested or not has_mode_changed:
             return
-        readInputFile(filename)
+        
+        self._report_thread_safe("progress")
 
-    def readInputFile(filename):
-        if not filename:
-            return
-        file = None
+    def _log_thread_safe(self, text: str):
+        self._report_thread_safe("log", text)
+
+    def _thread_convert(self):
         try:
-            file = open(filename, "r")
-            edtInput.set(file.read())
-        except Exception as e:
-            report("log", f"Unknown error reading file: {e}")
-        finally:
-            if file:
-                file.close()
+            self._log_thread_safe("Loading libraries... ")
+            import handwriting # type: ignore
+            gcode = handwriting.gcode.HandGCode(logger=self._log_thread_safe, progress=self._update_progress_bar)
+            self._log_thread_safe(f"Done (loaded \"{gcode.model_name}\"-mode)\n")
+            self._gcode = gcode
+            self._report_thread_safe("model_imported")
 
-    def _savePathInDict(d, path, value):
+            self._log_thread_safe("Loading neural network... ")
+            gcode.load()
+
+            self._log_thread_safe("Done\nLoading helper functions... ")
+            self._pen_settings_generators["gcode"] = handwriting.commands.gcode
+            self._pen_settings_generators["svg"] = handwriting.commands.svg
+
+            self._log_thread_safe("Done\n")
+            self._report_thread_safe("success")
+
+            if self.is_test_start_behaviour:
+                threading.Thread(target=self._thread_test_start_behaviour).start()
+
+            while True:
+                self._convert_event.wait()
+                
+                try:
+                    gcode.generate(self._convert_data)
+                    self._report_thread_safe("success")
+                except Exception as e:
+                    self._report_thread_safe("error", e)
+                
+                self._convert_event.clear()
+        
+        except Exception as e:
+            self._report_thread_safe("critical", f"The following unhandled exception occured: {e}\n\n{traceback.format_exc()}\n\n{sys.exc_info()}")
+
+    def _thread_test_start_behaviour(self):
+        time.sleep(3)
+        self.window.after(0, lambda *_: self._edt_input.insert(0, "Hello World"))
+        time.sleep(1)
+        self.start_convert()
+        time.sleep(30)
+        self.window.after(0, self.window.destroy)
+
+    @staticmethod
+    def _save_path_in_dict(d, path, value):
         plen = len(path)
         for i, p in enumerate(path, 1):
             if i < plen:
                 if p not in d:
-                    d[p] = dict()
+                    d[p] = {}
                 d = d[p]
                 continue
             d[p] = value
 
-    def saveSetting(path, value):
-        _savePathInDict(convertSettings, path, value)
+    def _save_setting(self, path, value):
+        self._save_path_in_dict(self._convert_settings, path, value)
 
-    def readSettingsFromUI():
-        convertSettings.clear()
-        convertSettings["version"] = versionSettingsCurrent
-        saveSetting(["input", "text"], edtInput.get())
-        saveSetting(["output", "file"], edtFileOut.get())
-        saveSetting(["output", "format"], sltFileType.get())
+    def _read_settings_from_ui(self):
+        self._convert_settings.clear()
+        self._convert_settings["version"] = version_handcode
+        self._save_setting(["input", "text"], self._edt_input.get())
+        self._save_setting(["output", "file"], self._edt_file_out.get())
+        self._save_setting(["output", "format"], self._slt_file_type.get())
 
-        saveSetting(["font", "size"], edtFontSize.get())
-        saveSetting(["font", "style"], sltFontStyle.get())
-        saveSetting(["font", "bias"], edtFontBias.get())
-        saveSetting(["font", "lineheight"], edtFontLineHeight.get())
-        saveSetting(["font", "wordspacing"], edtFontWordSpacing.get())
-        saveSetting(["font", "wordspacingvariance"], edtFontWordSpacingVar.get())
-        #saveSetting(["font", "align", "horizontal"], sclFontAlignHorizontal.get())
-        saveSetting(["font", "align", "vertical"], sclFontAlignVertical.get())
+        self._save_setting(["font", "size"], self._edt_font_size.get())
+        self._save_setting(["font", "style"], self._slt_font_style.get())
+        self._save_setting(["font", "bias"], self._edt_font_bias.get())
+        self._save_setting(["font", "lineheight"], self._edt_font_line_height.get())
+        self._save_setting(["font", "wordspacing"], self._edt_font_word_spacing.get())
+        self._save_setting(["font", "wordspacingvariance"], self._edt_font_word_spacing_var.get())
+        #self._save_setting(["font", "align", "horizontal"], self._scl_font_align_horizontal.get())
+        self._save_setting(["font", "align", "vertical"], self._scl_font_align_vertical.get())
 
-        saveSetting(["pen", "heights", "draw"], edtPenZDraw.get())
-        saveSetting(["pen", "heights", "travel"], edtPenZTravel.get())
-        saveSetting(["pen", "heights", "pause"], edtPenZPause.get())
-        saveSetting(["pen", "speeds", "draw"], edtPenFDraw.get())
-        saveSetting(["pen", "speeds", "travel"], edtPenFTravel.get())
+        self._save_setting(["pen", "heights", "draw"], self._edt_pen_z_draw.get())
+        self._save_setting(["pen", "heights", "travel"], self._edt_pen_z_travel.get())
+        self._save_setting(["pen", "heights", "pause"], self._edt_pen_z_pause.get())
+        self._save_setting(["pen", "speeds", "draw"], self._edt_pen_f_draw.get())
+        self._save_setting(["pen", "speeds", "travel"], self._edt_pen_f_travel.get())
 
-        saveSetting(["page", "width"], edtPageWidth.get())
-        saveSetting(["page", "height"], edtPageHeight.get())
-        saveSetting(["page", "rotate"], edtPageRotation.get())
+        self._save_setting(["page", "width"], self._edt_page_width.get())
+        self._save_setting(["page", "height"], self._edt_page_height.get())
+        self._save_setting(["page", "rotate"], self._edt_page_rotation.get())
 
-        saveSetting(["features", "replace", "enabled"], chkFeatureReplace.get())
-        saveSetting(["features", "imitate", "enabled"], chkFeatureImitate.get())
-        saveSetting(["features", "imitate", "diaresisasmacron"], chkFeatureImitateDAM.get())
-        saveSetting(["features", "splitpages", "enabled"], chkFeatureSplitPages.get())
-        
-    formatFloat = legacy.formatFloat
-    formatFontStyleName = legacy.formatFontStyleName
-    
-    def writeSettingsToUI():
-        edtInput.set(convertSettings.get("input", {}).get("text", ""))
-        edtFileOut.delete(0, tk.END)
-        edtFileOut.insert(0, convertSettings.get("output", {}).get("file", "demo.nc"))
-        sltFileType.set(convertSettings.get("output", {}).get("format", "GCode"))
+        self._save_setting(["features", "replace", "enabled"], self._chk_feature_replace.get())
+        self._save_setting(["features", "imitate", "enabled"], self._chk_feature_imitate.get())
+        self._save_setting(["features", "imitate", "diaresisasmacron"], self._chk_feature_imitate_dam.get())
+        self._save_setting(["features", "splitpages", "enabled"], self._chk_feature_split_pages.get())
 
-        settingsFont = convertSettings.get("font", {})
-        fontSize = settingsFont.get("size", formatFloat(10))
-        _fontSize = 10
-        try: _fontSize = float(fontSize)
-        except: pass
-        edtFontSize.set(fontSize)
-        sltFontStyle.set(settingsFont.get("style", formatFontStyleName(1)))
-        edtFontBias.set(settingsFont.get("bias", formatFloat(75)))
-        edtFontLineHeight.set(settingsFont.get("lineheight", fontSize))
-        edtFontWordSpacing.set(settingsFont.get("wordspacing", formatFloat(round(_fontSize * 0.4, 2))))
-        edtFontWordSpacingVar.set(settingsFont.get("wordspacingvariance", formatFloat(round(_fontSize * 0.2, 1))))
-        chkFontLineHeightRecalc.set(settingsFont.get("lineheight_recalc", True))
-        chkFontWordSpacingRecalc.set(settingsFont.get("wordspacing_recalc", True))
-        chkFontWordSpacingRecalc.callListeners("change")
+    def _write_settings_to_ui(self):
+        format_float = legacy.formatFloat
+        format_font_style_name = legacy.formatFontStyleName
 
-        settingsFontAlign = settingsFont.get("align", {})
-        sclFontAlignHorizontal.set(settingsFontAlign.get("horizontal", 0))
-        sclFontAlignVertical.set(settingsFontAlign.get("vertical", 0.8))
+        self._edt_input.set(self._convert_settings.get("input", {}).get("text", ""))
+        self._edt_file_out.delete(0, tk.END)
+        self._edt_file_out.insert(0, self._convert_settings.get("output", {}).get("file", "demo.nc"))
+        self._slt_file_type.set(self._convert_settings.get("output", {}).get("format", "GCode"))
 
-        settingsPen = convertSettings.get("pen", {})
-        settingsPenHeights = settingsPen.get("heights", {})
-        edtPenZDraw.set(settingsPenHeights.get("draw", formatFloat(0)))
-        edtPenZTravel.set(settingsPenHeights.get("travel", formatFloat(5)))
-        edtPenZPause.set(settingsPenHeights.get("pause", formatFloat(30)))
-        settingsPenSpeeds = settingsPen.get("speeds", {})
-        edtPenFDraw.set(settingsPenSpeeds.get("draw", formatFloat(1000)))
-        edtPenFTravel.set(settingsPenSpeeds.get("draw", formatFloat(1000)))
-
-        settingsPage = convertSettings.get("page", {})
-        edtPageWidth.set(settingsPage.get("width", formatFloat(0)))
-        edtPageHeight.set(settingsPage.get("height", formatFloat(0)))
-        edtPageRotation.set(settingsPage.get("rotate", formatFloat(0)))
-
-        settingsFeatures = convertSettings.get("features", {})
-        chkFeatureReplace.set(settingsFeatures.get("replace", {}).get("enabled", True))
-        chkFeatureImitate.set(settingsFeatures.get("imitate", {}).get("enabled", True))
-        chkFeatureImitate.callListeners("change")
-        chkFeatureImitateDAM.set(settingsFeatures.get("imitate", {}).get("diaresisasmacron", False))
-        chkFeatureSplitPages.set(settingsFeatures.get("splitpages", {}).get("enabled", False))
-
-
-    def formatPath(path):
-        return "->".join(path)
-
-    _fontstylere = re.compile(r"^\s*Style (\d+)\s*$")
-    def parseFontStyle(style):
-        style = _fontstylere.findall(style)
+        settings_font = self._convert_settings.get("font", {})
+        font_size = settings_font.get("size", format_float(10))
         try:
-            style = int(style[0])
-            if (style < 1) or (style > 12):
-                raise ValueError()
-            return style
+            font_size = float(font_size)
+        except (ValueError, TypeError):
+            font_size = 10
+        self._edt_font_size.set(font_size)
+
+        font_style_names = [style.name for style in self._gcode.writing_styles]
+        self._slt_font_style.configure(options=font_style_names)
+        _default_font_style_name = format_font_style_name(1)
+        font_style_name = settings_font.get("style", _default_font_style_name)
+        if not font_style_name in font_style_names:
+            self._report("log", f"Could not load font style ({font_style_name}) from settings, falling back to {_default_font_style_name}\n")
+            font_style_name = _default_font_style_name
+        self._slt_font_style.set(font_style_name)
+
+        self._edt_font_bias.set(settings_font.get("bias", format_float(75)))
+        self._edt_font_line_height.set(settings_font.get("lineheight", font_size))
+        self._edt_font_word_spacing.set(settings_font.get("wordspacing", format_float(round(font_size * 0.4, 2))))
+        self._edt_font_word_spacing_var.set(settings_font.get("wordspacingvariance", format_float(round(font_size * 0.2, 1))))
+        self._chk_font_line_height_recalc.set(settings_font.get("lineheight_recalc", True))
+        self._chk_font_word_spacing_recalc.set(settings_font.get("wordspacing_recalc", True))
+        self._recalculate_font_factors()
+
+        settings_font_align = settings_font.get("align", {})
+        self._scl_font_align_horizontal.set(settings_font_align.get("horizontal", 0))
+        self._scl_font_align_vertical.set(settings_font_align.get("vertical", 0.8))
+
+        settings_pen = self._convert_settings.get("pen", {})
+        settings_pen_heights = settings_pen.get("heights", {})
+        self._edt_pen_z_draw.set(settings_pen_heights.get("draw", format_float(0)))
+        self._edt_pen_z_travel.set(settings_pen_heights.get("travel", format_float(5)))
+        self._edt_pen_z_pause.set(settings_pen_heights.get("pause", format_float(30)))
+        settings_pen_speeds = settings_pen.get("speeds", {})
+        self._edt_pen_f_draw.set(settings_pen_speeds.get("draw", format_float(1000)))
+        self._edt_pen_f_travel.set(settings_pen_speeds.get("draw", format_float(1000)))
+
+        settings_page = self._convert_settings.get("page", {})
+        self._edt_page_width.set(settings_page.get("width", format_float(0)))
+        self._edt_page_height.set(settings_page.get("height", format_float(0)))
+        self._edt_page_rotation.set(settings_page.get("rotate", format_float(0)))
+
+        settings_features = self._convert_settings.get("features", {})
+        self._chk_feature_replace.set(settings_features.get("replace", {}).get("enabled", True))
+        self._chk_feature_imitate.set(settings_features.get("imitate", {}).get("enabled", True))
+        self._update_feature_imitate()
+        self._chk_feature_imitate_dam.set(settings_features.get("imitate", {}).get("diaresisasmacron", False))
+        self._chk_feature_split_pages.set(settings_features.get("splitpages", {}).get("enabled", False))
+
+    def _parse_font_style(self, style_name: str) -> int:
+        try:
+            for style in self._gcode.writing_styles:
+                if style.name != style_name:
+                    continue
+                return style.id
+            raise ValueError("Invalid writing style")
         except (KeyError, ValueError):
-            report("log", f"Invalid font style selected: \"{style}\"\n")
+            self._log_thread_safe(f"Invalid writing style selected: \"{style_name}\"\n")
             raise
         except Exception as e:
-            report("log", f"Unknown error while parsing font style \"{style}\": {e}\n")
+            self._log_thread_safe(f"Unknown error while parsing writing style \"{style_name}\": {e}\n")
             raise
 
-    _pensettingsgen = dict()
-    def parsePenSettings(mode, **kwargs):
-        if not _pensettingsgen:
+    def _parse_pen_settings(self, mode, **kwargs):
+        if not self._pen_settings_generators:
             raise NotImplementedError("The handwriting library does not seem to have been fully loaded yet!")
-        if mode not in _pensettingsgen:
+        if mode not in self._pen_settings_generators:
             raise NotImplementedError("The mode you requested does not seem to be implemented (yet?).")
-
-        return _pensettingsgen[mode](**kwargs)
-        
-    def getConvertSetting(path, default=None):
-        value = convertSettings
+        return self._pen_settings_generators[mode](**kwargs)
+    
+    def _get_convert_setting(self, path: list[str], dtype: typing.Callable[[typing.Any], T]|None=None, default: T|None=None) -> T:
+        # Find value in recursive settings dict (as given by path)
+        value = self._convert_settings
         for p in path:
             if p not in value:
-                report("log", f"Field {formatPath(path)} ({p}) not set!")
+                self._log_thread_safe(f"Field {self._format_attr_path(path)} ({p}) not set!")
                 if default is not None:
-                    report("log", f" Using default value instead: {default}\n")
+                    self._log_thread_safe(f"Using default value instead: {default}\n")
                     return default
-                report("log", "\n")
+                self._log_thread_safe("\n")
             try:
                 value = value[p]
             except:
-                report("log", f"Error while accessing part \"{p}\" of field {formatPath(path)}:\n{traceback.format_exc()}")
+                self._log_thread_safe(f"Error while accessing part \"{p}\" of field {self._format_attr_path(path)}:\n{traceback.format_exc()}")
                 if default is not None:
-                    report("log", f"Using default value instead: {default}\n")
+                    self._log_thread_safe(f"Using default instead: {default}\n")
                     return default
                 raise
-        return value
 
-    def getConvertSettingTyped(path, dtype, default=None):
-        value = getConvertSetting(path, default=default)
+        # Convert value to specified type
         try:
             value = dtype(value)
         except:
-            report("log", f"Unable to parse value \"{value}\" from field {formatPath(path)} to {dtype}:\n{traceback.format_exc()}")
-            try:
-                value = dtype(default)
-                report("log", f"Using default value instead: {default} -> {value}\n")
-                return value
-            except:
-                pass
+            self._log_thread_safe(f"Unable to parse value \"{value}\" from field {self._format_attr_path(path)} to {dtype}:\n{traceback.format_exc()}")
+            if default is not None:
+                self._log_thread_safe(f"Using default value instead: {default}\n")
+                return default
             raise
-        
+
         return value
 
-    def convertSettingToData(path, dtype, to=None, default=None):
+    @staticmethod
+    def _format_attr_path(path):
+        return "->".join(path)
+    
+    def _convert_setting_to_data(self, path: list[str], dtype: typing.Callable[[typing.Any], T], to: list[str]|None=None, default: T|None=None) -> int:
         if to is None:
             to = path
 
         try:
-            value = getConvertSettingTyped(path, dtype, default=default)
-        except:
+            value = self._get_convert_setting(path, dtype, default=default)
+        except Exception:
             return 1
         
-        _savePathInDict(convertData, to, value)
+        self._save_path_in_dict(self._convert_data, to, value)
         return 0
-
-    def convertSettingsToData():
+    
+    def _convert_settings_to_data(self) -> int:
         errors = 0
-        errors += convertSettingToData(["input", "text"], str, default="Lorem ipsum (there was an error parsing the input field)")
-        errors += convertSettingToData(["output", "file"], lambda p: os.path.join(path_data, p), default="demo.gcode")
+        errors += self._convert_setting_to_data(["input", "text"], str, default="Lorem ipsum (there was an error parsing the input field)")
+        errors += self._convert_setting_to_data(["output", "file"], lambda p: os.path.join(path_data, p), default="demo.gcode")
 
-        errors += convertSettingToData(["font", "size"], float, default=formatFloat(10))
-        errors += convertSettingToData(["font", "style"], parseFontStyle, default=formatFontStyleName(1))
-        errors += convertSettingToData(["font", "bias"], lambda x: float(x)/100, default=formatFloat(75))
-        errors += convertSettingToData(["font", "lineheight"], float, default=formatFloat(10))
+        errors += self._convert_setting_to_data(["font", "size"], float, default=10)
+        errors += self._convert_setting_to_data(["font", "style"], self._parse_font_style, default=0)
+        errors += self._convert_setting_to_data(["font", "bias"], lambda x: float(x)/100, default=0.75)
+        errors += self._convert_setting_to_data(["font", "lineheight"], float, default=10)
 
         try:
-            _fontSize = convertData.get("font", {}).get("size", 10)
-            wordspacing = getConvertSettingTyped(["font", "wordspacing"], float, default=formatFloat(_fontSize * 0.4))
-            wordspacingvar = getConvertSettingTyped(["font", "wordspacingvariance"], float, default=formatFloat(_fontSize * 0.2))
+            font_size = self._convert_data.get("font", {}).get("size", 10)
+            word_spacing = self._get_convert_setting(["font", "wordspacing"], float, default=font_size * 0.4)
+            word_spacing_var = self._get_convert_setting(["font", "wordspacingvariance"], float, default=font_size * 0.2)
             def wordspacingfun():
-                return wordspacing + (random.random()-0.5) * wordspacingvar
-            _savePathInDict(convertData, ["font", "wordspacing"], wordspacingfun)
-        except:
+                return word_spacing + (random.random()-0.5) * word_spacing_var
+            self._save_path_in_dict(self._convert_data, ["font", "wordspacing"], wordspacingfun)
+        except Exception:
             errors += 1
 
         # errors += convertSettingToData(["font", "align", "horizontal"], float, default=formatFloat(0))
-        errors += convertSettingToData(["font", "align", "vertical"], float, default=formatFloat(0.8))
+        errors += self._convert_setting_to_data(["font", "align", "vertical"], float, default=0.8)
 
         try:
-            pensettings = dict()
+            pen_settings = {}
 
-            mode = getConvertSettingTyped(["output", "format"], str, default="GCode").lower()
-
-            # see lib/handwriting/commands.py for more information about these arguments
-            pensettings["pendraw"] = getConvertSettingTyped(["pen", "heights", "draw"], float, default=formatFloat(0))
-            pensettings["pentravel"] = getConvertSettingTyped(["pen", "heights", "travel"], float, default=formatFloat(5))
-            pensettings["penpause"] = getConvertSettingTyped(["pen", "heights", "pause"], float, default=formatFloat(30))
+            mode = self._get_convert_setting(["output", "format"], lambda f: [mode for mode, mname in self._MAP_FILETYPES.items() if mname == f][0], default="gcode")
             
-            pensettings["feeddraw"] = getConvertSettingTyped(["pen", "speeds", "draw"], float, default=formatFloat(1000))
-            pensettings["feedtravel"] = getConvertSettingTyped(["pen", "speeds", "travel"], float, default=formatFloat(1000))
+            # see lib/handwriting/commands.py for more information about these arguments
+            pen_settings["pendraw"] = self._get_convert_setting(["pen", "heights", "draw"], float, default=0)
+            pen_settings["pentravel"] = self._get_convert_setting(["pen", "heights", "travel"], float, default=5)
+            pen_settings["penpause"] = self._get_convert_setting(["pen", "heights", "pause"], float, default=30)
 
-            _savePathInDict(convertData, ["commands"], parsePenSettings(mode, **pensettings))
-        except:
+            pen_settings["feeddraw"] = self._get_convert_setting(["pen", "speeds", "draw"], float, default=1000)
+            pen_settings["feedtravel"] = self._get_convert_setting(["pen", "speeds", "travel"], float, default=1000)
+
+            self._save_path_in_dict(self._convert_data, ["commands"], self._parse_pen_settings(mode, **pen_settings))
+        except Exception:
             print(traceback.format_exc())
             errors += 1
 
-        errors += convertSettingToData(["page", "width"], float, default=formatFloat(0))
-        errors += convertSettingToData(["page", "height"], float, default=formatFloat(0))
-        errors += convertSettingToData(["page", "rotate"], float, default=formatFloat(0))
+        errors += self._convert_setting_to_data(["page", "width"], float, default=0)
+        errors += self._convert_setting_to_data(["page", "height"], float, default=0)
+        errors += self._convert_setting_to_data(["page", "rotate"], float, default=0)
 
-        errors += convertSettingToData(["features", "replace", "enabled"], bool, default=True)
-        errors += convertSettingToData(["features", "imitate", "enabled"], bool, default=True)
-        errors += convertSettingToData(["features", "imitate", "diaresisasmacron"], bool, default=False)
-        errors += convertSettingToData(["features", "splitpages", "enabled"], bool, default=False)
+        errors += self._convert_setting_to_data(["features", "replace", "enabled"], bool, default=True)
+        errors += self._convert_setting_to_data(["features", "imitate", "enabled"], bool, default=True)
+        errors += self._convert_setting_to_data(["features", "imitate", "diaresisasmacron"], bool, default=False)
+        errors += self._convert_setting_to_data(["features", "splitpages", "enabled"], bool, default=False)
 
         return errors
-
-    def loadSettingsFromFile():
+    
+    def _load_settings_from_file(self):
         if not os.path.isfile(path_settings):
             return
         
@@ -784,35 +860,46 @@ def main():
         try:
             file = open(path_settings, "r")
             settings = json.load(file)
-            settings = legacy.convertSettingsLegacy(settings, versionSettingsCurrent)
-            convertSettings.update(settings)
-        except Exception as e:
-            print("Could not load settings: ")
-            print(traceback.format_exc())
+            settings = legacy.convertSettingsLegacy(settings, version_handcode)
+            self._convert_settings.update(settings)
+        except Exception:
+            self._log_thread_safe(f"Could not load settings:\n{traceback.format_exc()}")
         finally:
             if file: file.close()
 
-    def saveSettingsToFile():
-        report("log", "Saving settings... ")
-        file = open(path_settings, "w")
-        json.dump(convertSettings, file)
-        file.close()
-        report("log", "Done\n")
+    def _save_settings_to_file(self, *, raise_on_fail: bool=False):
+        self._log_thread_safe("Saving settings... ")
+        try:
+            file = open(path_settings, "w")
+            json.dump(self._convert_settings, file)
+            file.close()
+        except Exception as e:
+            self._log_thread_safe(f"Failed! ({e})\n")
+            if raise_on_fail:
+                raise
+            return
+        self._log_thread_safe("Done\n")
 
-    prgLoading.start(20)
-    convertEvent = threading.Event()
-    convertData = dict()
-    convertSettings = dict()
-    convertThread = threading.Thread(target=threadConvert, daemon=True)
-    convertThread.start()
+    def __init__(self):
+        self._create_window()
+        self._load_fonts()
+        self._load_styles()
+        self._init_state_vars()
+        self._init_window()
+        self._init_widgets()
 
-    reloadUI()
-    window.update()
-    loadSettingsFromFile()
-    writeSettingsToUI()
+    def start(self):
+        self._init_handlers()
 
-    window.after(2*uiPollInterval, updateUIQueue)
-    window.mainloop()
+        self._prg_loading.start(20)
+        threading.Thread(target=self._thread_convert, daemon=True).start()
+
+        self._update_layout()
+        self.window.update()
+        self._load_settings_from_file()
+        
+        self._schedule_ui_update()
+        self.window.mainloop()
 
 if __name__ == "__main__":
-    main()
+    HandCodeApp().start()

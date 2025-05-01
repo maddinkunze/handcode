@@ -8,10 +8,19 @@ _T = typing.TypeVar("_T")
 _ProgressF = typing.Callable[[str, float|int, float|int], typing.Any]
 _InvokeF = typing.Callable[[_T, bool, np.ndarray, np.ndarray, int, int, np.ndarray, np.ndarray, list[float], int, _ProgressF], list[list[float]]]
 
+class WritingStyle:
+    def __init__(self, sid: int, name: str, image_path: str|None=None):
+        self.id = sid
+        self.name = name
+        self.image_path = image_path
+
 class ModelRunner(typing.Generic[_T]):
-    def __init__(self, load_f: typing.Callable[[], _T], invoke_f: _InvokeF, prepend_style_chars: bool = True):
+    def __init__(self, load_f: typing.Callable[[], _T], invoke_f: _InvokeF, model_name: str, writing_styles: list[WritingStyle], prepend_style_chars: bool=True):
+        self._model = None
         self.load_f = load_f
         self.invoke_f = invoke_f
+        self.model_name = model_name
+        self.writing_styles = writing_styles
         self.prepend_style_chars = prepend_style_chars
 
     def load(self):
@@ -60,6 +69,8 @@ def get_optimal_runner() -> ModelRunner:
 
     raise NotImplementedError("Could not load a model runner on this system. Please check the stdout (terminal) for more information.")
 
+ulw_writing_styles = [WritingStyle(i, f"Style {i}") for i in range(1, 10)]
+
 def get_ultralightweight_runner() -> ModelRunner:
     """
     Creates a model runner using an ultra-lightweight model, that depends on numpy only
@@ -80,7 +91,9 @@ def get_ultralightweight_runner() -> ModelRunner:
         )
         return filter_strokes(strokes)
     
-    return ModelRunner(load_model, invoke_model, prepend_style_chars=False)
+    return ModelRunner(load_model, invoke_model, "ulw", ulw_writing_styles, prepend_style_chars=False)
+
+original_writing_styles = [WritingStyle(i, f"Style {i+1}") for i in range(13)]
 
 def get_tflite_runner() -> ModelRunner:
     """
@@ -105,7 +118,7 @@ def get_tflite_runner() -> ModelRunner:
         )["strokes"]
         return filter_strokes(strokes)
 
-    return ModelRunner(load_model, invoke_model)
+    return ModelRunner(load_model, invoke_model, "tflite", original_writing_styles)
     
 def get_tensorflow_runner() -> ModelRunner:
     import tensorflow as tf # type: ignore
@@ -126,7 +139,7 @@ def get_tensorflow_runner() -> ModelRunner:
         )["strokes"]
         return filter_strokes(strokes)
 
-    return ModelRunner(load_model, invoke_model)
+    return ModelRunner(load_model, invoke_model, "tensorflow", original_writing_styles)
     
 def get_checkpoint_runner() -> ModelRunner:
     from .rnn import rnn
@@ -174,7 +187,7 @@ def get_checkpoint_runner() -> ModelRunner:
         )[0].numpy()
         return filter_strokes(strokes)
 
-    return ModelRunner(load_model, invoke_model)
+    return ModelRunner(load_model, invoke_model, "checkpoint", original_writing_styles)
 
 def filter_strokes(strokes) -> list[list[float]]:
     return [stroke[~np.all(stroke == 0.0, axis=1)] for stroke in strokes]

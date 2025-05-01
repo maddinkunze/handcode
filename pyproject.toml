@@ -17,7 +17,7 @@ tf = [
     "tf-keras==2.14.1",
 ]
 build = [
-    "cx_Freeze==6.12",
+    "cx_Freeze==8.2",
     "lazy-loader==0.2.0",
 ]
 

@@ -3,6 +3,7 @@ import numpy as np
 from .alphabet import alphabet as rnn_alphabet
 from .savgol_np import savgol_filter
 from .model_runner import get_optimal_runner
+from .commands import gcode
 
 class HandGCode:
     settings_default = {
@@ -25,23 +26,7 @@ class HandGCode:
             "height": 0,
             "rotate": 0
         },
-        "commands": {
-            "draw": {
-                "start": None,
-                "move": "G1 X{x:f} Y{y:f} Z0 F1000\n",
-                "end": None
-            },
-            "travel": {
-                "start": None,
-                "move": "G1 X{x:f} Y{y:f} Z5 F1000\n",
-                "end": None
-            },
-            "page": {
-                "start": None,
-                "next": "G1 Z50 F1000\nM0\n",
-                "end": "G1 Z50 F1000\n"
-            }
-        },
+        "commands": gcode(),
         "output": {
             "file": "test.nc"
         },
@@ -84,6 +69,14 @@ class HandGCode:
 
     def load(self):
         self._model.load()
+
+    @property
+    def model_name(self):
+        return self._model.model_name
+    
+    @property
+    def writing_styles(self):
+        return self._model.writing_styles
 
     def generate(self, settings):
         self.progress("Starting...", None, None)
@@ -167,10 +160,10 @@ class HandGCode:
 
         settings_font = settings.get("font", {})
         style_index = settings_font.get("style", self.settings_default["font"]["style"])
-        style = self._load_style(style_index)
-        style_strokes = style["strokes"]
-        style_strokes_len = len(style_strokes)
-        style_chars = style["chars"]
+        #style = self._load_style(style_index)
+        #style_strokes = style["strokes"]
+        #style_strokes_len = len(style_strokes)
+        #style_chars = style["chars"]
         bias = settings_font.get("bias", self.settings_default["font"]["bias"])
 
         words = passalong["words"]
@@ -192,13 +185,13 @@ class HandGCode:
             self.progress(None, i, _num_words)
 
             _chars = word
-            if prepend_style_chars:
-                _chars = f"{style_chars.item().decode()} {_chars}"
+            #if prepend_style_chars:
+            #    _chars = f"{style_chars.item().decode()} {_chars}"
             _chars = self._encode_ascii(_chars)
             _chars = np.array(_chars)
 
-            prime[i, :style_strokes_len, :] = style_strokes
-            prime_len[i] = style_strokes_len
+            #prime[i, :style_strokes_len, :] = style_strokes
+            #prime_len[i] = style_strokes_len
 
             _chars_len = len(_chars)
             chars[i, :_chars_len] = _chars
@@ -642,4 +635,7 @@ class MoveGenerator:
         if not move:
             return
 
-        self.file.write(move.format(**arguments))
+        move_call = move
+        if isinstance(move_call, str):
+            move_call = move_call.format
+        self.file.write(move_call(**arguments))

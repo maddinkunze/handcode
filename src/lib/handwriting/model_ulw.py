@@ -183,26 +183,22 @@ character_remap = {
 }
 
 writing_style_map = {
-    0: 0,
-    1: 1, # 44?
-    2: 2, # 54?
-    3: 3, # 23?
-    4: 4, # 1?
-    5: 5, # 19?
-    6: 6, # 6?
-    7: 7, # 30?
-    8: 8, # 11?
-    9: 9, # 21?
-    10: 10,
-    11: 11,
-    12: 12,
+    1:  44,
+    2:  54,
+    3:  23,
+    4:  1,
+    5:  19,
+    6:  6,
+    7:  30,
+    8:  11,
+    9:  21,
 }
 
 def run_model(model: dict, text: np.ndarray, writing_style: int, biases: list[float], max_tsteps: int, progress_cb: typing.Callable[[str|None, float|int, float|int], typing.Any]):
     num_words = text.shape[0]
     progress_cb(None, 0, num_words)
 
-    writing_style_index = writing_style_map[writing_style] # 44? 0-80?
+    writing_style_index = writing_style_map[writing_style]
 
     strokes_all = []
 
