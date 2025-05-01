@@ -12,6 +12,9 @@ HandCode is a simple tool that enables its users to automatically create GCode f
 
 ![](doc/img/diagram_process.png)
 
+> [!WARNING]
+> Please read and understand the license carefully before using this program! 
+
 ### Getting started
 
 #### Preparations
