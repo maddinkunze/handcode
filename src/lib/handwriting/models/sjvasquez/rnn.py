@@ -5,7 +5,7 @@ import numpy as np
 import tensorflow as tf
 #tf.compat.v1.disable_v2_behavior()
 
-from .alphabet import alphabet
+from .alphabet import character_map
 from .rnn_cell import LSTMAttentionCell
 from .rnn_ops import rnn_free_run
 from .tf_base_model import TFBaseModel
@@ -123,7 +123,7 @@ class rnn(TFBaseModel):
         cell = LSTMAttentionCell(
             lstm_size=self.lstm_size,
             num_attn_mixture_components=self.attention_mixture_components,
-            attention_values=tf.one_hot(self.c, len(alphabet)),
+            attention_values=tf.one_hot(self.c, len(character_map)),
             attention_values_lengths=self.c_len,
             num_output_mixture_components=self.output_mixture_components,
             bias=self.bias

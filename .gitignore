@@ -25,6 +25,7 @@ share/python-wheels/
 *.egg
 MANIFEST
 temp/
+logs/
 
 # PyInstaller
 #  Usually these files are written by a python script from a template
@@ -175,7 +176,6 @@ _del/
 # Ignore data files (except demo.txt)
 /src/data/*
 !/src/data/demo.txt
-/src/lib/handwriting/logs/
 
 # Allow lib subfolder (contains icon.ico and svg2gcode)
 # i know those should not be in lib, but meh

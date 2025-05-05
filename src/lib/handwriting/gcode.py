@@ -1,8 +1,8 @@
 import os
 import numpy as np
-from .alphabet import alphabet as rnn_alphabet
+from .models.sjvasquez.alphabet import character_map as rnn_alphabet
 from .savgol_np import savgol_filter
-from .model_runner import get_optimal_runner
+from .models import get_optimal_runner
 from .commands import gcode
 
 class HandGCode:
@@ -56,13 +56,9 @@ class HandGCode:
         "ö": "o",
         "ü": "u"
     }
-    _alpha_to_num = dict([(e, i) for i, e in enumerate(alphabet)])
-
-    _directory = os.path.dirname(os.path.realpath(__file__))
-    _cached_styles = {}
 
     def __init__(self, logger=print, progress=lambda *_: ...):
-        self._model = get_optimal_runner()
+        self._model = get_optimal_runner(progress)
         
         self.logger = logger
         self.progress = progress
@@ -72,7 +68,7 @@ class HandGCode:
 
     @property
     def model_name(self):
-        return self._model.model_name
+        return self._model.name
     
     @property
     def writing_styles(self):
@@ -141,80 +137,19 @@ class HandGCode:
         passalong["newlines"] = newlines_before_words[1:]
         passalong["replacedcharacters"] = replacedcharacters
 
-    @classmethod
-    def _load_style(cls, style_name):
-        cached_style = cls._cached_styles.get(style_name, None)
-        if cached_style:
-            return cached_style
-
-        styles_path = os.path.join(cls._directory, "styles")
-        strokes = np.load(os.path.join(styles_path, f"style-{style_name}-strokes.npy"))
-        chars = np.load(os.path.join(styles_path, f"style-{style_name}-chars.npy"))
-
-        cached_style = {"strokes": strokes, "chars": chars}
-        cls._cached_styles[style_name] = cached_style
-        return cached_style
-
     def _sample(self, settings, passalong):
         self.progress("Preparing stroke generation...", None, None)
 
-        settings_font = settings.get("font", {})
-        style_index = settings_font.get("style", self.settings_default["font"]["style"])
-        #style = self._load_style(style_index)
-        #style_strokes = style["strokes"]
-        #style_strokes_len = len(style_strokes)
-        #style_chars = style["chars"]
-        bias = settings_font.get("bias", self.settings_default["font"]["bias"])
-
         words = passalong["words"]
         words_len = len(words)
-        
-        prime = np.zeros([words_len, 1200, 3])
-        prime_len = np.zeros([words_len])
 
-        chars = np.zeros([words_len, 120])
-        chars_len = np.zeros([words_len])
-
-        prepend_style_chars = self._model.prepend_style_chars
-        biases = []
-        tsteps_max = 0
-
-        _num_words = len(words)
-        self.progress("Preparing stroke generation...", 0, _num_words)
-        for i, word in enumerate(words):
-            self.progress(None, i, _num_words)
-
-            _chars = word
-            #if prepend_style_chars:
-            #    _chars = f"{style_chars.item().decode()} {_chars}"
-            _chars = self._encode_ascii(_chars)
-            _chars = np.array(_chars)
-
-            #prime[i, :style_strokes_len, :] = style_strokes
-            #prime_len[i] = style_strokes_len
-
-            _chars_len = len(_chars)
-            chars[i, :_chars_len] = _chars
-            chars_len[i] = _chars_len
-
-            biases.append(bias)
-            if len(word) > tsteps_max:
-                tsteps_max = len(word)
+        settings_font = settings.get("font", {})
+        style = settings_font.get("style", self.settings_default["font"]["style"])
+        biases = [settings_font.get("bias", self.settings_default["font"]["bias"])] * words_len
         
         self.progress("Generating strokes...", None, None)
 
-        strokes = self._model.invoke(
-            prime = True,
-            x_prime = prime,
-            prime_len = prime_len,
-            num_samples = words_len,
-            sample_tsteps = 40 * tsteps_max,
-            chars = chars,
-            chars_len = chars_len,
-            biases = biases,
-            style_index = style_index,
-            progress_cb = self.progress,
-        )
+        strokes = self._model.invoke(words, biases, style)
 
         passalong["strokes"] = strokes 
 
@@ -271,6 +206,7 @@ class HandGCode:
 
         _num_words = len(words)
         self.progress("Calculating word positions...", 0, _num_words)
+        strokes_words = self._filter_strokes(strokes_words)
         for i, word, strokes_word in zip(range(_num_words), words, strokes_words):
             self.progress(None, i, _num_words)
 
@@ -488,12 +424,9 @@ class HandGCode:
             file_out.write(command_page_end)
         file_out.close()
 
-    @classmethod
-    def _encode_ascii(cls, ascii_string):
-        """
-        encodes ascii string to array of ints
-        """
-        return np.array(list(map(lambda x: cls._alpha_to_num.get(x, 0), ascii_string)) + [0])
+    @staticmethod
+    def _filter_strokes(strokes):
+        return [stroke[~np.all(stroke == 0.0, axis=1)] for stroke in strokes]
 
     @staticmethod
     def _denoise(coords):

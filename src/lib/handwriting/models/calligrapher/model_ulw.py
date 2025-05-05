@@ -1,7 +1,10 @@
+import os
 import math
 import numpy as np
 import typing
 import random
+
+from ..model_runner import ModelRunner, WritingStyle
 
 def load_model(filepath: str) -> bytes:
     f = open(filepath, "rb")
@@ -13,7 +16,7 @@ def parse_model(filepath: str):
     model_raw = load_model(filepath)
     model_raw_length = len(model_raw)
 
-    model_parsed = dict()
+    model_parsed = {}
     index = 0
 
     while index < model_raw_length:
@@ -107,79 +110,14 @@ def unpack_sparse_matrix(values, offsets, dimensions):
     return sparse_matrix
 
 
-character_remap = {
-    1: 8, # " " (space)
-    2: 72, # !
-    3: 4, # "
-    4: 56, # "#" (hastag)
-    5: 16, # '
-    6: 66, # (
-    7: 67, # )
-    8: 37, # ,
-    9: 40, # -
-    10: 7, # .
-    11: 62, # 0
-    12: 59, # 1
-    13: 63, # 2
-    14: 69, # 3
-    15: 68, # 4
-    16: 61, # 5
-    17: 71, # 6
-    18: 70, # 7
-    19: 76, # 8
-    20: 60, # 9
-    21: 74, # :
-    22: 73, # ;
-    23: 51, # ?
-    24: 9, # A
-    25: 47, # B
-    26: 57, # C
-    27: 52, # D
-    28: 42, # E
-    29: 53, # F
-    30: 45, # G
-    31: 41, # H
-    32: 23, # I
-    33: 64, # J
-    34: 58, # K
-    35: 48, # L
-    36: 5, # M
-    37: 38, # N
-    38: 36, # O
-    39: 46, # P
-    40: 55, # R
-    41: 18, # S
-    42: 31, # T
-    43: 65, # U
-    44: 39, # V
-    45: 54, # W
-    46: 50, # Y
-    47: 14, # a
-    48: 32, # b
-    49: 20, # c
-    50: 27, # d
-    51: 19, # e
-    52: 35, # f
-    53: 33, # g
-    54: 30, # h
-    55: 13, # i
-    56: 43, # j
-    57: 28, # k
-    58: 26, # l
-    59: 12, # m
-    60: 15, # n
-    61: 25, # o
-    62: 29, # p
-    63: 49, # q
-    64: 6, # r
-    65: 17, # s
-    66: 21, # t
-    67: 11, # u
-    68: 34, # v
-    69: 24, # w
-    70: 44, # x
-    71: 22, # y
-    72: 10, # z
+character_map = {
+    "\0": 0, " ": 8,  "!": 72, '"': 4,  "#": 56, "'": 16, "(": 66, ")": 67, ",": 37, "-": 40, ".": 7,  "?": 51,
+    "0": 62, "1": 59, "2": 63, "3": 69, "4": 68, "5": 61, "6": 71, "7": 70, "8": 76, "9": 60, ":": 74, ";": 73,
+    "A": 9,  "B": 47, "C": 57, "D": 52, "E": 42, "F": 53, "G": 45, "H": 41, "I": 23, "J": 64, "K": 58, "L": 48,
+    "M": 5,  "N": 38, "O": 36, "P": 46, "R": 55, "S": 18, "T": 31, "U": 65, "V": 39, "W": 54, "Y": 50,
+    "a": 14, "b": 32, "c": 20, "d": 27, "e": 19, "f": 35, "g": 33, "h": 30, "i": 13, "j": 43, "k": 28, "l": 26,
+    "m": 12, "n": 15, "o": 25, "p": 29, "q": 49, "r": 6,  "s": 17, "t": 21, "u": 11, "v": 34, "w": 24, "x": 44,
+    "y": 22, "z": 10,
 }
 
 writing_style_map = {
@@ -194,8 +132,8 @@ writing_style_map = {
     9:  21,
 }
 
-def run_model(model: dict, text: np.ndarray, writing_style: int, biases: list[float], max_tsteps: int, progress_cb: typing.Callable[[str|None, float|int, float|int], typing.Any]):
-    num_words = text.shape[0]
+def run_model(model: dict, text: list[str], writing_style: int, biases: list[float], progress_cb: typing.Callable[[str|None, float|int, float|int], typing.Any]):
+    num_words = len(text)
     progress_cb(None, 0, num_words)
 
     writing_style_index = writing_style_map[writing_style]
@@ -204,7 +142,7 @@ def run_model(model: dict, text: np.ndarray, writing_style: int, biases: list[fl
 
     for i, (word, bias) in enumerate(zip(text, biases)):
         word_stripped = np.trim_zeros(word)
-        word_filtered = [character_remap.get(c, 0) for c in word_stripped]
+        word_filtered = [character_map.get(c, 0) for c in word_stripped]
         word_filtered = [c for c in word_filtered if c != 0]
         word_filtered = [2, *word_filtered, 3]
         word_len = len(word_filtered)
@@ -234,14 +172,14 @@ def run_model(model: dict, text: np.ndarray, writing_style: int, biases: list[fl
         sample_tsteps = 0
         strokes = [np.array([0, 0, 1])]
 
-        stop_condition = max_tsteps
+        stop_condition = 40 * len(word)
 
         while True:
             stroke, stop_certainty, state = js_L(model, strokes[-1], state, bias)
             sample_tsteps += 1
             if (sample_tsteps > stop_condition) or (stop_certainty > .5):
                 break
-            progress_cb(None, i + sample_tsteps / max_tsteps, num_words)
+            progress_cb(None, i + sample_tsteps / stop_condition, num_words)
             strokes.append(stroke)
 
         strokes_all.append(np.array(strokes))
@@ -392,7 +330,7 @@ def calculate_char_embeddings(model, char_raws):
     
     concatenated_embeddings = np.concatenate((char_embeddings, weighted_embeddings), axis=1)
 
-    intermediate = (concatenated_embeddings.reshape(-1, 512, 1) * model["j"].reshape(1, 512, -1)).sum(axis=1)
+    intermediate = (concatenated_embeddings.reshape((-1, 512, 1)) * model["j"].reshape(1, 512, -1)).sum(axis=1)
     intermediate += model["E"]
 
     return intermediate
@@ -406,3 +344,17 @@ def softplus(arr):
     if arr.dtype == np.float32:
         arr = arr.clip(None, 88) # clip to avoid overflow in exp
     return np.log(1 + np.exp(arr))
+
+path_dir = os.path.abspath(os.path.dirname(__file__))
+path_model = os.path.join(path_dir, "model.ulw")
+
+class ModelULW(ModelRunner):
+    name = "cai-ulw"
+    writing_styles = [WritingStyle(i, f"Style {i}") for i in range(1, 10)]
+
+
+    def load(self):
+        self._model = parse_model(path_model)
+
+    def invoke(self, text, biases, style):
+        return run_model(self._model, text, style, biases, self.progress_cb)

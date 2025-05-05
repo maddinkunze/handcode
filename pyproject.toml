@@ -27,3 +27,6 @@ override-dependencies = [
     "tensorflow-intel; sys_platform == 'win32'",
     "tensorflow-io-gcs-filesystem; sys_platform == 'never'",
 ]
+
+[tool.uv.workspace]
+members = ["_del/handwriting-synthesis"]
