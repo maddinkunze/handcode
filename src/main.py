@@ -20,7 +20,10 @@ import tkinter.filedialog as tkfd
 import tkinter.messagebox as tkmb
 
 from common import path_lib, path_data, path_settings, version_handcode
-import tkwidgets as tkw # type: ignore
+if typing.TYPE_CHECKING:
+    import lib.tkwidgets as tkw
+else:
+    import tkwidgets as tkw # type: ignore
 
 tkm = tk
 if sys.platform == "darwin":
@@ -474,10 +477,19 @@ class HandCodeApp:
                 file.close()
 
     def _show_folder(self):
-        if os.name == "nt":
+        if sys.platform == "win32":
             os.startfile(path_data)
-        elif sys.platform.startswith("linux"):
-            os.system(f"xdg-open \"{path_data}\"") # TODO: dangerous, we assume the path does not contain any quotes
+            return
+
+        path_data_safe = path_data.replace('"', '\\"')
+        if sys.platform.startswith("linux"):
+            os.system(f"xdg-open \"{path_data_safe}\"")
+            return
+
+        if sys.platform == "darwin":
+            os.system(f"open -R \"{path_data_safe}\"")
+            return
+
 
     def _update_ui_queue(self):
         for _ in range(self._ui_poll_tries):
@@ -587,7 +599,10 @@ class HandCodeApp:
     def _thread_convert(self):
         try:
             self._log_thread_safe("Loading libraries... ")
-            import handwriting # type: ignore
+            if typing.TYPE_CHECKING:
+                import lib.handwriting as handwriting
+            else:
+                import handwriting # type: ignore
             gcode = handwriting.gcode.HandGCode(logger=self._log_thread_safe, progress=self._update_progress_bar)
             self._log_thread_safe(f"Done (loaded \"{gcode.model_name}\"-mode)\n")
             self._gcode = gcode

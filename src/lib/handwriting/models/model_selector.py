@@ -3,7 +3,7 @@ import traceback
 from .model_runner import _ProgressF, ModelRunner
 
 def get_optimal_runner(progress_cb: _ProgressF) -> ModelRunner:
-    return _load_model_from_list(progress_cb, get_ulw_model, get_tf_model, get_rnn_model)
+    return _load_model_from_list(progress_cb, get_torch_model, get_ulw_model, get_tf_model, get_rnn_model)
 
 def _load_model_from_list(progress_cb: _ProgressF, *model_loaders: typing.Callable[[], type[ModelRunner]]) -> ModelRunner:
     for loader in model_loaders:
@@ -16,6 +16,10 @@ def _load_model_from_list(progress_cb: _ProgressF, *model_loaders: typing.Callab
             print(f"Could not load \"{loader_name}\" model runner")
             traceback.print_exc()
             print("---\n")
+
+def get_torch_model() -> type[ModelRunner]:
+    from .vickianand.model_torch import ModelTorch
+    return ModelTorch
 
 def get_ulw_model() -> type[ModelRunner]:
     from .calligrapher.model_ulw import ModelULW
