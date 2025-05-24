@@ -10,6 +10,9 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+torch = [
+    "torch==2.1.0",
+]
 tf = [
     "tensorflow==2.11.0",
     "tensorflow-intel==2.11.0",

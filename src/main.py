@@ -604,7 +604,7 @@ class HandCodeApp:
             else:
                 import handwriting # type: ignore
             gcode = handwriting.gcode.HandGCode(logger=self._log_thread_safe, progress=self._update_progress_bar)
-            self._log_thread_safe(f"Done (loaded \"{gcode.model_name}\"-mode)\n")
+            self._log_thread_safe(f"Done (loaded \"{gcode.model_name}\"-model)\n")
             self._gcode = gcode
             self._report_thread_safe("model_imported")
 

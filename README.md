@@ -153,6 +153,11 @@ If there is no release for your platform available but you want the native GUI e
 
 Please see [troubleshooting](#troubleshooting) if you encounter any errors during this process.
 
+
+### Models
+
+This program allows users to choose between different models. To reduce the binary size, precompiled releases (as found in the release section) will only contain a very limited set of models to choose from. To see a list of all supported models, please take a look into [`src/lib/handwriting/models`](src/lib/handwriting/models/). There you will also find the respective licenses and more information on using each model.
+
 ### Troubleshooting
 
 #### UV errors
