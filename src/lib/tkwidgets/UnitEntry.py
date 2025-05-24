@@ -60,9 +60,15 @@ class UnitEntry:
     def get(self):
         return self.entry.get()
 
-    def place(self, x, y, width):
-        self.entry.place(x=x, y=y, width=width-self.unitwidth, height=20)
-        self.unit.place(x=x+width-self.unitwidth, y=y, width=self.unitwidth, height=20)
+    def place(self, x, y, width, relx=0, rely=0, anchor=tk.NW):
+        _basex = x
+        _unitx = x + width - self.unitwidth
+        if anchor in (tk.E, tk.SE, tk.NE):
+            _basex = x - self.unitwidth
+            _unitx = x
+
+        self.entry.place(x=_basex, y=y, width=width-self.unitwidth, height=20, relx=relx, rely=rely, anchor=anchor)
+        self.unit.place(x=_unitx, y=y, width=self.unitwidth, height=20, relx=relx, rely=rely, anchor=anchor)
 
     def _onchange(self):
         _name = "change"

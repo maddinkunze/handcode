@@ -58,7 +58,7 @@ class ScrolledEntry:
         if cscrollY:
             self.scrollY.configure(cscrollY)
 
-    def place(self, x, y, width, height):
-        self.entry.place(x=x, y=y, width=width-15, height=height-15)
-        self.scrollX.place(x=x, y=y+height-15, width=width-15, height=15)
-        self.scrollY.place(x=x+width-15, y=y, width=15, height=height-15)
+    def place(self, x, y, width, height, relwidth=0, relheight=0):
+        self.entry.place(x=x, y=y, width=width-15, height=height-15, relwidth=relwidth, relheight=relheight)
+        self.scrollX.place(x=x, y=y+height-15, width=width-15, height=15, relwidth=relwidth, rely=relheight)
+        self.scrollY.place(x=x+width-15, y=y, width=15, height=height-15, relheight=relheight, relx=relwidth)

@@ -21,6 +21,7 @@ class ModelTorch(ModelRunner):
         self._oh_encoder = OneHotEncoder()
 
     def invoke(self, text, biases, style):
+        biases = [3 * b for b in biases]
         text = [e.to(self._device) for e in self._oh_encoder.one_hot(text)]
         strokes = self._model.generate(text, biases[0], self._device, True).cpu().numpy()
         strokes_words = []

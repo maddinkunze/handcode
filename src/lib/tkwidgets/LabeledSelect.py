@@ -37,9 +37,12 @@ class LabeledSelect:
             cmenu["activeforeground"] = kwargs["fgselect:hover"]
 
         if "font" in kwargs:
-            clabel["font"] = kwargs["font"]
-            cselect["font"] = kwargs["font"]
-            cmenu["font"] = kwargs["font"]
+            font = kwargs["font"]
+            cselect["font"] = font
+            cmenu["font"] = font
+
+        if "fontlabel" in kwargs:
+            clabel["font"] = kwargs["fontlabel"]
             
         if "label" in kwargs:
             clabel["text"] = kwargs["label"]

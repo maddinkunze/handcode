@@ -34,9 +34,10 @@ class LabeledEntry:
             centry["bgcursor"] = kwargs["bgcursor"]
 
         if "font" in kwargs:
-            font = kwargs["font"]
-            clabel["font"] = font
-            centry["font"] = font
+            centry["font"] = kwargs["font"]
+
+        if "fontlabel" in kwargs:
+            clabel["font"] = kwargs["fontlabel"]
 
         if "label" in kwargs:
             clabel["text"] = kwargs["label"]
@@ -64,6 +65,6 @@ class LabeledEntry:
     def get(self):
         return self.entry.get()
 
-    def place(self, x, y, width):
-        self.label.place(x=x, y=y, width=width, height=20)
-        self.entry.place(x=x, y=y+20, width=width)
+    def place(self, x, y, width, relx=0, rely=0, anchor=tk.NW):
+        self.label.place(x=x, y=y, width=width, height=20, relx=relx, rely=rely, anchor=anchor)
+        self.entry.place(x=x, y=y+20, width=width, relx=relx, rely=rely, anchor=anchor)

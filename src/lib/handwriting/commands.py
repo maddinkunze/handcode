@@ -61,7 +61,7 @@ def svg(pendraw=None, pentravel=None, penpause=None, feeddraw=None, feedtravel=N
         },
         "travel": {
             "start": None,
-            "move": lambda x, y, **_: f"M {x:f} {-1*y:f} ",
+            "move": lambda x, y, **_: f"M {x:f} {-y:f} ",
             "end": None,
         },
         "page": {

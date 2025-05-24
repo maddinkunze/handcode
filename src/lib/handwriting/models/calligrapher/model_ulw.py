@@ -357,4 +357,5 @@ class ModelULW(ModelRunner):
         self._model = parse_model(path_model)
 
     def invoke(self, text, biases, style):
+        biases = [2.5 * b for b in biases]
         return run_model(self._model, text, style, biases, self.progress_cb)

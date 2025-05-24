@@ -65,11 +65,16 @@ class HandCodeApp:
     def _load_fonts(self) -> None:
         self._font_tooltip = tkf.Font(size=7)
         self._font_text = tkf.Font(size=9)
+        self._font_entry = tkf.Font(size=12)
         self._font_label = tkf.Font(size=10, weight="bold")
         self._font_start = tkf.Font(size=24, weight="bold")
 
     def _load_styles(self) -> None:
         self._style_window = {
+            "bg": self.STYLE["bg_window"],
+        }
+
+        self._style_frame = {
             "bg": self.STYLE["bg_window"],
         }
 
@@ -108,7 +113,8 @@ class HandCodeApp:
             "bgentry": self.STYLE["bg_inner"],
             "fgentry": self.STYLE["fg_text"],
             "bgcursor": self.STYLE["fg_hint"],
-            "font": self._font_text,
+            "font": self._font_entry,
+            "fontlabel": self._font_text,
             "relief": tk.FLAT,
             "bd": self.STYLE["borderwidth"],
             "highlightthickness": self.STYLE["highlightthickness"],
@@ -155,7 +161,8 @@ class HandCodeApp:
             "bgscale": self.STYLE["bg_inner"],
             "fgscale": self.STYLE["bg_button"],
             "fgscale:hover": self.STYLE["bg_button_hover"],
-            "font": self._font_text,
+            "font": self._font_entry,
+            "fontlabel": self._font_text,
             "fonttooltip": self._font_tooltip,
             "bd": self.STYLE["borderwidth"],
             "highlightthickness": self.STYLE["highlightthickness"],
@@ -168,6 +175,8 @@ class HandCodeApp:
             "bgselect:hover": self.STYLE["bg_button_hover"],
             "fgselect": self.STYLE["fg_button"],
             "fgselect:hover": self.STYLE["fg_button_hover"],
+            "font": self._font_entry,
+            "fontlabel": self._font_text,
             "bd": self.STYLE["borderwidth"],
             "highlightthickness": self.STYLE["highlightthickness"],
         }
@@ -202,10 +211,26 @@ class HandCodeApp:
     def _create_window(self) -> None:
         self.window = tk.Tk()
 
+    def _init_sizes(self) -> None:
+        self._xstart = 10
+        self._ystart = 5
+        self._xmargin = 10
+        self._ymargin = 5
+        self._widget_height = 20
+
+        self._settings_width = 240
+        self._inputs_min_width = 420
+        self._start_height = 128
+        self._inout_height = 45
+
+        self._window_size = (660, 650)
+
     def _init_window(self) -> None:
-        self.window.resizable(False, False)
+
+        self.window.resizable(True, True)
         self._window_size = (660, 650)
         self.window.geometry(f"{self._window_size[0]}x{self._window_size[1]}")
+        self.window.minsize(*self._window_size)
         self.window.title("HandCode")
         self.window.configure(**self._style_window)
 
@@ -220,147 +245,237 @@ class HandCodeApp:
                 pass
 
     def _init_widgets(self) -> None:
-        self._lbl_file_in = tk.Label(self.window, text="Input File (opt):", **self._style_label_section)
-        self._btn_file_in = tkm.Button(self.window, text="Open File...", **self._style_button_default)
+        self._frm_inout = tk.Frame(self.window, **self._style_frame)
+        self._lbl_file_in = tk.Label(self._frm_inout, text="Input File (opt):", **self._style_label_section)
+        self._btn_file_in = tkm.Button(self._frm_inout, text="Open File...", **self._style_button_default)
         self._lbl_file_process = tk.Label(self.window, text="↴   ↱", **{**self._style_label_section, "font": self._font_start})
-        self._lbl_file_out = tk.Label(self.window, text="Output File:", **self._style_label_section)
-        self._edt_file_out = tk.Entry(self.window, **self._style_entry_default)
-        self._slt_file_type = tkw.LabeledSelect(self.window, label="Format", options=[*self._MAP_FILETYPES.values()], **self._style_select_labeled)
+        self._lbl_file_out = tk.Label(self._frm_inout, text="Output File:", **self._style_label_section)
+        self._edt_file_out = tk.Entry(self._frm_inout, **self._style_entry_default)
+        self._slt_file_type = tkw.LabeledSelect(self._frm_inout, label="Format", options=[*self._MAP_FILETYPES.values()], **self._style_select_labeled)
 
-        self._lbl_input = tk.Label(self.window, text="Input Text:", **self._style_label_section)
-        self._edt_input = tkw.ScrolledEntry(self.window, **self._style_entry_scrolled)
+        self._frm_input = tk.Frame(self.window, **self._style_frame)
+        self._lbl_input = tk.Label(self._frm_input, text="Input Text:", **self._style_label_section)
+        self._edt_input = tkw.ScrolledEntry(self._frm_input, **self._style_entry_scrolled)
 
-        self._lbl_log = tk.Label(self.window, text="Event Log:", **self._style_label_section)
-        self._edt_log = tkw.ScrolledEntry(self.window, **self._style_entry_scrolled)
+        self._frm_log = tk.Frame(self.window, **self._style_frame)
+        self._lbl_log = tk.Label(self._frm_log, text="Event Log:", **self._style_label_section)
+        self._edt_log = tkw.ScrolledEntry(self._frm_log, **self._style_entry_scrolled)
 
-        self._prg_loading = ttk.Progressbar(self.window, orient="horizontal", mode="indeterminate", style="Maddin.HC.Horizontal.TProgressbar")
-        self._btn_show = tkm.Button(self.window, text="Open input/output folder", **self._style_button_default)
-        self._btn_start = tkm.Button(self.window, text="Start", **self._style_button_start, state=tk.DISABLED)
+        self._frm_start = tk.Frame(self.window, **self._style_frame)
 
-
-        self._seg_left_right = tk.Frame(self.window, self._style_separator)
-
-
-        self._lbl_font = tk.Label(self.window, text="Font Settings:", **self._style_label_section)
-        self._edt_font_size = tkw.LabeledEntry(self.window, label="Size", unit="mm", **self._style_entry_labeled)
-        self._slt_font_style = tkw.LabeledSelect(self.window, label="Style", options=[], **self._style_select_labeled)
-        self._edt_font_bias = tkw.LabeledEntry(self.window, label="Legibility", unit="%", **self._style_entry_labeled)
-
-        self._edt_font_line_height = tkw.LabeledEntry(self.window, label="Line Height", unit="mm", **self._style_entry_labeled)
-        self._lbl_font_word_spacing = tk.Label(self.window, text="Word Spacing", **self._style_label_input)
-        self._edt_font_word_spacing = tkw.UnitEntry(self.window, unit="mm", **self._style_entry_unit)
-        self._lbl_font_word_spacing_var = tk.Label(self.window, text="±", **self._style_label_input)
-        self._edt_font_word_spacing_var = tkw.UnitEntry(self.window, unit="mm", **self._style_entry_unit)
-
-        self._chk_font_line_height_recalc = tkw.Checkbox(self.window, label="Recalc on f...", **self._style_checkbox_small)
-        self._chk_font_word_spacing_recalc = tkw.Checkbox(self.window, label="Recalc on font size cha...", **self._style_checkbox_small)
-
-        self._scl_font_align_horizontal = tkw.LabeledScale(self.window, label="Horzontal Align", description="Left      Center    Right", start=0, end=1, step=0.1, **self._style_scale_labeled, state=tk.DISABLED)
-        self._scl_font_align_vertical = tkw.LabeledScale(self.window, label="Vertical Align", description="Top      Center  Bottom", start=0, end=1, step=0.1, **self._style_scale_labeled)
-
-        self._lbl_pen = tk.Label(self.window, text="Pen Settings:", **self._style_label_section)
-        self._edt_pen_z_draw = tkw.LabeledEntry(self.window, label="Z Draw", unit="mm", **self._style_entry_labeled)
-        self._edt_pen_z_travel = tkw.LabeledEntry(self.window, label="Z Travel", unit="mm", **self._style_entry_labeled)
-        self._edt_pen_z_pause = tkw.LabeledEntry(self.window, label="Z Pause", unit="mm", **self._style_entry_labeled)
-
-        self._edt_pen_f_draw = tkw.LabeledEntry(self.window, label="Feedrate Draw", unit="mm/min", **self._style_entry_labeled)
-        self._edt_pen_f_travel = tkw.LabeledEntry(self.window, label="Feedrate Travel", unit="mm/min", **self._style_entry_labeled)
+        self._prg_loading = ttk.Progressbar(self._frm_start, orient="horizontal", mode="indeterminate", style="Maddin.HC.Horizontal.TProgressbar")
+        self._btn_show = tkm.Button(self._frm_start, text="Open input/output folder", **self._style_button_default)
+        self._btn_start = tkm.Button(self._frm_start, text="Start", **self._style_button_start, state=tk.DISABLED)
 
 
-        self._lbl_page = tk.Label(self.window, text="Page Settings:", **self._style_label_section)
-        self._edt_page_width = tkw.LabeledEntry(self.window, label="Width (o≃∞)", unit="mm", **self._style_entry_labeled)
-        self._edt_page_height = tkw.LabeledEntry(self.window, label="Height (o≃∞)", unit="mm", **self._style_entry_labeled)
-        self._edt_page_rotation = tkw.LabeledEntry(self.window, label="Rotation", unit="°", **self._style_entry_labeled)
+        self._frm_settings = tk.Frame(self.window, **self._style_frame)
 
-        self._lbl_other = tk.Label(self.window, text="Other Features:", **self._style_label_section)
-        self._chk_feature_replace = tkw.Checkbox(self.window, label="Replace unknown characters", **self._style_checkbox_default)
-        self._lbl_feature_replace = tk.Label(self.window, text="(e.g. ä -> a, Q -> O)", **self._style_label_tooltip)
-        self._chk_feature_imitate = tkw.Checkbox(self.window, label="Imitate some unknown characters", **self._style_checkbox_default)
-        self._chk_feature_imitate_dam = tkw.Checkbox(self.window, label="Imitate diaresis as macron (ä -> ā)", **self._style_checkbox_small)
-        self._chk_feature_split_pages = tkw.Checkbox(self.window, label="One output file for each page", **self._style_checkbox_default)
+        self._lbl_font = tk.Label(self._frm_settings, text="Font Settings:", **self._style_label_section)
+        self._edt_font_size = tkw.LabeledEntry(self._frm_settings, label="Size", unit="mm", **self._style_entry_labeled)
+        self._slt_font_style = tkw.LabeledSelect(self._frm_settings, label="Style", options=[], **self._style_select_labeled)
+        self._edt_font_bias = tkw.LabeledEntry(self._frm_settings, label="Legibility", unit="%", **self._style_entry_labeled)
 
-    def _update_layout(self) -> None:
-        # actually display all the ui stuff
-        xstart = 10
-        ystart = 5
-        
-        xmargin = 10
-        ymargin = 5
-        
-        height = 20
-        
+        self._edt_font_line_height = tkw.LabeledEntry(self._frm_settings, label="Line Height", unit="mm", **self._style_entry_labeled)
+        self._lbl_font_word_spacing = tk.Label(self._frm_settings, text="Word Spacing", **self._style_label_input)
+        self._edt_font_word_spacing = tkw.UnitEntry(self._frm_settings, unit="mm", **self._style_entry_unit)
+        self._lbl_font_word_spacing_var = tk.Label(self._frm_settings, text="±", **self._style_label_input)
+        self._edt_font_word_spacing_var = tkw.UnitEntry(self._frm_settings, unit="mm", **self._style_entry_unit)
+
+        if sys.platform == "win32":
+            label_lhr = "Recalc on f..."
+            label_wsr = "Recalc on font s..."
+            self._chk_font_word_spacing_recalc = tkw.Checkbox(self._frm_settings, label="Recalc on font size change", **self._style_checkbox_small)
+        elif sys.platform == "darwin":
+            label_lhr = "Recalc on font s..."
+            label_wsr = "Recalc on font size change"
+        else:
+            label_lhr = "Recalc on font s..."
+            label_wsr = "Recalc on font size change"
+        self._chk_font_line_height_recalc = tkw.Checkbox(self._frm_settings, label=label_lhr, **self._style_checkbox_small)
+        self._chk_font_word_spacing_recalc = tkw.Checkbox(self._frm_settings, label=label_wsr, **self._style_checkbox_small)
+
+        if sys.platform == "win32":
+            desc_horizontal = "Left      Center    Right"
+            desc_vertical = "Top      Center  Bottom"
+        elif sys.platform == "darwin":
+            desc_horizontal = "Left           Center         Right"
+            desc_vertical = "Top          Center        Bottom"
+        else:
+            desc_horizontal = "Left      Center    Right"
+            desc_vertical = "Top      Center  Bottom"
+        self._scl_font_align_horizontal = tkw.LabeledScale(self._frm_settings, label="Horzontal Align", description=desc_horizontal, start=0, end=1, step=0.1, **self._style_scale_labeled, state=tk.DISABLED)
+        self._scl_font_align_vertical = tkw.LabeledScale(self._frm_settings, label="Vertical Align", description=desc_vertical, start=0, end=1, step=0.1, **self._style_scale_labeled)
+
+        self._lbl_pen = tk.Label(self._frm_settings, text="Pen Settings:", **self._style_label_section)
+        self._edt_pen_z_draw = tkw.LabeledEntry(self._frm_settings, label="Z Draw", unit="mm", **self._style_entry_labeled)
+        self._edt_pen_z_travel = tkw.LabeledEntry(self._frm_settings, label="Z Travel", unit="mm", **self._style_entry_labeled)
+        self._edt_pen_z_pause = tkw.LabeledEntry(self._frm_settings, label="Z Pause", unit="mm", **self._style_entry_labeled)
+
+        self._edt_pen_f_draw = tkw.LabeledEntry(self._frm_settings, label="Feedrate Draw", unit="mm/min", **self._style_entry_labeled)
+        self._edt_pen_f_travel = tkw.LabeledEntry(self._frm_settings, label="Feedrate Travel", unit="mm/min", **self._style_entry_labeled)
+
+
+        self._lbl_page = tk.Label(self._frm_settings, text="Page Settings:", **self._style_label_section)
+        self._edt_page_width = tkw.LabeledEntry(self._frm_settings, label="Width (o≃∞)", unit="mm", **self._style_entry_labeled)
+        self._edt_page_height = tkw.LabeledEntry(self._frm_settings, label="Height (o≃∞)", unit="mm", **self._style_entry_labeled)
+        self._edt_page_rotation = tkw.LabeledEntry(self._frm_settings, label="Rotation", unit="°", **self._style_entry_labeled)
+
+        self._lbl_other = tk.Label(self._frm_settings, text="Other Features:", **self._style_label_section)
+        self._chk_feature_replace = tkw.Checkbox(self._frm_settings, label="Replace unknown characters", **self._style_checkbox_default)
+        self._lbl_feature_replace = tk.Label(self._frm_settings, text="(e.g. ä -> a, Q -> O)", **self._style_label_tooltip)
+        self._chk_feature_imitate = tkw.Checkbox(self._frm_settings, label="Imitate some unknown characters", **self._style_checkbox_default)
+        self._chk_feature_imitate_dam = tkw.Checkbox(self._frm_settings, label="Imitate diaresis as macron (ä -> ā)", **self._style_checkbox_small)
+        self._chk_feature_split_pages = tkw.Checkbox(self._frm_settings, label="One output file for each page", **self._style_checkbox_default)
+
+
+        self._seg_left_right = tk.Frame(self.window, **self._style_separator)
+
+    def _update_entire_layout(self) -> None:
+        self._update_trivial_layout()
+        self._update_settings_layout()
+        self._update_non_trivial_sizes()
+
+    def _update_trivial_layout(self) -> None:
+        x = self._xstart
+        y = self._ystart
+
+        self._lbl_file_in.place(x=x, y=y, height=self._widget_height)
+        self._btn_file_in.place(x=x, y=y+self._widget_height, width=120, height=self._widget_height)
+        x += 120
+        if sys.platform == "win32":
+            self._lbl_file_process.place(x=x, y=y+self._widget_height-2)
+        elif sys.platform == "darwin":
+            self._lbl_file_process.place(x=x+5, y=y+self._widget_height+1)
+        else:
+            self._lbl_file_process.place(x=x, y=y+self._widget_height)
+        self._lbl_file_process.tkraise(self._frm_input)
+        x += 70
+        self._lbl_file_out.place(x=x, y=y, height=self._widget_height)
+        self._edt_file_out.place(x=x, y=y+self._widget_height, width=120, height=self._widget_height)
+        x += 120 + self._xmargin
+        self._slt_file_type.place(x=x, y=y, width=80)
+
+        x = self._xstart
+        y = self._ystart
+        self._lbl_input.place(x=x, y=y, height=self._widget_height)
+
+        y += self._widget_height
+        self._edt_input.place(x=x, y=y, relwidth=1, relheight=1, width=-2*self._xmargin, height=-self._ymargin-self._widget_height)
+
+        x = self._xstart
+        y = self._ystart
+        self._lbl_log.place(x=x, y=y, height=self._widget_height)
+
+        y += self._widget_height
+        self._edt_log.place(x=x, y=y, relwidth=1, relheight=1, width=-2*self._xmargin, height=-3*self._ymargin-self._widget_height)
+
+        x = self._xstart
+        y = self._ystart
+        self._prg_loading.place(x=x, y=y, width=220, height=self._widget_height)
+        y += self._widget_height + self._ymargin + 2
+        self._btn_show.place(x=x, y=y, width=220, height=self._widget_height+self._ymargin)
+        y += self._widget_height + 3 * self._ymargin
+        self._btn_start.place(x=x, y=y, width=220, height=2*self._widget_height+2*self._ymargin)
+
+    def _update_settings_layout(self) -> None:
+        xstart = self._xmargin
+
         x = xstart
-        y = ystart
-
-        self._lbl_file_in.place(x=x, y=y, height=height)
-        self._btn_file_in.place(x=x, y=y+height, width=120, height=height)
-        self._lbl_file_process.place(x=x+120, y=y+height-2)
-        self._lbl_file_out.place(x=x+120+70, y=y, height=height)
-        self._edt_file_out.place(x=x+120+70, y=y+height, width=120, height=height)
-        self._slt_file_type.place(x=x+120+70+120+xmargin, y=y, width=80)
-        y += height + height + ymargin
-        self._lbl_input.place(x=x, y=y, height=height)
-        y += height
-        self._edt_input.place(x=x, y=y, width=400, height=430)
-        y += 430 + ymargin
-        self._lbl_log.place(x=x, y=y, height=height)
-        y += height
-        self._edt_log.place(x=x, y=y, width=400, height=114)
-        
-        x += 400 + xmargin
-        y = ystart
-        self._seg_left_right.place(x=x-1, y=y+ymargin, width=2, height=self._window_size[1]-2*(ystart+ymargin))
-        x += xmargin
+        y = self._ystart
         self._lbl_font.place(x=x, y=y, height=20)
-        y += height
+
+        y += self._widget_height
         self._edt_font_size.place(x=x, y=y, width=60)
-        self._slt_font_style.place(x=x+60+xmargin, y=y, width=80)
-        self._edt_font_bias.place(x=x+60+xmargin+80+xmargin, y=y, width=60)
-        y += 2 * height + ymargin
+        x += 60 + self._xmargin
+        self._slt_font_style.place(x=x, y=y, width=80)
+        x += 80 + self._xmargin
+        self._edt_font_bias.place(x=x, y=y, width=60)
+
+        x = xstart
+        y += 2 * self._widget_height + self._ymargin
         self._edt_font_line_height.place(x=x, y=y, width=80)
-        self._lbl_font_word_spacing.place(x=x+80+xmargin, y=y, width=100, height=height)
-        self._edt_font_word_spacing.place(x=x+80+xmargin, y=y+height, width=65)
-        self._lbl_font_word_spacing_var.place(x=x+80+xmargin+65, y=y+height, width=15, height=height)
-        self._edt_font_word_spacing_var.place(x=x+80+xmargin+65+15, y=y+height, width=50)
-        y += 2 * height
-        self._chk_font_line_height_recalc.place(x=x-3, y=y, height=height)
-        self._chk_font_word_spacing_recalc.place(x=x+80+xmargin-3, y=y, height=height)
-        y += height + ymargin
+        x += 80 + self._xmargin
+        self._lbl_font_word_spacing.place(x=x, y=y, width=100, height=self._widget_height)
+        y += self._widget_height
+        self._edt_font_word_spacing.place(x=x, y=y, width=65)
+        x += 65
+        self._lbl_font_word_spacing_var.place(x=x, y=y, width=15, height=self._widget_height)
+        x += 15
+        self._edt_font_word_spacing_var.place(x=x, y=y, width=50)
+
+        x = xstart - 3
+        y += self._widget_height
+        self._chk_font_line_height_recalc.place(x=x, y=y, height=self._widget_height)
+        x += 80 + self._xmargin
+        self._chk_font_word_spacing_recalc.place(x=x, y=y, height=self._widget_height)
+
+        x = xstart
+        y += self._widget_height + self._ymargin
         self._scl_font_align_horizontal.place(x=x, y=y, width=105)
-        self._scl_font_align_vertical.place(x=x+105+xmargin, y=y, width=105)
-        y += 2 * height + 10 + 3 * ymargin  # + 10 since the LabeledScale is 10px larger than 2 * height
-        self._lbl_pen.place(x=x, y=y, height=height)
-        y += height
+        x += 105 + self._xmargin
+        self._scl_font_align_vertical.place(x=x, y=y, width=105)
+
+        x = xstart
+        y += 2 * self._widget_height + 10 + 3 * self._ymargin  # + 10 since the LabeledScale is 10px larger than 2 * height
+        self._lbl_pen.place(x=x, y=y, height=self._widget_height)
+
+        x = xstart
+        y += self._widget_height
         self._edt_pen_z_draw.place(x=x, y=y, width=67)
-        self._edt_pen_z_travel.place(x=x+67+xmargin, y=y, width=66)
-        self._edt_pen_z_pause.place(x=x+67+xmargin+66+xmargin, y=y, width=67)
-        y += 2 * height + ymargin
+        x += 67 + self._xmargin
+        self._edt_pen_z_travel.place(x=x, y=y, width=66)
+        x += 66 + self._xmargin
+        self._edt_pen_z_pause.place(x=x, y=y, width=67)
+
+        x = xstart
+        y += 2 * self._widget_height + self._ymargin
         self._edt_pen_f_draw.place(x=x, y=y, width=105)
-        self._edt_pen_f_travel.place(x=x+105+xmargin, y=y, width=105)
-        y += 2 * height + 3 * ymargin
-        self._lbl_page.place(x=x, y=y, height=height)
-        y += height
+        x += 105 + self._xmargin
+        self._edt_pen_f_travel.place(x=x, y=y, width=105)
+
+        x = xstart
+        y += 2 * self._widget_height + 3 * self._ymargin
+        self._lbl_page.place(x=x, y=y, height=self._widget_height)
+
+        x = xstart
+        y += self._widget_height
         self._edt_page_width.place(x=x, y=y, width=75)
-        self._edt_page_height.place(x=x+75+xmargin, y=y, width=75)
-        self._edt_page_rotation.place(x=x+75+xmargin+75+xmargin, y=y, width=50)
-        y += 2 * height + 3 * ymargin
-        self._lbl_other.place(x=x, y=y, height=height)
-        y += height
-        self._chk_feature_replace.place(x=x, y=y, height=height)
-        y += height
-        self._lbl_feature_replace.place(x=x+height, y=y, height=height//2)
-        y += height//2 + ymargin
-        self._chk_feature_imitate.place(x=x, y=y, height=height)
-        y += height
-        self._chk_feature_imitate_dam.place(x=x+height, y=y, height=height-5)
-        y += height + ymargin
-        self._chk_feature_split_pages.place(x=x, y=y, height=height)
-        y += height + 3 * ymargin - 2
-        self._prg_loading.place(x=x, y=y, width=220, height=height)
-        y += height + ymargin + 2
-        self._btn_show.place(x=x, y=y, width=220, height=height+ymargin)
-        y += height + ymargin + 2 * ymargin
-        self._btn_start.place(x=x, y=y, width=220, height=2*height+2*ymargin)
+        x += 75 + self._xmargin
+        self._edt_page_height.place(x=x, y=y, width=75)
+        x += 75 + self._xmargin
+        self._edt_page_rotation.place(x=x, y=y, width=50)
+
+        x = xstart
+        y += 2 * self._widget_height + 3 * self._ymargin
+        self._lbl_other.place(x=x, y=y, height=self._widget_height)
+
+        x = xstart
+        y += self._widget_height
+        self._chk_feature_replace.place(x=x, y=y, height=self._widget_height)
+
+        x = xstart + self._widget_height
+        y += self._widget_height
+        self._lbl_feature_replace.place(x=x, y=y, height=self._widget_height//2)
+
+        x = xstart
+        y += self._widget_height//2 + self._ymargin
+        self._chk_feature_imitate.place(x=x, y=y, height=self._widget_height)
+
+        x = xstart + self._widget_height
+        y += self._widget_height
+        self._chk_feature_imitate_dam.place(x=x, y=y, height=self._widget_height-5)
+
+        x = xstart
+        y += self._widget_height + self._ymargin
+        self._chk_feature_split_pages.place(x=x, y=y, height=self._widget_height)
+
+    def _update_non_trivial_sizes(self) -> None:
+        self._frm_inout.place(x=0, y=0, width=-self._settings_width, height=self._inout_height, relwidth=1)
+        self._frm_input.place(x=0, y=self._inout_height, width=-self._settings_width, height=-self._inout_height/2, relwidth=1, relheight=0.7)
+        self._frm_log.place(x=0, y=self._inout_height/2, width=-self._settings_width, height=-self._inout_height/2, rely=0.7, relwidth=1, relheight=0.3)
+        self._frm_settings.place(x=0, y=0, width=self._settings_width, height=-self._start_height, relx=1, rely=0, relheight=1, anchor=tk.NE)
+        self._frm_start.place(x=0, y=0, width=self._settings_width, height=self._start_height, relx=1, rely=1, anchor=tk.SE)
+        self._seg_left_right.place(x=-self._settings_width+1, y=self._ymargin, width=2, height=-2*self._ymargin, relx=1, rely=0, anchor=tk.NE, relheight=1)
 
     def _init_handlers(self) -> None:
         self._edt_font_size.addListener("change", self._recalculate_font_sizes)
@@ -899,6 +1014,7 @@ class HandCodeApp:
         self._create_window()
         self._load_fonts()
         self._load_styles()
+        self._init_sizes()
         self._init_state_vars()
         self._init_window()
         self._init_widgets()
@@ -909,7 +1025,7 @@ class HandCodeApp:
         self._prg_loading.start(20)
         threading.Thread(target=self._thread_convert, daemon=True).start()
 
-        self._update_layout()
+        self._update_entire_layout()
         self.window.update()
         self._load_settings_from_file()
         
