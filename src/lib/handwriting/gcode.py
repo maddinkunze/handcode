@@ -1,8 +1,10 @@
 import os
 import numpy as np
+
 from .models.sjvasquez.alphabet import character_map as rnn_alphabet
 from .savgol_np import savgol_filter
-from .models import get_optimal_runner
+from .models import get_optimal_runner, ModelRunner, all_models
+
 from .commands import gcode
 
 class HandGCode:
@@ -57,14 +59,37 @@ class HandGCode:
         "ü": "u"
     }
 
-    def __init__(self, logger=print, progress=lambda *_: ...):
-        self._model = get_optimal_runner(progress)
-        
+    all_models = all_models
+
+    def __init__(self, model: str|None=None, logger=print, progress=lambda *_: ...):
         self.logger = logger
         self.progress = progress
 
+        self._cached_models = dict[str, ModelRunner]()
+        self._set_model(model)
+
     def load(self):
         self._model.load()
+
+    def switch_model(self, model: str|None=None):
+        self._set_model(model)
+        self.load()
+
+    def _set_model(self, model: str|None):
+        if model in self._cached_models:
+            self._model = self._cached_models[model]
+            return
+        if model in all_models:
+            model_type = all_models[model]
+            self._model = model_type(self.progress)
+            self._cached_models[model] = self._model
+            return
+        if model is None:
+            self._model = get_optimal_runner(self.progress)
+            self._cached_models[model] = self._model
+            return
+        raise ValueError(f"Model {model} not found in available models: {list(all_models.keys())}")
+
 
     @property
     def model_name(self):

@@ -78,6 +78,12 @@ class HandCodeApp:
             "bg": self.STYLE["bg_window"],
         }
 
+        self._style_canvas = {
+            "bg": "#800000",#self.STYLE["bg_window"],
+            "bd": self.STYLE["borderwidth"],
+            "relief": tk.FLAT,
+        }
+
         _style_label = {
             "bg": self.STYLE["bg_window"],
             "fg": self.STYLE["fg_label"],
@@ -99,6 +105,9 @@ class HandCodeApp:
             **_style_label,
             "font": self._font_tooltip,
         }
+
+        self._style_scroll_x = "Maddin.HC.Horizontal.TScrollbar"
+        self._style_scroll_y = "Maddin.HC.Vertical.TScrollbar"
 
         self._style_entry_default = {
             "bg": self.STYLE["bg_inner"],
@@ -122,8 +131,8 @@ class HandCodeApp:
 
         self._style_entry_scrolled = {
             **_style_entry_custom,
-            "stylescrollx": "Maddin.HC.Horizontal.TScrollbar",
-            "stylescrolly": "Maddin.HC.Vertical.TScrollbar",
+            "stylescrollx": self._style_scroll_x,
+            "stylescrolly": self._style_scroll_y,
         }
 
         self._style_entry_unit = {
@@ -217,18 +226,23 @@ class HandCodeApp:
         self._xmargin = 10
         self._ymargin = 5
         self._widget_height = 20
+        self._scroll_width = 15
+
+        self._outline_width = 0
+        if sys.platform == "darwin":
+            self._outline_width = 2
 
         self._settings_width = 240
+        self._settings_width_outer = self._settings_width + self._scroll_width
         self._inputs_min_width = 420
         self._start_height = 128
         self._inout_height = 45
 
-        self._window_size = (660, 650)
+        self._window_size = (self._inputs_min_width + self._settings_width_outer, 650)
 
     def _init_window(self) -> None:
 
         self.window.resizable(True, True)
-        self._window_size = (660, 650)
         self.window.geometry(f"{self._window_size[0]}x{self._window_size[1]}")
         self.window.minsize(*self._window_size)
         self.window.title("HandCode")
@@ -268,7 +282,20 @@ class HandCodeApp:
         self._btn_start = tkm.Button(self._frm_start, text="Start", **self._style_button_start, state=tk.DISABLED)
 
 
-        self._frm_settings = tk.Frame(self.window, **self._style_frame)
+        self._frm_settings_outer = tk.Frame(self.window, **self._style_frame)
+        self._cvs_settings = tk.Canvas(self._frm_settings_outer, **self._style_canvas)
+        self._scr_settings = ttk.Scrollbar(self._frm_settings_outer, orient=tk.VERTICAL, command=self._cvs_settings.yview, style=self._style_scroll_y)
+        self._frm_settings = tk.Frame(self._frm_settings_outer, **self._style_frame)
+
+        self._frm_settings.bind("<Configure>", lambda e: self._cvs_settings.configure(scrollregion=self._cvs_settings.bbox("all")))
+        self._cvs_settings.create_window((0, 0), window=self._frm_settings, anchor=tk.NW)
+        self._cvs_settings.configure(yscrollcommand=self._scr_settings.set)
+
+
+        self._lbl_model = tk.Label(self._frm_settings, text="Model Settings:", **self._style_label_section)
+        self._slt_model = tkw.LabeledSelect(self._frm_settings, label="Model", options=[], **self._style_select_labeled, state=tk.DISABLED)
+        self._btn_model_info = tkm.Button(self._frm_settings, text="Show Info", **self._style_button_default, state=tk.DISABLED)
+        self._lbl_model_license = tk.Label(self._frm_settings, text="⏳ Loading models...", justify=tk.LEFT, **self._style_label_tooltip)
 
         self._lbl_font = tk.Label(self._frm_settings, text="Font Settings:", **self._style_label_section)
         self._edt_font_size = tkw.LabeledEntry(self._frm_settings, label="Size", unit="mm", **self._style_entry_labeled)
@@ -284,9 +311,8 @@ class HandCodeApp:
         if sys.platform == "win32":
             label_lhr = "Recalc on f..."
             label_wsr = "Recalc on font s..."
-            self._chk_font_word_spacing_recalc = tkw.Checkbox(self._frm_settings, label="Recalc on font size change", **self._style_checkbox_small)
         elif sys.platform == "darwin":
-            label_lhr = "Recalc on font s..."
+            label_lhr = "Recalc on font..."
             label_wsr = "Recalc on font size change"
         else:
             label_lhr = "Recalc on font s..."
@@ -340,7 +366,7 @@ class HandCodeApp:
         y = self._ystart
 
         self._lbl_file_in.place(x=x, y=y, height=self._widget_height)
-        self._btn_file_in.place(x=x, y=y+self._widget_height, width=120, height=self._widget_height)
+        self._btn_file_in.place(x=x-self._outline_width, y=y+self._widget_height-self._outline_width, width=120+2*self._outline_width, height=self._widget_height+2*self._outline_width)
         x += 120
         if sys.platform == "win32":
             self._lbl_file_process.place(x=x, y=y+self._widget_height-2)
@@ -371,18 +397,29 @@ class HandCodeApp:
 
         x = self._xstart
         y = self._ystart
-        self._prg_loading.place(x=x, y=y, width=220, height=self._widget_height)
+        self._prg_loading.place(x=x, y=y, width=235, height=self._widget_height)
         y += self._widget_height + self._ymargin + 2
-        self._btn_show.place(x=x, y=y, width=220, height=self._widget_height+self._ymargin)
+        self._btn_show.place(x=x-self._outline_width, y=y-self._outline_width, width=235+2*self._outline_width, height=self._widget_height+self._ymargin+2*self._outline_width)
         y += self._widget_height + 3 * self._ymargin
-        self._btn_start.place(x=x, y=y, width=220, height=2*self._widget_height+2*self._ymargin)
+        self._btn_start.place(x=x-self._outline_width, y=y-self._outline_width, width=235+2*self._outline_width, height=2*self._widget_height+2*self._ymargin+2*self._outline_width)
 
     def _update_settings_layout(self) -> None:
         xstart = self._xmargin
 
         x = xstart
         y = self._ystart
-        self._lbl_font.place(x=x, y=y, height=20)
+        self._lbl_model.place(x=x, y=y, height=self._widget_height)
+        y += self._widget_height
+        self._slt_model.place(x=x, y=y, width=130)
+        x += 130 + self._xmargin
+        self._btn_model_info.place(x=x-self._outline_width, y=y+self._widget_height-self._outline_width, width=80+2*self._outline_width, height=self._widget_height+2*self._outline_width)
+
+        x = xstart
+        y += 2*self._widget_height + 3
+        self._lbl_model_license.place(x=x, y=y, height=self._widget_height)
+        y += self._widget_height + self._ymargin
+
+        self._lbl_font.place(x=x, y=y, height=self._widget_height)
 
         y += self._widget_height
         self._edt_font_size.place(x=x, y=y, width=60)
@@ -403,7 +440,7 @@ class HandCodeApp:
         x += 15
         self._edt_font_word_spacing_var.place(x=x, y=y, width=50)
 
-        x = xstart - 3
+        x = xstart
         y += self._widget_height
         self._chk_font_line_height_recalc.place(x=x, y=y, height=self._widget_height)
         x += 80 + self._xmargin
@@ -469,15 +506,24 @@ class HandCodeApp:
         y += self._widget_height + self._ymargin
         self._chk_feature_split_pages.place(x=x, y=y, height=self._widget_height)
 
+        height = y + self._widget_height + self._ymargin
+        self._frm_settings.configure(width=self._settings_width, height=height)
+
     def _update_non_trivial_sizes(self) -> None:
-        self._frm_inout.place(x=0, y=0, width=-self._settings_width, height=self._inout_height, relwidth=1)
-        self._frm_input.place(x=0, y=self._inout_height, width=-self._settings_width, height=-self._inout_height/2, relwidth=1, relheight=0.7)
-        self._frm_log.place(x=0, y=self._inout_height/2, width=-self._settings_width, height=-self._inout_height/2, rely=0.7, relwidth=1, relheight=0.3)
-        self._frm_settings.place(x=0, y=0, width=self._settings_width, height=-self._start_height, relx=1, rely=0, relheight=1, anchor=tk.NE)
-        self._frm_start.place(x=0, y=0, width=self._settings_width, height=self._start_height, relx=1, rely=1, anchor=tk.SE)
-        self._seg_left_right.place(x=-self._settings_width+1, y=self._ymargin, width=2, height=-2*self._ymargin, relx=1, rely=0, anchor=tk.NE, relheight=1)
+        self._frm_inout.place(x=0, y=0, width=-self._settings_width_outer, height=self._inout_height, relwidth=1)
+        self._frm_input.place(x=0, y=self._inout_height, width=-self._settings_width_outer, height=-self._inout_height/2, relwidth=1, relheight=0.7)
+        self._frm_log.place(x=0, y=self._inout_height/2, width=-self._settings_width_outer, height=-self._inout_height/2, rely=0.7, relwidth=1, relheight=0.3)
+        self._frm_settings_outer.place(x=0, y=0, width=self._settings_width_outer, height=-self._start_height, relheight=1, relx=1, rely=0, anchor=tk.NE)
+        #canvas.pack(side="left", fill="both", expand=True)
+        #scrollbar.pack(side="right", fill="y")
+        self._cvs_settings.place(x=0, y=0, relwidth=1, width=-self._scroll_width, relheight=1)
+        self._scr_settings.place(x=0, y=0, width=self._scroll_width, relx=1, relheight=1, anchor=tk.NE)
+        self._frm_start.place(x=0, y=0, width=self._settings_width_outer, height=self._start_height, relx=1, rely=1, anchor=tk.SE)
+        self._seg_left_right.place(x=-self._settings_width_outer+1, y=self._ymargin, width=2, height=-2*self._ymargin, relx=1, rely=0, anchor=tk.NE, relheight=1)
 
     def _init_handlers(self) -> None:
+        self._slt_model.addListener("change", self._switch_model)
+
         self._edt_font_size.addListener("change", self._recalculate_font_sizes)
         self._edt_font_line_height.addListener("change", self._recalculate_font_factors)
         self._edt_font_word_spacing.addListener("change", self._recalculate_font_factors)
@@ -496,7 +542,7 @@ class HandCodeApp:
         self._ui_queue = queue.Queue[typing.Callable[[], typing.Any]]()
         self._ui_poll_tries = 5 # number of callbacks to call at most during one ui update run
         self._ui_poll_interval = 100
-        self._convert_event = threading.Event()
+        self._convert_queue = queue.Queue[str]()
 
         @dataclasses.dataclass
         class _ProgressData:
@@ -519,6 +565,18 @@ class HandCodeApp:
         self._convert_data = dict[str, typing.Any]()
         self._re_font_style = re.compile(r"^\s*Style (\d+)\s*$")
         self._gcode = None
+        self._last_successful_model = None
+
+    def _switch_model(self) -> None:
+        model = self._slt_model.get()
+        if not model:
+            return
+        
+        self._slt_model.configure(state=tk.DISABLED)
+        self._btn_model_info.configure(state=tk.DISABLED)
+        self._lbl_model_license.configure(text="⏳ Loading model...")
+        self._report("log", f"Switching to model: {model}\n")
+        self._convert_queue.put("model")
 
     def _get_font_size(self, entry) -> float:
         try:
@@ -623,7 +681,7 @@ class HandCodeApp:
         self.window.after(self._ui_poll_interval, self._update_ui_queue)
 
     def start_convert(self):
-        if self._convert_event.is_set():
+        if self._convert_queue.qsize() > 0:
             return
         
         self._btn_start.configure(state=tk.DISABLED)
@@ -640,7 +698,7 @@ class HandCodeApp:
             self._prg_loading.stop()
             return
         
-        self._convert_event.set()
+        self._convert_queue.put("generate")
 
     @property
     def is_test_start_behaviour(self) -> bool:
@@ -650,8 +708,19 @@ class HandCodeApp:
         if (event == "log") and data:
             self._edt_log.append(data)
 
-        if (event == "model_imported"):
+        if (event == "libraries_loaded"):
             self._write_settings_to_ui()
+            self._slt_model.configure(options=list(self._gcode.all_models.keys()))
+
+        if (event == "model_loaded"):
+            self._slt_model.configure(state=tk.NORMAL)
+            self._btn_model_info.configure(state=tk.NORMAL)
+            self._lbl_model_license.configure(text=self._gcode._model.short_info)
+            self._last_successful_model = self._slt_model.get()
+
+        if (event == "model_failed"):
+            self._report("log", "Switching back to last known working model\n")
+            self._slt_model.set(self._last_successful_model)
 
         if (event == "success"):
             self._btn_start.configure(state=tk.NORMAL)
@@ -713,18 +782,14 @@ class HandCodeApp:
 
     def _thread_convert(self):
         try:
-            self._log_thread_safe("Loading libraries... ")
+            self._log_thread_safe("Loading framework... ")
             if typing.TYPE_CHECKING:
                 import lib.handwriting as handwriting
             else:
                 import handwriting # type: ignore
             gcode = handwriting.gcode.HandGCode(logger=self._log_thread_safe, progress=self._update_progress_bar)
-            self._log_thread_safe(f"Done (loaded \"{gcode.model_name}\"-model)\n")
             self._gcode = gcode
-            self._report_thread_safe("model_imported")
-
-            self._log_thread_safe("Loading neural network... ")
-            gcode.load()
+            self._report_thread_safe("libraries_loaded")
 
             self._log_thread_safe("Done\nLoading helper functions... ")
             self._pen_settings_generators["gcode"] = handwriting.commands.gcode
@@ -737,15 +802,30 @@ class HandCodeApp:
                 threading.Thread(target=self._thread_test_start_behaviour).start()
 
             while True:
-                self._convert_event.wait()
-                
-                try:
-                    gcode.generate(self._convert_data)
-                    self._report_thread_safe("success")
-                except Exception as e:
-                    self._report_thread_safe("error", e)
-                
-                self._convert_event.clear()
+                task = self._convert_queue.get()
+
+                if task == "stop":
+                    return
+
+                if task == "model":
+                    try:
+                        self._log_thread_safe("Loading model... ")
+                        gcode.switch_model(self._slt_model.get())
+                        self._log_thread_safe("Done\n")
+                        self._report_thread_safe("model_loaded")
+                    except Exception as e:
+                        self._log_thread_safe("Failed\n")
+                        self._report_thread_safe("error", e)
+                        self._report_thread_safe("model_failed")
+
+                if task == "generate":
+                    try:
+                        gcode.generate(self._convert_data)
+                        self._report_thread_safe("success")
+                    except Exception as e:
+                        self._report_thread_safe("error", e)
+
+                self._convert_queue.task_done()
         
         except Exception as e:
             self._report_thread_safe("critical", f"The following unhandled exception occured: {e}\n\n{traceback.format_exc()}\n\n{sys.exc_info()}")
@@ -811,6 +891,8 @@ class HandCodeApp:
         self._edt_file_out.delete(0, tk.END)
         self._edt_file_out.insert(0, self._convert_settings.get("output", {}).get("file", "demo.nc"))
         self._slt_file_type.set(self._convert_settings.get("output", {}).get("format", "GCode"))
+
+        self._slt_model.set(self._convert_settings.get("model", {}).get("name", "ULW"))
 
         settings_font = self._convert_settings.get("font", {})
         font_size = settings_font.get("size", format_float(10))

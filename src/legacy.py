@@ -51,6 +51,12 @@ def convertSettingsLegacyFrom030(settings):
     settingsNew["version"] = "0.4.0"
     return settingsNew
 
+def convertSettingsLegacyFrom041(settings):
+    settingsNew = {**settings}
+    settingsNew["model"] = "ULW"
+    settingsNew["version"] = "0.5.0"
+    return settingsNew
+
 def convertSettingsKnownGood(newVersion):
     def _conv(settings):
         settings["version"] = newVersion
@@ -59,7 +65,8 @@ def convertSettingsKnownGood(newVersion):
 
 _legacyVersionsSettings = {
     "0.3.0": convertSettingsLegacyFrom030,
-    "0.4.0": convertSettingsKnownGood("0.5.0")
+    "0.4.0": convertSettingsKnownGood("0.4.1"),
+    "0.4.1": convertSettingsLegacyFrom041,
 }
 def convertSettingsLegacy(settings, versionCurrent):
     versionLast = None

@@ -2,6 +2,7 @@ import tkinter as tk
 
 class LabeledSelect:
     def __init__(self, root, **kwargs):
+        self.listeners = {}
         self.label = tk.Label(root)
         self.var = tk.StringVar()
         self.select = tk.OptionMenu(root, self.var, "")
@@ -47,6 +48,9 @@ class LabeledSelect:
         if "label" in kwargs:
             clabel["text"] = kwargs["label"]
 
+        if "state" in kwargs:
+            cselect["state"] = kwargs["state"]
+
         if "options" in kwargs:
             self.setOptions(kwargs["options"])
 
@@ -69,8 +73,40 @@ class LabeledSelect:
         return self.var.get()
 
     def set(self, value):
+        _prev = self.var.get()
         self.var.set(value)
+        if _prev != value:
+            self._onchange()
 
     def place(self, x, y, width):
         self.label.place(x=x, y=y, width=width, height=20)
         self.select.place(x=x, y=y+20, width=width, height=20)
+
+    def _onchange(self):
+        _name = "change"
+        if not _name in self.listeners:
+            return
+        
+        for listener in self.listeners[_name].values():
+            listener()
+
+        return True
+
+    def addListener(self, name, listener, tag=None):
+        if name not in self.listeners:
+            self.listeners[name] = dict()
+
+        if tag is None:
+            tag = 0
+            while f"{tag}" in self.listeners[name]:
+                tag += 1
+
+        self.listeners[name][tag] = listener
+
+        return tag
+
+    def removeListener(self, name, tag):
+        if name not in self.listeners:
+            return
+
+        self.listeners[name].pop(tag, None)
