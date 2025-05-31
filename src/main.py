@@ -514,8 +514,6 @@ class HandCodeApp:
         self._frm_input.place(x=0, y=self._inout_height, width=-self._settings_width_outer, height=-self._inout_height/2, relwidth=1, relheight=0.7)
         self._frm_log.place(x=0, y=self._inout_height/2, width=-self._settings_width_outer, height=-self._inout_height/2, rely=0.7, relwidth=1, relheight=0.3)
         self._frm_settings_outer.place(x=0, y=0, width=self._settings_width_outer, height=-self._start_height, relheight=1, relx=1, rely=0, anchor=tk.NE)
-        #canvas.pack(side="left", fill="both", expand=True)
-        #scrollbar.pack(side="right", fill="y")
         self._cvs_settings.place(x=0, y=0, relwidth=1, width=-self._scroll_width, relheight=1)
         self._scr_settings.place(x=0, y=0, width=self._scroll_width, relx=1, relheight=1, anchor=tk.NE)
         self._frm_start.place(x=0, y=0, width=self._settings_width_outer, height=self._start_height, relx=1, rely=1, anchor=tk.SE)
