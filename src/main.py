@@ -12,10 +12,12 @@ import legacy # type: ignore
 import typing
 import threading
 import traceback
+import webbrowser
 import dataclasses
 import tkinter as tk
 import tkinter.ttk as ttk
 import tkinter.font as tkf
+import tkinter.dialog as tkd
 import tkinter.filedialog as tkfd
 import tkinter.messagebox as tkmb
 
@@ -79,7 +81,7 @@ class HandCodeApp:
         }
 
         self._style_canvas = {
-            "bg": "#800000",#self.STYLE["bg_window"],
+            "bg": self.STYLE["bg_window"],
             "bd": self.STYLE["borderwidth"],
             "relief": tk.FLAT,
         }
@@ -104,6 +106,11 @@ class HandCodeApp:
         self._style_label_tooltip = {
             **_style_label,
             "font": self._font_tooltip,
+        }
+
+        self._style_label_link = {
+            **self._style_label_input,
+            "fg": "#4286f4",
         }
 
         self._style_scroll_x = "Maddin.HC.Horizontal.TScrollbar"
@@ -283,7 +290,7 @@ class HandCodeApp:
 
 
         self._frm_settings_outer = tk.Frame(self.window, **self._style_frame)
-        self._cvs_settings = tk.Canvas(self._frm_settings_outer, **self._style_canvas)
+        self._cvs_settings = tk.Canvas(self._frm_settings_outer, **self._style_canvas, yscrollincrement=10)
         self._scr_settings = ttk.Scrollbar(self._frm_settings_outer, orient=tk.VERTICAL, command=self._cvs_settings.yview, style=self._style_scroll_y)
         self._frm_settings = tk.Frame(self._frm_settings_outer, **self._style_frame)
 
@@ -506,7 +513,7 @@ class HandCodeApp:
         y += self._widget_height + self._ymargin
         self._chk_feature_split_pages.place(x=x, y=y, height=self._widget_height)
 
-        height = y + self._widget_height + self._ymargin
+        height = y + self._widget_height
         self._frm_settings.configure(width=self._settings_width, height=height)
 
     def _update_non_trivial_sizes(self) -> None:
@@ -521,6 +528,7 @@ class HandCodeApp:
 
     def _init_handlers(self) -> None:
         self._slt_model.addListener("change", self._switch_model)
+        self._btn_model_info.configure(command=self._show_model_info)
 
         self._edt_font_size.addListener("change", self._recalculate_font_sizes)
         self._edt_font_line_height.addListener("change", self._recalculate_font_factors)
@@ -531,9 +539,46 @@ class HandCodeApp:
 
         self._chk_feature_imitate.addListener("change", self._update_feature_imitate)
 
+        self._frm_settings_outer.bind_all("<MouseWheel>", self._scroll_settings_wheel, add=True)
+        self._frm_settings_outer.bind_all("<Button-4>", self._scroll_settings_buttons, add=True)
+        self._frm_settings_outer.bind_all("<Button-5>", self._scroll_settings_buttons, add=True)
+
         self._btn_file_in.configure(command=self._select_input_file)
         self._btn_show.configure(command=self._show_folder)
         self._btn_start.configure(command=self.start_convert)
+
+    def _scroll_settings_wheel(self, event: tk.Event):
+        if not str(event.widget).startswith(str(self._frm_settings_outer)):
+            # bit of a hack to check if the event occured on a widget that is a child of the settings frame
+            return
+        
+        if event.delta == 0:
+            return
+        
+        # avoid flickering when continuing to scroll down when already at the bottom
+        if self._cvs_settings.yview()[1] >= 1:
+            if (event.delta > 0) and self._settings_was_scrolling_down:
+                self._settings_was_scrolling_down = False
+                return
+            elif event.delta < 0:
+                self._settings_was_scrolling_down = True
+            else:
+                self._settings_was_scrolling_down = False
+        else:
+            self._settings_was_scrolling_down = False
+        
+        y_steps = int(-event.delta/abs(event.delta))
+        self._cvs_settings.yview_scroll(y_steps, tk.UNITS)
+ 
+    def _scroll_settings_buttons(self, event: tk.Event):
+        if not str(event.widget).startswith(str(self._frm_settings_outer)):
+            # bit of a hack to check if the event occured on a widget that is a child of the settings frame
+            return
+        
+        y_steps = 1
+        if event.num == 4:
+            y_steps *= -1
+        self._cvs_settings.yview_scroll(y_steps, tk.UNITS)
 
     def _init_state_vars(self) -> None:
         self._font_factors = dict[str, float]()
@@ -564,6 +609,8 @@ class HandCodeApp:
         self._re_font_style = re.compile(r"^\s*Style (\d+)\s*$")
         self._gcode = None
         self._last_successful_model = None
+
+        self._settings_was_scrolling_down = False
 
     def _switch_model(self) -> None:
         model = self._slt_model.get()
@@ -621,6 +668,45 @@ class HandCodeApp:
         else:
             self._font_factors.pop("wordspacing", None)
             self._font_factors.pop("wordspacingvar", None)
+
+    def _show_model_info(self):
+        window = tk.Toplevel(self.window, **self._style_window)
+        window.title("Model Info")
+        window.minsize(300, 100)
+
+        lbl_title = tk.Label(window, text=f"(Internal) Model Name: {self._gcode._model.name}", **self._style_label_section)
+
+        lbl_info = tk.Label(window, text="Description:", **self._style_label_input)
+        edt_info = tkw.ScrolledEntry(window, **self._style_entry_scrolled)
+        edt_info.set(self._gcode._model.description)
+
+        lbl_license = tk.Label(window, text="License:", **self._style_label_input)
+        edt_license = tkw.ScrolledEntry(window, **self._style_entry_scrolled)
+        edt_license.set(self._gcode._model.license)
+
+        lbls_url = list[tk.Label]()
+        for desc, url in self._gcode._model.urls:
+            lbl_url = tk.Label(window, text=f"{desc} ↗", **self._style_label_link)
+            lbl_url.bind("<Button-1>", lambda _, _url=url: webbrowser.open_new_tab(_url))
+            lbls_url.append(lbl_url)
+
+        btn_close = tkm.Button(window, text="Close", **self._style_button_default)
+
+        height_urls = len(lbls_url) * 20
+        height_other = 105
+
+        lbl_title.place(x=5, y=5, relwidth=1, height=20, width=-10)
+        lbl_info.place(x=5, y=25, height=20)
+        edt_info.place(x=5, y=45, height=-(height_other+height_urls)/2, relheight=0.5, relwidth=1, width=-10)
+        lbl_license.place(x=5, y=50-(height_other+height_urls)/2, rely=0.5)
+        edt_license.place(x=5, y=70-(height_other+height_urls)/2, rely=0.5, relwidth=1, width=-10, relheight=0.5, height=-(height_other+height_urls)/2)
+        for i, lbl in enumerate(lbls_url):
+            lbl.place(x=5, y=-height_urls-30+i*20, rely=1, height=20)
+        btn_close.place(x=-5, y=-5, relx=1, rely=1, width=100, height=20, anchor=tk.SE)
+
+        window_size = (320, height_urls+height_other+2*100)
+        window.minsize(*window_size)
+        window.geometry("x".join(map(str, window_size)))
 
     def _update_feature_imitate(self):
         state = tk.NORMAL if self._chk_feature_imitate.get() else tk.DISABLED

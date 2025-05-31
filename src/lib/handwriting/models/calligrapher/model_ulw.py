@@ -8,7 +8,7 @@ from ..model_runner import ModelRunner, WritingStyle
 
 path_dir = os.path.abspath(os.path.dirname(__file__))
 path_model = os.path.join(path_dir, "model.ulw")
-path_last_part = os.path.split(path_model)[-1]
+path_last_part = os.path.split(path_dir)[-1]
 
 class ModelULW(ModelRunner):
     name = "cai-ulw"
