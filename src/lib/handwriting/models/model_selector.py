@@ -24,11 +24,8 @@ def _load_model_from_list(progress_cb: _ProgressF, *model_loaders: type[ModelRun
             print("---\n")
 
 all_models = dict[str, type[ModelRunner]]()
-all_models["Torch"] = ModelTorch
-all_models["ULW"] = ModelULW
-if False:
-    all_models["TFLite"] = ModelTFLite
-if not getattr(sys, "frozen", False):
-    all_models["TF"] = ModelTF
-if False:
-    all_models["RNN"] = ModelRNN
+_all_models: list[type[ModelRunner]] = [ModelTorch, ModelULW, ModelTF, ModelRNN, ModelTFLite]
+for model_class in _all_models:
+    if not model_class.is_available():
+        continue
+    all_models[model_class.id] = model_class

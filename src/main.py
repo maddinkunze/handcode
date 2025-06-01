@@ -112,6 +112,9 @@ class HandCodeApp:
             **self._style_label_input,
             "fg": "#4286f4",
         }
+        if sys.platform == "darwin":
+            self._style_label_link["cursor"] = "pointinghand"
+            # TODO: add pointer cursors for other platforms
 
         self._style_scroll_x = "Maddin.HC.Horizontal.TScrollbar"
         self._style_scroll_y = "Maddin.HC.Vertical.TScrollbar"
@@ -617,6 +620,7 @@ class HandCodeApp:
         if not model:
             return
         
+        self._read_model_setting_from_ui()
         self._slt_model.configure(state=tk.DISABLED)
         self._btn_model_info.configure(state=tk.DISABLED)
         self._lbl_model_license.configure(text="⏳ Loading model...")
@@ -672,16 +676,15 @@ class HandCodeApp:
     def _show_model_info(self):
         window = tk.Toplevel(self.window, **self._style_window)
         window.title("Model Info")
-        window.minsize(300, 100)
 
         lbl_title = tk.Label(window, text=f"(Internal) Model Name: {self._gcode._model.name}", **self._style_label_section)
 
         lbl_info = tk.Label(window, text="Description:", **self._style_label_input)
-        edt_info = tkw.ScrolledEntry(window, **self._style_entry_scrolled)
+        edt_info = tkw.ScrolledEntry(window, tk.WORD, **self._style_entry_scrolled)
         edt_info.set(self._gcode._model.description)
 
         lbl_license = tk.Label(window, text="License:", **self._style_label_input)
-        edt_license = tkw.ScrolledEntry(window, **self._style_entry_scrolled)
+        edt_license = tkw.ScrolledEntry(window, tk.WORD, **self._style_entry_scrolled)
         edt_license.set(self._gcode._model.license)
 
         lbls_url = list[tk.Label]()
@@ -690,7 +693,7 @@ class HandCodeApp:
             lbl_url.bind("<Button-1>", lambda _, _url=url: webbrowser.open_new_tab(_url))
             lbls_url.append(lbl_url)
 
-        btn_close = tkm.Button(window, text="Close", **self._style_button_default)
+        btn_close = tkm.Button(window, text="Close", **self._style_button_default, command=lambda *_: window.destroy())
 
         height_urls = len(lbls_url) * 20
         height_other = 105
@@ -704,7 +707,7 @@ class HandCodeApp:
             lbl.place(x=5, y=-height_urls-30+i*20, rely=1, height=20)
         btn_close.place(x=-5, y=-5, relx=1, rely=1, width=100, height=20, anchor=tk.SE)
 
-        window_size = (320, height_urls+height_other+2*100)
+        window_size = (500, height_urls+height_other+2*180)
         window.minsize(*window_size)
         window.geometry("x".join(map(str, window_size)))
 
@@ -793,14 +796,16 @@ class HandCodeApp:
             self._edt_log.append(data)
 
         if (event == "libraries_loaded"):
-            self._write_settings_to_ui()
-            self._slt_model.configure(options=list(self._gcode.all_models.keys()))
+            models = dict(map(lambda x: (x[0], x[1].name), self._gcode.all_models.items()))
+            self._slt_model.configure(options=models)
+            self._write_model_setting_to_ui()
 
         if (event == "model_loaded"):
             self._slt_model.configure(state=tk.NORMAL)
             self._btn_model_info.configure(state=tk.NORMAL)
             self._lbl_model_license.configure(text=self._gcode._model.short_info)
             self._last_successful_model = self._slt_model.get()
+            self._write_settings_to_ui()
 
         if (event == "model_failed"):
             self._report("log", "Switching back to last known working model\n")
@@ -887,7 +892,7 @@ class HandCodeApp:
 
             while True:
                 task = self._convert_queue.get()
-
+ 
                 if task == "stop":
                     return
 
@@ -895,11 +900,12 @@ class HandCodeApp:
                     try:
                         self._log_thread_safe("Loading model... ")
                         gcode.switch_model(self._slt_model.get())
-                        self._log_thread_safe("Done\n")
+                        self._log_thread_safe("Done\n\n")
                         self._report_thread_safe("model_loaded")
                     except Exception as e:
-                        self._log_thread_safe("Failed\n")
+                        self._log_thread_safe("Failed\nSee below and in your terminal (if available) for more info\n")
                         self._report_thread_safe("error", e)
+                        self._log_thread_safe("\n")
                         self._report_thread_safe("model_failed")
 
                 if task == "generate":
@@ -939,6 +945,9 @@ class HandCodeApp:
     def _read_settings_from_ui(self):
         self._convert_settings.clear()
         self._convert_settings["version"] = version_handcode
+
+        self._read_model_setting_from_ui()
+
         self._save_setting(["input", "text"], self._edt_input.get())
         self._save_setting(["output", "file"], self._edt_file_out.get())
         self._save_setting(["output", "format"], self._slt_file_type.get())
@@ -967,7 +976,10 @@ class HandCodeApp:
         self._save_setting(["features", "imitate", "diaresisasmacron"], self._chk_feature_imitate_dam.get())
         self._save_setting(["features", "splitpages", "enabled"], self._chk_feature_split_pages.get())
 
-    def _write_settings_to_ui(self):
+    def _read_model_setting_from_ui(self):
+        self._save_setting(["model", "name"], self._slt_model.get())
+
+    def _write_settings_to_ui(self) -> None:
         format_float = legacy.formatFloat
         format_font_style_name = legacy.formatFontStyleName
 
@@ -976,7 +988,7 @@ class HandCodeApp:
         self._edt_file_out.insert(0, self._convert_settings.get("output", {}).get("file", "demo.nc"))
         self._slt_file_type.set(self._convert_settings.get("output", {}).get("format", "GCode"))
 
-        self._slt_model.set(self._convert_settings.get("model", {}).get("name", "ULW"))
+        self._write_model_setting_to_ui(noevent=True)
 
         settings_font = self._convert_settings.get("font", {})
         font_size = settings_font.get("size", format_float(10))
@@ -988,7 +1000,7 @@ class HandCodeApp:
 
         font_style_names = [style.name for style in self._gcode.writing_styles]
         self._slt_font_style.configure(options=font_style_names)
-        _default_font_style_name = format_font_style_name(1)
+        _default_font_style_name = font_style_names[0]
         font_style_name = settings_font.get("style", _default_font_style_name)
         if not font_style_name in font_style_names:
             self._report("log", f"Could not load font style ({font_style_name}) from settings, falling back to {_default_font_style_name}\n")
@@ -1027,6 +1039,9 @@ class HandCodeApp:
         self._update_feature_imitate()
         self._chk_feature_imitate_dam.set(settings_features.get("imitate", {}).get("diaresisasmacron", False))
         self._chk_feature_split_pages.set(settings_features.get("splitpages", {}).get("enabled", False))
+
+    def _write_model_setting_to_ui(self, *, noevent: bool=False) -> None:
+        self._slt_model.set(self._convert_settings.get("model", {}).get("name", "cai-ulw"), noevent=noevent)
 
     def _parse_font_style(self, style_name: str) -> int:
         try:

@@ -156,7 +156,10 @@ Please see [troubleshooting](#troubleshooting) if you encounter any errors durin
 
 ### Models
 
-This program allows users to choose between different models. To reduce the binary size, precompiled releases (as found in the release section) will only contain a very limited set of models to choose from. To see a list of all supported models, please take a look into [`src/lib/handwriting/models`](src/lib/handwriting/models/). There you will also find the respective licenses and more information on using each model.
+This program allows users to choose between different models to synthesize multiple handwriting styles based on different approaches/papers resulting in a wide variety of output qualities, inference speeds but also different licenses (and thus rules governing the usage) and also dependencies (and thus program size). To reduce the binary size, precompiled releases (as found in the release section) will only contain a very limited set of models to choose from. To see a list of all supported models, please take a look into [`src/lib/handwriting/models`](src/lib/handwriting/models/). There you will also find the respective licenses and more information about each model (including relevant links and attributions) as well as instructions for installing all required dependencies.
+
+> [!NOTE]
+> Some model runners are always disabled (and thus not shown in the UI), even when all requirements are met for using them. You will have to enable them in [lib/handwriting/models/*/model_*.py](src/lib/handwriting/models/) by changing the return expression of `is_available()`.
 
 ### Troubleshooting
 

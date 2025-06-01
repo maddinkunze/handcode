@@ -6,7 +6,8 @@ else:
 from .model_base import BaseTFModel, path_model_tflite
 
 class ModelTFLite(BaseTFModel):
-    name = "hws-tflite"
+    id = "hws-tflite"
+    name = "TFLite"
 
     if typing.TYPE_CHECKING:
         import tflite_runtime.interpreter as _tflite
@@ -46,3 +47,8 @@ class ModelTFLite(BaseTFModel):
             chars_len=chars_len,
             bias=self._np.array(biases)
         )["strokes"]
+
+    @classmethod
+    def is_available(cls):
+        # there is basically no tflite runtime (except for android), that includes flex delegates (which are required for this model), so we disable it by default
+        return False

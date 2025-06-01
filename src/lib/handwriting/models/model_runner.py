@@ -13,6 +13,7 @@ class WritingStyle:
         self.image_path = image_path
 
 class ModelRunner:
+    id: str
     name: str
     alphabet: list[str]
     writing_styles: list[WritingStyle]
@@ -57,3 +58,7 @@ class ModelRunner:
             short_info = "💵 Commercial use allowed\n⚖️ MIT License"
 
         return description, license, short_info
+    
+    @classmethod
+    def is_available(cls) -> bool:
+        ...

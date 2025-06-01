@@ -3,6 +3,7 @@ import tkinter as tk
 class LabeledSelect:
     def __init__(self, root, **kwargs):
         self.listeners = {}
+        self._options = {}
         self.label = tk.Label(root)
         self.var = tk.StringVar()
         self.select = tk.OptionMenu(root, self.var, "")
@@ -66,28 +67,47 @@ class LabeledSelect:
             self.set("")
 
         self.select["menu"].delete(0, tk.END)
+        self._options = {}
+        if isinstance(options, dict):
+            self._options = options
         for option in options:
-            self.select["menu"].add_command(label=option, command=lambda option=option: self.set(option))
+            name = self._options.get(option, option)
+            self.select["menu"].add_command(label=name, command=lambda _opt=option: self.set(_opt))
 
     def get(self):
-        return self.var.get()
+        value = self.var.get()
+        for opt, name in self._options.items():
+            if name == value:
+                return opt
+        return value
 
-    def set(self, value):
+    def set(self, value, *, noevent=False):
         _prev = self.var.get()
+        value = self._options.get(value, value)
+        if _prev == value:
+            return
+        if not noevent:
+            self._onbeforechange()
         self.var.set(value)
-        if _prev != value:
+        if not noevent:
             self._onchange()
 
     def place(self, x, y, width):
         self.label.place(x=x, y=y, width=width, height=20)
         self.select.place(x=x, y=y+20, width=width, height=20)
 
+    def _onbeforechange(self):
+       self._callListeners("beforechange")
+
     def _onchange(self):
-        _name = "change"
-        if not _name in self.listeners:
+        self._callListeners("change")
+
+    def _callListeners(self, name):
+        if name not in self.listeners:
             return
-        
-        for listener in self.listeners[_name].values():
+
+        listeners = self.listeners[name]
+        for listener in listeners.values():
             listener()
 
         return True

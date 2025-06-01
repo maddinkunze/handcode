@@ -6,7 +6,8 @@ else:
 from .model_base import BaseTFModel, path_checkpoints
 
 class ModelRNN(BaseTFModel):
-    name = "hws-rnn"
+    id = "hws-rnn"
+    name = "RNN"
 
     if typing.TYPE_CHECKING:
         from .rnn import rnn as _rnn
@@ -69,3 +70,8 @@ class ModelRNN(BaseTFModel):
                 self._model.bias: biases
             }
         )[0].numpy()
+
+    @classmethod
+    def is_available(cls) -> bool:
+        # there is no support for this model runner anymore, as it runs on very old versions of tensorflow only (1.15 or 2.0, not sure) which are not supported by the python version required by the remaining project
+        return False

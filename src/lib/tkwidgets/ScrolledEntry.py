@@ -2,11 +2,15 @@ import tkinter as tk
 import tkinter.ttk as ttk
 
 class ScrolledEntry:
-    def __init__(self, root, **kwargs):
-        self.entry = tk.Text(root, wrap=tk.NONE, relief=tk.FLAT)
-        self.scrollX = ttk.Scrollbar(root, orient=tk.HORIZONTAL, command=self.entry.xview)
+    def __init__(self, root, wrap=tk.NONE, **kwargs):
+        self.entry = tk.Text(root, wrap=wrap, relief=tk.FLAT)
+        if wrap == tk.NONE:
+            self.scrollX = ttk.Scrollbar(root, orient=tk.HORIZONTAL, command=self.entry.xview)
+            self.entry.configure(xscrollcommand=self.scrollX.set)
+        else:
+            self.scrollX = None
         self.scrollY = ttk.Scrollbar(root, orient=tk.VERTICAL, command=self.entry.yview)
-        self.entry.configure(xscrollcommand=self.scrollX.set, yscrollcommand=self.scrollY.set)
+        self.entry.configure(yscrollcommand=self.scrollY.set)
         self.configure(**kwargs)
 
     def get(self):
@@ -53,12 +57,15 @@ class ScrolledEntry:
 
         if centry:
             self.entry.configure(centry)
-        if cscrollX:
+        if cscrollX and self.scrollX:
             self.scrollX.configure(cscrollX)
         if cscrollY:
             self.scrollY.configure(cscrollY)
 
     def place(self, x, y, width=0, height=0, relwidth=0, relheight=0, relx=0, rely=0):
-        self.entry.place(x=x, y=y, relx=relx, rely=rely, width=width-15, height=height-15, relwidth=relwidth, relheight=relheight)
-        self.scrollX.place(x=x, y=y+height-15, relx=relx, rely=rely+relheight, width=width-15, height=15, relwidth=relwidth)
-        self.scrollY.place(x=x+width-15, y=y, relx=relx+relwidth, rely=rely, width=15, height=height-15, relheight=relheight)
+        if self.scrollX:
+            height = height - 15
+        self.entry.place(x=x, y=y, relx=relx, rely=rely, width=width-15, height=height, relwidth=relwidth, relheight=relheight)
+        if self.scrollX:
+            self.scrollX.place(x=x, y=y+height, relx=relx, rely=rely+relheight, width=width-15, height=15, relwidth=relwidth)
+        self.scrollY.place(x=x+width-15, y=y, relx=relx+relwidth, rely=rely, width=15, height=height, relheight=relheight)

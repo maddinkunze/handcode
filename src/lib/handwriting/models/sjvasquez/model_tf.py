@@ -1,3 +1,4 @@
+import sys
 import typing
 if typing.TYPE_CHECKING:
     from lib.classproperty import classproperty
@@ -7,7 +8,8 @@ else:
 from .model_base import BaseTFModel, path_model_tflite
 
 class ModelTF(BaseTFModel):
-    name = "hws-tf"
+    id = "hws-tf"
+    name = "TF"
 
 
     if typing.TYPE_CHECKING:
@@ -48,3 +50,8 @@ class ModelTF(BaseTFModel):
             chars_len = self._tf.constant(chars_len.astype("int32")),
             bias = self._tf.constant(biases)
         )["strokes"]
+
+    @classmethod
+    def is_available(cls):
+        # release builds will not contain the tensorflow library, so we disable it for frozen (= release) builds
+        return not getattr(sys, "frozen", False)

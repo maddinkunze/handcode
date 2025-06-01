@@ -11,7 +11,8 @@ path_model = os.path.join(path_dir, "model.ulw")
 path_last_part = os.path.split(path_dir)[-1]
 
 class ModelULW(ModelRunner):
-    name = "cai-ulw"
+    id = "cai-ulw"
+    name = "ULW"
     writing_styles = [WritingStyle(i, f"Style {i}") for i in range(1, 10)]
 
     if typing.TYPE_CHECKING:
@@ -54,9 +55,10 @@ class ModelULW(ModelRunner):
     @classmethod
     def _load_info(cls):
         cls._description, cls._license, cls._short_info = cls._get_info_from_readme(os.path.join(path_dir, "README.md"))
-        _, license, _ = cls._get_info_from_readme(os.path.join(path_dir, os.path.pardir, "sjvasquez", "RADME.md"))
+        related = "sjvasquez"
+        _, license, _ = cls._get_info_from_readme(os.path.join(path_dir, os.path.pardir, related, "README.md"))
         if license:
-            cls._license += "\n\nLicense information of the related project:\n" + license
+            cls._license += f"\n\nLicense information of the related project ({related}):\n{license}"
     @classproperty
     def license(cls):
         if cls._license is None:
@@ -72,3 +74,7 @@ class ModelULW(ModelRunner):
         if cls._short_info is None:
             cls._load_info()
         return cls._short_info
+    
+    @classmethod
+    def is_available(cls):
+        return True

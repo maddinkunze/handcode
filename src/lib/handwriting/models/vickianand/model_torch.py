@@ -14,7 +14,8 @@ path_model = os.path.join(path_dir, "model.pt")
 path_last_part = os.path.split(path_dir)[-1]
 
 class ModelTorch(ModelRunner):
-    name = "anand-torch"
+    id = "anand-torch"
+    name = "Torch"
     alphabet = list(character_map.keys())
     writing_styles = [WritingStyle(0, "Default")]
 
@@ -118,3 +119,7 @@ class ModelTorch(ModelRunner):
         if cls._short_info is None:
             cls._load_info()
         return cls._short_info
+    
+    @classmethod
+    def is_available(cls) -> bool:
+        return True

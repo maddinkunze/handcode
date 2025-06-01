@@ -53,7 +53,7 @@ def convertSettingsLegacyFrom030(settings):
 
 def convertSettingsLegacyFrom041(settings):
     settingsNew = {**settings}
-    settingsNew["model"] = "ULW"
+    settingsNew["model"] = "cai-ulw"
     settingsNew["version"] = "0.5.0"
     return settingsNew
 
