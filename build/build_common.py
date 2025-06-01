@@ -15,14 +15,10 @@ else:
 
 _platform = None
 if sys.platform == "win32":
-    _platform = "win-amd64"
+    _platform = "win64"
     _distext = "zip"
 elif sys.platform == "darwin":
     _platform = "macos"
-    if platform.processor() == "arm":
-        _platform += "-arm64"
-    else:
-        _platform += "-amd64"
     _distext = "app"
 assert _platform is not None, "Unknown platform to build for: " + sys.platform
 
