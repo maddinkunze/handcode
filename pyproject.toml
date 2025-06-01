@@ -1,6 +1,6 @@
 [project]
 name = "handcode"
-version = "0.4.2"
+version = "0.5.0"
 description = "Handwriting GCode Generator"
 readme = "README.md"
 requires-python = "==3.10.*"
@@ -10,6 +10,9 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+recommended = [
+    "handcode[torch]"
+]
 torch = [
     "torch==2.1.0",
 ]

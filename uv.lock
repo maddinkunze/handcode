@@ -314,7 +314,7 @@ wheels = [
 
 [[package]]
 name = "handcode"
-version = "0.4.2"
+version = "0.5.0"
 source = { virtual = "." }
 dependencies = [
     { name = "numpy" },
@@ -325,6 +325,9 @@ dependencies = [
 build = [
     { name = "cx-freeze" },
     { name = "lazy-loader" },
+]
+recommended = [
+    { name = "torch" },
 ]
 tf = [
     { name = "tensorflow" },
@@ -339,6 +342,7 @@ torch = [
 [package.metadata]
 requires-dist = [
     { name = "cx-freeze", marker = "extra == 'build'", specifier = "==8.2" },
+    { name = "handcode", extras = ["torch"], marker = "extra == 'recommended'" },
     { name = "lazy-loader", marker = "extra == 'build'", specifier = "==0.2.0" },
     { name = "numpy", specifier = "==1.26.4" },
     { name = "tensorflow", marker = "extra == 'tf'", specifier = "==2.11.0" },
@@ -348,7 +352,7 @@ requires-dist = [
     { name = "tkmacosx" },
     { name = "torch", marker = "extra == 'torch'", specifier = "==2.1.0" },
 ]
-provides-extras = ["torch", "tf", "build"]
+provides-extras = ["recommended", "torch", "tf", "build"]
 
 [[package]]
 name = "idna"

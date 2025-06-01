@@ -148,7 +148,7 @@ If there is no release for your platform available but you want the native GUI e
    - `brew install uv` on macOS with [homebrew](https://brew.sh/) installed
    - `curl -LsSf https://astral.sh/uv/install.sh | sh` on macOS without homebrew or Linux
 3. Open a terminal or command prompt (if not already open) and go to the HandCode directory: `cd path/to/handcode` (or `cd path\to\handcode` on Windows)
-4. Sync dependencies with uv: `uv sync`
+4. Sync dependencies with uv: `uv sync --extra recommended` (you can use other `--extra` flags, depending on which models you want to use; see [models](#models) below for more information)
 5. Start HandCode: `uv run src/main.py` (or `uv run src\main.py` on Windows); you should now see the HandCode user interface
 
 Please see [troubleshooting](#troubleshooting) if you encounter any errors during this process.
@@ -159,7 +159,7 @@ Please see [troubleshooting](#troubleshooting) if you encounter any errors durin
 This program allows users to choose between different models to synthesize multiple handwriting styles based on different approaches/papers resulting in a wide variety of output qualities, inference speeds but also different licenses (and thus rules governing the usage) and also dependencies (and thus program size). To reduce the binary size, precompiled releases (as found in the release section) will only contain a very limited set of models to choose from. To see a list of all supported models, please take a look into [`src/lib/handwriting/models`](src/lib/handwriting/models/). There you will also find the respective licenses and more information about each model (including relevant links and attributions) as well as instructions for installing all required dependencies.
 
 > [!NOTE]
-> Some model runners are always disabled (and thus not shown in the UI), even when all requirements are met for using them. You will have to enable them in [lib/handwriting/models/*/model_*.py](src/lib/handwriting/models/) by changing the return expression of `is_available()`.
+> Some model runners are always disabled (and thus not shown in the UI), even when all requirements are met for using them. You will have to enable them in [lib/handwriting/models/*/model_*.py](src/lib/handwriting/models/) by changing the return expression of `is_available()` of the respective model runner.
 
 ### Troubleshooting
 
