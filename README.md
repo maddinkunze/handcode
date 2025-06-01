@@ -218,18 +218,15 @@ For building this project you need to do the following:
 
 ### Windows
 
-You should be simply able to run the `build.bat` script provided in the `build` subdirectory. Besides the libraries you installed for the project you need to install the required build libraries such as [cx_Freeze](https://cx-freeze.readthedocs.io/en/stable/). You can install all needed libraries using `uv pip install -r build\requirements.txt --python .venv\Scripts\python.exe`. Note, that you have to install the `requirements.txt` located within the `build` directory and you have to call `build.bat` with the virtual environment activated and whilst inside the `build` directory. The `--python .venv\Scripts\python.exe` flag ensures, that the build requirements are installed into the virtual environment and not into your global python installation; you may have to change the location of your venv executable.
+You should be simply able to run the `build.bat` script provided in the `build` subdirectory. Besides the libraries you installed for the project you need to install the required build libraries such as [cx_Freeze](https://cx-freeze.readthedocs.io/en/stable/). You can install all needed libraries using `uv sync --extra build --extra recommended`. Note, that you have to change the `--extra recommended` flag to reflect which models you want to include in your release (see [models](#models) for more information).
 
 For completeness, here is a complete rundown of what you need to do, to build HandCode for Windows:
 1. Follow instructions for installation (source code); verify that the program starts and works without problems
 2. Make sure, you are at the project root: `cd C:\path\to\handcode`
-3. Steps 4-5 are optional, if you have already installed the build tools in your virtual environment
-5. Install build requirements: `uv pip install -r build\requirements.txt --python .venv\Scripts\python.exe` (optional, if build tools are already installed in your venv)
-6. Activate virtual environment: `.venv\Scripts\activate`
-7. Go into `build` directory: `cd build`
-8. Start the build process: `build.bat` (this will take some time)
-9. Follow the instructions during the build, they are required to minimize the build size
-9. Optional: Package the built folder into a single zip file for distribution
+3. Install build requirements: `uv sync --extra build --extra recommended` (optional, if you have already installed the build tools into your venv)
+4. Start the build process: `uv run build\build_win.py` (this will take some time)
+5. Follow the instructions during the build, they are required to minimize the build size
+6. Optional: Package the built folder (located within `dist`) into a single zip file for distribution
 
 The provided script ([`build.bat`](build/build.bat)) will do the following:
 1. Build and bundle the software to the best of cx_Freeze's capabilities, see [cx_Freezes documentation](https://cx-freeze.readthedocs.io/en/stable/) and my [`build/setup.py`](build/setup.py) script for more information
@@ -242,16 +239,19 @@ The provided script ([`build.bat`](build/build.bat)) will do the following:
 
 I have not tested nor built this project on other platforms then mentioned. If you managed to build it for another platform, feel free to share your steps and code modifications.
 
+In general, you will have to install all dependencies using `uv sync --extra build --extra recommended` (you can replace the second `--extra recommended` with the dependencies for your choice of [models](#models)) followed by `uv run build/build.py`. Take a look into the `build/build_*.py` files to get an idea of how the program is built on each platform and adapt it to your needs.
+
 
 ## Attributions
 
-This project is written in [Python](https://python.org) and relies on the following projects directly:
+This project is written in [Python](https://python.org) and primarily relies on the following projects directly:
+ - Python's standard library
+ - [handwriting-synthesis](https://github.com/vickianand/handwriting-synthesis) (MIT License)
  - [handwriting-synthesis](https://github.com/sjvasquez/handwriting-synthesis) (No License, but usage like this seems to be in reasonable scope)
+ - [numpy](https://github.com/numpy/numpy) (BSD 3 Clause License)
+ - [pytorch](https://github.com/pytorch/pytorch) (BSD 3 Clause License)
  - [tensorflow](https://github.com/tensorflow/tensorflow) (Apache License, Version 2.0)
 
 It also indirectly relies on these awesome projects:
  - [uv](https://github.com/astral-sh/uv) (Apache License, Version 2.0 or MIT License)
  - [cx_Freeze](https://github.com/marcelotduarte/cx_Freeze) (modified Python Software Foundation License)
-
-Previous versions used to rely on the following project:
- - [svg2gcode](https://github.com/sameer/svg2gcode) (MIT License)
