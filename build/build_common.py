@@ -23,7 +23,7 @@ elif sys.platform == "darwin":
 assert _platform is not None, "Unknown platform to build for: " + sys.platform
 
 sys.path.append(path_src)
-from common import version_handcode as buildversion
+from common import version_handcode as buildversion, use_compression, ext_compression, files_compressed, compression_depth
 sys.path.pop()
 sys.path.pop()
 

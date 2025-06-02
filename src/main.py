@@ -21,7 +21,7 @@ import tkinter.dialog as tkd
 import tkinter.filedialog as tkfd
 import tkinter.messagebox as tkmb
 
-from common import path_lib, path_data, path_settings, version_handcode
+from common import path_data, path_settings, set_tk_icon, version_handcode
 if typing.TYPE_CHECKING:
     import lib.tkwidgets as tkw
 else:
@@ -259,14 +259,7 @@ class HandCodeApp:
         self.window.configure(**self._style_window)
 
         # Add icon to window/taskbar
-        if sys.platform == "win32":
-            self.window.iconbitmap(os.path.join(path_lib, "icon.ico"))
-        else:
-            try:
-                img = tk.PhotoImage(file=os.path.join(path_lib, "icon.png"))
-                self.window.iconphoto(True, img)
-            except Exception:
-                pass
+        set_tk_icon(self.window)
 
     def _init_widgets(self) -> None:
         self._frm_inout = tk.Frame(self.window, **self._style_frame)
@@ -741,13 +734,13 @@ class HandCodeApp:
             os.startfile(path_data)
             return
 
-        path_data_safe = path_data.replace('"', '\\"')
+        path_data_safe = path_data.replace('"', r'\"')
         if sys.platform.startswith("linux"):
             os.system(f"xdg-open \"{path_data_safe}\"")
             return
 
         if sys.platform == "darwin":
-            os.system(f"open -R \"{path_data_safe}\"")
+            os.system(f"open \"{path_data_safe}\"")
             return
 
 

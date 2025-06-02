@@ -2,16 +2,22 @@ import os, sys
 from cx_Freeze import setup, Executable
 from build_common import path_src, path_lib, path_icon
 from build_common import buildname, buildversion, buildcpr, buildpath
+from build_optimize import patch_build_exe_run
 
 # Dependencies are automatically detected, but it might need fine tuning.
 path_main = os.path.join(path_src, "main.py")
 packages = []
-includes = ["handwriting", "tkwidgets"]
+includes = []
 includefiles = [
     (os.path.join(path_src, "data", "demo.txt"), os.path.join("data", "demo.txt")),
-    (path_icon, os.path.join("lib", os.path.basename(path_icon)))
 ]
-excludes = []
+excludes = ["sqlite3", "networkx", "lib"]
+bin_excludes = [
+    "model.tflite",
+    "model-17900.data-00000-of-00001",
+    "model-17900.index",
+    "model-17900.meta",
+]
 optimization = 1
 build_exe_options = {
     'build_exe': buildpath,
@@ -20,6 +26,7 @@ build_exe_options = {
     'include_files': includefiles,
     'include_msvcr': True,
     'excludes': excludes,
+    'bin_excludes': bin_excludes,
     'optimize': optimization,
     'constants': [f"handcode_version=\"{buildversion}\""],
     'replace_paths': [("*", "")],
@@ -32,6 +39,8 @@ bdist_mac_options = {
 
 # base="Win32GUI" should be used only for Windows GUI app
 base = "Win32GUI" if sys.platform == "win32" else None
+
+patch_build_exe_run()
 
 setup(
     name="HandCode",

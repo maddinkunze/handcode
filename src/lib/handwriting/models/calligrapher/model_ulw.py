@@ -42,7 +42,7 @@ class ModelULW(ModelRunner):
 
     def invoke(self, text, biases, style):
         biases = [2.5 * b for b in biases]
-        return self._rnn.run_model(self._model, text, style.id, biases, self.progress_cb)
+        return self._rnn.run_model(self._model, text, style, biases, self.progress_cb)
     
     urls = [
         ("Web Demo", "https://caligrapher.ai/"),

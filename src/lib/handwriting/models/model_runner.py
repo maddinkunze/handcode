@@ -1,8 +1,5 @@
 import os
-import sys
 import typing
-import numpy as np
-import traceback
 
 _ProgressF = typing.Callable[[str, float|int, float|int], typing.Any]
 
@@ -33,7 +30,7 @@ class ModelRunner:
     def load(self) -> None:
         raise NotImplementedError()
 
-    def invoke(self, text: list[str], biases: list[float], style: WritingStyle) -> list[list[float]]:
+    def invoke(self, text: list[str], biases: list[float], style: int) -> list[list[float]]:
         raise NotImplementedError()
 
     @staticmethod
