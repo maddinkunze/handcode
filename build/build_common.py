@@ -27,7 +27,7 @@ from common import version_handcode as buildversion, use_compression, ext_compre
 sys.path.pop()
 sys.path.pop()
 
-_dirname = f"handcode-{_platform}-{buildversion}"
+_dirname = f"handcode-{_platform}-v{buildversion}"
 
 buildname = "HandCode"
 buildcpr = "© Martin Kunze - https://github.com/maddinkunze/handcode"

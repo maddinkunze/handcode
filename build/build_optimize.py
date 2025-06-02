@@ -1,6 +1,6 @@
 import os
 import sys
-import lzma
+import bz2
 import shutil
 import typing
 from cx_Freeze import build_exe
@@ -69,12 +69,6 @@ remove_dirs = [
 remove_files_pattern: list[tuple[tuple[str, ...], "_rfilterf"]] = [
     (("lib", "numpy"), lambda _, f: f.endswith("pyi") or f.endswith("pxd")),
 ]
-_filter_id = lzma.FILTER_LZMA2
-if sys.platform == "win32":
-    _filter_id = lzma.FILTER_LZMA1
-compress_filters = [
-    {"id": _filter_id, "preset": 9 | lzma.PRESET_EXTREME},
-]
 
 
 # -------------------------------------------------------
@@ -97,8 +91,8 @@ if sys.platform == "win32":
     remove_files.append(("lib", "libcrypto-3.dll",)),
     remove_files.append(("lib", "libssl-3.dll",)),
     remove_files.append(("lib", "numpy", "core", "_simd.cp311-win_amd64.pyd")),
-    move_files.append((("vcruntime140.dll"), "lib"))
-    move_files.append((("vcruntime140_1.dll"), "lib"))
+    move_files.append((("vcruntime140.dll",), ("lib", "vcruntime140.dll")))
+    move_files.append((("vcruntime140_1.dll",), ("lib", "vcruntime140_1.dll")))
 
 
 # --------------------------------------
@@ -177,7 +171,7 @@ def _compress_large_file(path: str, minsize: int, compressfactor: float):
 
     print(f"Compressing {path}({ext_compression})", end="")
     file_orig = open(path, "rb")
-    file_compressed = lzma.open(path_compressed, "wb", filters=compress_filters)
+    file_compressed = bz2.open(path_compressed, "wb")
     file_compressed.write(file_orig.read())
     file_compressed.close()
     file_orig.close()

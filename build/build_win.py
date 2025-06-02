@@ -8,7 +8,7 @@ def build_win() -> None:
     to_zip_file()
 
 def to_zip_file() -> None:
-    print("Creating zip file... ", end="")
+    print("Creating zip file... ", end="", flush=True)
     with zipfile.ZipFile(distpath, "w", zipfile.ZIP_DEFLATED, compresslevel=9) as zf:
         for dirname, subdirs, files in os.walk(buildpath):
             for filename in files:

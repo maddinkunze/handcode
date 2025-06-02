@@ -6,14 +6,14 @@ path_exe_dir = os.path.dirname(os.path.realpath(sys.executable if is_frozen else
 path_data = os.path.join(path_exe_dir, "data")
 path_settings = os.path.join(path_data, "settings.json")
 path_lib = os.path.join(path_exe_dir, "lib")
-_path_icon_dir = path_exe_dir if is_frozen else path_lib
 if sys.platform == "win32":
-    path_icon = os.path.join(_path_icon_dir, "icon.ico")
+    path_icon = os.path.join(path_lib, "icon.ico")
 else:
+    _path_icon_dir = path_exe_dir if is_frozen else path_lib
     path_icon = os.path.join(_path_icon_dir, "icon.png")
 
 use_compression = True
-ext_compression = f"{os.extsep}lzma"
+ext_compression = f"{os.extsep}bz2"
 compression_depth = 3
 files_compressed = [
     ("lib", "numpy"),
@@ -24,6 +24,9 @@ if sys.platform == "darwin":
     files_compressed.append(("lib", "libtorch_cpu.dylib"))
     files_compressed.append(("lib", "libtorch_python.dylib"))
     files_compressed.append(("lib", "libgfortran.5.dylib"))
+if sys.platform == "win32":
+    files_compressed.append(("lib", "torch", "lib", "torch_cpu.dll"))
+    files_compressed.append(("lib", "torch", "lib", "torch_python.dll"))
 
 version_handcode = None # specify handcode version here, if it cannot be determined automatically
 if getattr(sys, "frozen", False):

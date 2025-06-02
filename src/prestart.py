@@ -27,16 +27,16 @@ def unpack_relevant_files():
 
     root = tkinter.Tk()
     root.title("Unpacking files")
+    set_tk_icon(root)
     root.geometry("300x65")
     root.resizable(False, False)
     root.protocol("WM_DELETE_WINDOW", lambda *_: 0)
     root.configure(bg=style["bg_window"])
-    set_tk_icon(root)
         
-    tkinter.Label(root, text="HandCode is unpacking its files right now.\nThis may take a few minutes, but it only\nneeds to be done once after installation.", fg=style["fg_text"]).place(x=0, y=0, width=300, height=62)
+    tkinter.Label(root, text="HandCode is unpacking its files right now.\nThis may take a few minutes, but it only\nneeds to be done once after installation.",  bg=style["bg_window"], fg=style["fg_text"]).place(x=0, y=0, width=300, height=62)
     root.update()
 
-    import lzma
+    import bz2
     import threading
 
     def decompress_large_files(path, maxlevel):
@@ -56,7 +56,7 @@ def unpack_relevant_files():
             return
         path_decompressed = path[:-len(ext_compression)]
 
-        file_orig = lzma.open(path, "rb")
+        file_orig = bz2.open(path, "rb")
         file_compressed = open(path_decompressed, "wb")
         file_compressed.write(file_orig.read())
         file_compressed.close()

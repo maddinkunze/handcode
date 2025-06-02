@@ -11,6 +11,8 @@ includes = []
 includefiles = [
     (os.path.join(path_src, "data", "demo.txt"), os.path.join("data", "demo.txt")),
 ]
+if sys.platform == "win32":
+    includefiles.append((os.path.join(path_src, "lib", "icon.ico"), os.path.join("lib", "icon.ico")))
 excludes = ["sqlite3", "networkx", "lib"]
 bin_excludes = [
     "model.tflite",

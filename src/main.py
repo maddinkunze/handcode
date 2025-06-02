@@ -67,7 +67,10 @@ class HandCodeApp:
     def _load_fonts(self) -> None:
         self._font_tooltip = tkf.Font(size=7)
         self._font_text = tkf.Font(size=9)
-        self._font_entry = tkf.Font(size=12)
+        _font_entry_size = 12
+        if sys.platform == "win32":
+            _font_entry_size = 10
+        self._font_entry = tkf.Font(size=_font_entry_size)
         self._font_label = tkf.Font(size=10, weight="bold")
         self._font_start = tkf.Font(size=24, weight="bold")
 
@@ -78,12 +81,15 @@ class HandCodeApp:
 
         self._style_frame = {
             "bg": self.STYLE["bg_window"],
+            "bd": self.STYLE["borderwidth"],
+            "relief": tk.FLAT,
         }
 
         self._style_canvas = {
             "bg": self.STYLE["bg_window"],
             "bd": self.STYLE["borderwidth"],
             "relief": tk.FLAT,
+            "highlightthickness": 0,
         }
 
         _style_label = {
@@ -114,7 +120,8 @@ class HandCodeApp:
         }
         if sys.platform == "darwin":
             self._style_label_link["cursor"] = "pointinghand"
-            # TODO: add pointer cursors for other platforms
+        if sys.platform == "win32":
+            self._style_label_link["cursor"] = "hand2"
 
         self._style_scroll_x = "Maddin.HC.Horizontal.TScrollbar"
         self._style_scroll_y = "Maddin.HC.Vertical.TScrollbar"
@@ -670,7 +677,7 @@ class HandCodeApp:
         window = tk.Toplevel(self.window, **self._style_window)
         window.title("Model Info")
 
-        lbl_title = tk.Label(window, text=f"(Internal) Model Name: {self._gcode._model.name}", **self._style_label_section)
+        lbl_title = tk.Label(window, text=f"Model Name: {self._gcode._model.name} ({self._gcode._model.id})", **self._style_label_section)
 
         lbl_info = tk.Label(window, text="Description:", **self._style_label_input)
         edt_info = tkw.ScrolledEntry(window, tk.WORD, **self._style_entry_scrolled)
