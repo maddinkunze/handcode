@@ -216,30 +216,19 @@ Otherwise you can try to reinstall tensorflow within your venv. Execute the foll
 
 For building this project you need to do the following:
 
-### Windows
+1. `uv sync --extra build --extra recommended` (you can change `--extra recommended` to whatever models you want to include in your build; see [models](#models) for more info)
+2. `uv run build/build.py`
+3. After the build process, the resulting file should be located at `build/dist/handcode-<platform>-<version>(.<ext>)`
 
-You should be simply able to run the `build.bat` script provided in the `build` subdirectory. Besides the libraries you installed for the project you need to install the required build libraries such as [cx_Freeze](https://cx-freeze.readthedocs.io/en/stable/). You can install all needed libraries using `uv sync --extra build --extra recommended`. Note, that you have to change the `--extra recommended` flag to reflect which models you want to include in your release (see [models](#models) for more information).
+> [!WARNING]
+> Only build this project after verifying that you can run the project (i.e. `uv run src/main.py`).
 
-For completeness, here is a complete rundown of what you need to do, to build HandCode for Windows:
-1. Follow instructions for installation (source code); verify that the program starts and works without problems
-2. Make sure, you are at the project root: `cd C:\path\to\handcode`
-3. Install build requirements: `uv sync --extra build --extra recommended` (optional, if you have already installed the build tools into your venv)
-4. Start the build process: `uv run build\build_win.py` (this will take some time)
-5. Follow the instructions during the build, they are required to minimize the build size
-6. Optional: Package the built folder (located within `dist`) into a single zip file for distribution
+Building a HandCode release is tested on the following platforms:
+ - Windows (specifically Windows 10 on an amd64/x86_46 architecture)
+ - macOS (specifically macOS 15.5 on an arm64 architecture)
 
-The provided script ([`build.bat`](build/build.bat)) will do the following:
-1. Build and bundle the software to the best of cx_Freeze's capabilities, see [cx_Freezes documentation](https://cx-freeze.readthedocs.io/en/stable/) and my [`build/setup.py`](build/setup.py) script for more information
-2. Remove unneccessary files, especially library data, demos, tests, duplicate files and folders, such as pycache folders.
-3. It starts the program, tracks which files are actually accessed and removes files that are not accessed by the exported binary.
-4. Finally, it compresses large files using lzma.
-5. Steps 2-4 (see [`build/finish.py`](build/finish.py)) are not strictly necessary but it reduces the package size from initially ~600-800MB to 130MB (still very big but meh)
-
-### Other
-
-I have not tested nor built this project on other platforms then mentioned. If you managed to build it for another platform, feel free to share your steps and code modifications.
-
-In general, you will have to install all dependencies using `uv sync --extra build --extra recommended` (you can replace the second `--extra recommended` with the dependencies for your choice of [models](#models)) followed by `uv run build/build.py`. Take a look into the `build/build_*.py` files to get an idea of how the program is built on each platform and adapt it to your needs.
+I have not tested nor built this project on other platforms than mentioned. If you have managed to build it for another platform, feel free to share your steps and code modifications.
+In general, you will have to install all dependencies using `uv sync --extra build --extra recommended` followed by `uv run build/build.py`. Take a look into the `build/build_*.py` files to get an idea of how the program is built on each platform and adapt it or create a new build configuration according to your needs.
 
 
 ## Attributions
