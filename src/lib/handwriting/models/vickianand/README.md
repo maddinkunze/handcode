@@ -1,3 +1,7 @@
+### Description
+
+This is a fast but sometimes inaccurate model that occasionally returns complete gibberish or nothing usable at all.
+
 ### Attribution
 
 This is as slightly modified version of Vicki Anand's [handwriting-synthesis](https://github.com/vickianand/handwriting-synthesis).

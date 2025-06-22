@@ -53,6 +53,19 @@ def convertSettingsLegacyFrom030(settings):
 
 def convertSettingsLegacyFrom041(settings):
     settingsNew = {**settings}
+    if "output" in settingsNew:
+        settingsNewOut = settingsNew["output"]
+        if "format" in settingsNewOut:
+            formatIds = {"GCode": "gcode"}
+            settingsNewOut = formatIds.get(settingsNewOut["format"], "gcode")
+    if "font" in settingsNew:
+        settingsNewFont = settingsNew["font"]
+        if "style" in settingsNewFont:
+            try:
+                styleId = int(settingsNewFont["style"].split()[-1])
+            except:
+                styleId = 0
+            settingsNewFont["style"] = styleId
     settingsNew["model"] = "cai-ulw"
     settingsNew["version"] = "0.5.0"
     return settingsNew

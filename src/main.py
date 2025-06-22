@@ -187,8 +187,7 @@ class HandCodeApp:
             "bgscale": self.STYLE["bg_inner"],
             "fgscale": self.STYLE["bg_button"],
             "fgscale:hover": self.STYLE["bg_button_hover"],
-            "font": self._font_entry,
-            "fontlabel": self._font_text,
+            "font": self._font_text,
             "fonttooltip": self._font_tooltip,
             "bd": self.STYLE["borderwidth"],
             "highlightthickness": self.STYLE["highlightthickness"],
@@ -197,15 +196,17 @@ class HandCodeApp:
         self._style_select_labeled = {
             "bglabel": self.STYLE["bg_window"],
             "fglabel": self.STYLE["fg_label"],
-            "bgselect": self.STYLE["bg_button"],
-            "bgselect:hover": self.STYLE["bg_button_hover"],
-            "fgselect": self.STYLE["fg_button"],
-            "fgselect:hover": self.STYLE["fg_button_hover"],
             "font": self._font_entry,
             "fontlabel": self._font_text,
             "bd": self.STYLE["borderwidth"],
             "highlightthickness": self.STYLE["highlightthickness"],
         }
+
+        if sys.platform != "darwin":
+            self._style_select_labeled["bgselect"] = self.STYLE["bg_button"],
+            self._style_select_labeled["bgselect:hover"] = self.STYLE["bg_button_hover"],
+            self._style_select_labeled["fgselect"] = self.STYLE["fg_button"],
+            self._style_select_labeled["fgselect:hover"] = self.STYLE["fg_button_hover"],
 
         self._style_checkbox_default = {
             "bglabel": self.STYLE["bg_window"],
@@ -275,7 +276,7 @@ class HandCodeApp:
         self._lbl_file_process = tk.Label(self.window, text="↴   ↱", **{**self._style_label_section, "font": self._font_start})
         self._lbl_file_out = tk.Label(self._frm_inout, text="Output File:", **self._style_label_section)
         self._edt_file_out = tk.Entry(self._frm_inout, **self._style_entry_default)
-        self._slt_file_type = tkw.LabeledSelect(self._frm_inout, label="Format", options=[*self._MAP_FILETYPES.values()], **self._style_select_labeled)
+        self._slt_file_type = tkw.LabeledSelect(self._frm_inout, label="Format", options=[tkw.SelectOption(fid, fname) for fid, fname in self._MAP_FILETYPES.items()], **self._style_select_labeled)
 
         self._frm_input = tk.Frame(self.window, **self._style_frame)
         self._lbl_input = tk.Label(self._frm_input, text="Input Text:", **self._style_label_section)
@@ -616,7 +617,7 @@ class HandCodeApp:
         self._settings_was_scrolling_down = False
 
     def _switch_model(self) -> None:
-        model = self._slt_model.get()
+        model = self._slt_model.getId()
         if not model:
             return
         
@@ -796,7 +797,7 @@ class HandCodeApp:
             self._edt_log.append(data)
 
         if (event == "libraries_loaded"):
-            models = dict(map(lambda x: (x[0], x[1].name), self._gcode.all_models.items()))
+            models = [tkw.SelectOption(mid, model.name) for mid, model in self._gcode.all_models.items()]
             self._slt_model.configure(options=models)
             self._write_model_setting_to_ui()
 
@@ -804,12 +805,12 @@ class HandCodeApp:
             self._slt_model.configure(state=tk.NORMAL)
             self._btn_model_info.configure(state=tk.NORMAL)
             self._lbl_model_license.configure(text=self._gcode._model.short_info)
-            self._last_successful_model = self._slt_model.get()
+            self._last_successful_model = self._slt_model.getId()
             self._write_settings_to_ui()
 
         if (event == "model_failed"):
             self._report("log", "Switching back to last known working model\n")
-            self._slt_model.set(self._last_successful_model)
+            self._slt_model.setById(self._last_successful_model)
 
         if (event == "success"):
             self._btn_start.configure(state=tk.NORMAL)
@@ -899,7 +900,7 @@ class HandCodeApp:
                 if task == "model":
                     try:
                         self._log_thread_safe("Loading model... ")
-                        gcode.switch_model(self._slt_model.get())
+                        gcode.switch_model(self._slt_model.getId())
                         self._log_thread_safe("Done\n\n")
                         self._report_thread_safe("model_loaded")
                     except Exception as e:
@@ -950,10 +951,10 @@ class HandCodeApp:
 
         self._save_setting(["input", "text"], self._edt_input.get())
         self._save_setting(["output", "file"], self._edt_file_out.get())
-        self._save_setting(["output", "format"], self._slt_file_type.get())
+        self._save_setting(["output", "format"], self._slt_file_type.getId())
 
         self._save_setting(["font", "size"], self._edt_font_size.get())
-        self._save_setting(["font", "style"], self._slt_font_style.get())
+        self._save_setting(["font", "style"], self._slt_font_style.getId())
         self._save_setting(["font", "bias"], self._edt_font_bias.get())
         self._save_setting(["font", "lineheight"], self._edt_font_line_height.get())
         self._save_setting(["font", "wordspacing"], self._edt_font_word_spacing.get())
@@ -977,7 +978,7 @@ class HandCodeApp:
         self._save_setting(["features", "splitpages", "enabled"], self._chk_feature_split_pages.get())
 
     def _read_model_setting_from_ui(self):
-        self._save_setting(["model", "name"], self._slt_model.get())
+        self._save_setting(["model", "name"], self._slt_model.getId())
 
     def _write_settings_to_ui(self) -> None:
         format_float = legacy.formatFloat
@@ -986,7 +987,7 @@ class HandCodeApp:
         self._edt_input.set(self._convert_settings.get("input", {}).get("text", ""))
         self._edt_file_out.delete(0, tk.END)
         self._edt_file_out.insert(0, self._convert_settings.get("output", {}).get("file", "demo.nc"))
-        self._slt_file_type.set(self._convert_settings.get("output", {}).get("format", "GCode"))
+        self._slt_file_type.setById(self._convert_settings.get("output", {}).get("format", "gcode"))
 
         self._write_model_setting_to_ui(noevent=True)
 
@@ -998,14 +999,14 @@ class HandCodeApp:
             font_size = 10
         self._edt_font_size.set(font_size)
 
-        font_style_names = [style.name for style in self._gcode.writing_styles]
-        self._slt_font_style.configure(options=font_style_names)
-        _default_font_style_name = font_style_names[0]
-        font_style_name = settings_font.get("style", _default_font_style_name)
-        if not font_style_name in font_style_names:
-            self._report("log", f"Could not load font style ({font_style_name}) from settings, falling back to {_default_font_style_name}\n")
-            font_style_name = _default_font_style_name
-        self._slt_font_style.set(font_style_name)
+        font_styles = [tkw.SelectOption(style.id, style.name, style.image_path) for style in self._gcode.writing_styles]
+        self._slt_font_style.configure(options=font_styles)
+        _default_font_style = font_styles[0]
+        font_style_id = settings_font.get("style", _default_font_style)
+        if not any(map(lambda f: f.id == font_style_id, font_styles)):
+            self._report("log", f"Could not load font style ({font_style_id}) from settings, falling back to {_default_font_style.name}\n")
+            font_style_id = _default_font_style.id
+        self._slt_font_style.setById(font_style_id)
 
         self._edt_font_bias.set(settings_font.get("bias", format_float(75)))
         self._edt_font_line_height.set(settings_font.get("lineheight", font_size))
@@ -1041,7 +1042,7 @@ class HandCodeApp:
         self._chk_feature_split_pages.set(settings_features.get("splitpages", {}).get("enabled", False))
 
     def _write_model_setting_to_ui(self, *, noevent: bool=False) -> None:
-        self._slt_model.set(self._convert_settings.get("model", {}).get("name", "cai-ulw"), noevent=noevent)
+        self._slt_model.setById(self._convert_settings.get("model", {}).get("name", "cai-ulw"), noevent=noevent)
 
     def _parse_font_style(self, style_name: str) -> int:
         try:
@@ -1117,7 +1118,7 @@ class HandCodeApp:
         errors += self._convert_setting_to_data(["output", "file"], lambda p: os.path.join(path_data, p), default="demo.gcode")
 
         errors += self._convert_setting_to_data(["font", "size"], float, default=10)
-        errors += self._convert_setting_to_data(["font", "style"], self._parse_font_style, default=0)
+        errors += self._convert_setting_to_data(["font", "style"], int, default=0)
         errors += self._convert_setting_to_data(["font", "bias"], lambda x: float(x)/100, default=0.75)
         errors += self._convert_setting_to_data(["font", "lineheight"], float, default=10)
 
@@ -1137,7 +1138,7 @@ class HandCodeApp:
         try:
             pen_settings = {}
 
-            mode = self._get_convert_setting(["output", "format"], lambda f: [mode for mode, mname in self._MAP_FILETYPES.items() if mname == f][0], default="gcode")
+            mode = self._get_convert_setting(["output", "format"], str, default="gcode")
             
             # see lib/handwriting/commands.py for more information about these arguments
             pen_settings["pendraw"] = self._get_convert_setting(["pen", "heights", "draw"], float, default=0)

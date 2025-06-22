@@ -88,7 +88,12 @@ class ModelTorch(ModelRunner):
         strokes_words = []
         for i in range(strokes.shape[1]):
             strokes_word = strokes[:, i, :]
-            last_actual_index = self._np.argwhere(strokes_word[:, 0] == 1.0)[-1, 0] # find where garbage at the end starts
+            
+            penup_indices = self._np.argwhere(strokes_word[:, 0] == 1.0)
+            if not penup_indices.size > 0:
+                continue # TODO: throw an error??
+
+            last_actual_index = penup_indices[-1, 0] # find where garbage at the end starts
             strokes_word = strokes_word[:, :last_actual_index] # cut garbage from the end
             strokes_word[:, :] = strokes_word[:, (1, 2, 0)] # reorder the entries (the model returns (penup, x, y), but we need (x, y, penup))
             strokes_words.append(strokes_word)

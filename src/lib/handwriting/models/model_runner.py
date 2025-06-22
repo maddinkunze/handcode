@@ -1,4 +1,5 @@
 import os
+import re
 import typing
 
 _ProgressF = typing.Callable[[str, float|int, float|int], typing.Any]
@@ -33,21 +34,35 @@ class ModelRunner:
     def invoke(self, text: list[str], biases: list[float], style: int) -> list[list[float]]:
         raise NotImplementedError()
 
-    @staticmethod
-    def _get_info_from_readme(path_readme: str, path_license: str|None=None) -> tuple[str, str, str]:
+    _re_md_url = re.compile(r"\[([^\]]*)\]\(([^\)]*)\)")
+    _re_md_url_sub = r"\1 (see \2)"
+    @classmethod
+    def _get_info_from_readme(cls, path_readme: str, path_license: str|None=None) -> tuple[str, str, str]:
         if not os.path.exists(path_readme):
             return "", "", ""
 
         with open(path_readme, "r", encoding="utf-8") as f:
             readme = f.read()
 
-        description = readme.split("### Attribution")[1].split("### ")[0].strip()
+        description = ""
+        for title in ["Description", "Attribution"]:
+            content = cls._get_section_from_markdown(readme, title)
+            if not content:
+                continue
+            if description:
+                description += "\n\n"
+            description += content
+
+        if not description:
+            description = "No info about this model :("
+
+        description = re.sub(cls._re_md_url, cls._re_md_url_sub, description)
 
         if path_license and os.path.exists(path_license):
             with open(path_license, "r", encoding="utf-8") as f:
                 license = f.read().strip()
         else:
-            license = readme.split("### License")[1].split("### ")[0].strip()
+            license = cls._get_section_from_markdown(readme, "License")
 
         short_info = "❓ Commercial use unknown\n⚖️ Unknown License"
 
@@ -55,6 +70,13 @@ class ModelRunner:
             short_info = "💵 Commercial use allowed\n⚖️ MIT License"
 
         return description, license, short_info
+    
+    @staticmethod
+    def _get_section_from_markdown(text: str, title: str, level: int = 3) -> str|None:
+        _title = f"{'#' * level} {title}"
+        if not _title in text:
+            return None
+        return text.split(_title)[1].split(f"{'#' * (level - 1)} ")[0].rstrip("#").strip()
     
     @classmethod
     def is_available(cls) -> bool:

@@ -1,7 +1,11 @@
 from itertools import chain
+import random
 import torch
 from torch.distributions import MultivariateNormal, Bernoulli, Categorical
+from torch.distributions.constraints import positive_definite
 from .alphabet import character_map
+
+torch.manual_seed(1023)
 
 class OneHotEncoder:
     n_char = 57
@@ -226,19 +230,20 @@ class HandWritingSynthRNN(torch.nn.Module):
                         strokes_mask[j] = 1.0
                 # keeping at lower limit of stroke sequence to 20
                 if i > 20 and end_loop:
-                    print(f"breaking stroke generation at {i} sequence length")
                     break
+
+            mu.nan_to_num(mu.nanmean())
 
             attn_vars["phi_list"] += attn_vars_i["phi_list"]
             attn_vars["kappa_list"] += attn_vars_i["kappa_list"]
 
             # sample from the distribution (returned parameters)
             # samples[i, :, 0] = e[-1, :] > 0.5
-            distrbn1 = Bernoulli(e[-1, :])
+            distrbn1 = Bernoulli(e[-1, :].nan_to_num(0))
             samples[i, :, 0] = distrbn1.sample()
 
             # selected_mode = torch.argmax(log_pi[-1, :, :], dim=1) # shape = (batch,)
-            distrbn2 = Categorical((log_pi[-1, :, :] * (1 + bias)).exp())
+            distrbn2 = Categorical((log_pi[-1, :, :].nan_to_num(0) * (1 + bias)).exp())
             selected_mode = distrbn2.sample()
 
             index_1 = selected_mode.unsqueeze(1)  # shape (batch, 1)
@@ -264,9 +269,10 @@ class HandWritingSynthRNN(torch.nn.Module):
             sigma2d[:, 1, 1] = sigma[:, 1] ** 2
             sigma2d[:, 0, 1] = rho[:] * sigma[:, 0] * sigma[:, 1]
             sigma2d[:, 1, 0] = sigma2d[:, 0, 1]
-
+            sigma2d = sigma2d.nan_to_num(sigma2d.nanmean())
+            
             distribn = MultivariateNormal(loc=mu, covariance_matrix=sigma2d)
-
+            
             samples[i, :, 1:] = distribn.sample()
             if use_stopping:
                 samples[i, :, :] *= strokes_mask.unsqueeze(-1)
