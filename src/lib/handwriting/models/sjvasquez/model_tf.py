@@ -1,5 +1,5 @@
-import sys
 import typing
+import importlib.util
 if typing.TYPE_CHECKING:
     from lib.classproperty import classproperty
 else:
@@ -53,5 +53,6 @@ class ModelTF(BaseTFModel):
 
     @classmethod
     def is_available(cls):
-        # release builds will not contain the tensorflow library, so we disable it for frozen (= release) builds
-        return not getattr(sys, "frozen", False)
+        return bool(
+            importlib.util.find_spec("tensorflow")
+        )

@@ -1,5 +1,6 @@
 import os
 import typing
+import importlib.util
 
 if typing.TYPE_CHECKING:
     from lib.classproperty import classproperty
@@ -127,4 +128,7 @@ class ModelTorch(ModelRunner):
     
     @classmethod
     def is_available(cls) -> bool:
-        return True
+        return bool(
+            importlib.util.find_spec("torch") and
+            importlib.util.find_spec("numpy")
+        )

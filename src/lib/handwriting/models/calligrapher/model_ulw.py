@@ -1,5 +1,6 @@
 import os
 import typing
+import importlib.util
 if typing.TYPE_CHECKING:
     from lib.classproperty import classproperty
 else:
@@ -77,4 +78,6 @@ class ModelULW(ModelRunner):
     
     @classmethod
     def is_available(cls):
-        return True
+        return bool(
+            importlib.util.find_spec("numpy")
+        )

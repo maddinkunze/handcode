@@ -50,5 +50,5 @@ class ModelTFLite(BaseTFModel):
 
     @classmethod
     def is_available(cls):
-        # there is basically no tflite runtime (except for android), that includes flex delegates (which are required for this model), so we disable it by default
+        # there is basically no tflite runtime (except for android), that includes flex delegates (which are required for this model), so we always disable it by default
         return False

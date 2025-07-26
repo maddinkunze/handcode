@@ -15,6 +15,7 @@ class ModelRunner:
     name: str
     alphabet: list[str]
     writing_styles: list[WritingStyle]
+    is_supported: bool
 
     urls: list[tuple[str, str]]  # (name, url)
     description: str
