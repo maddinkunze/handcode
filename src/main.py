@@ -42,12 +42,14 @@ class HandCodeApp:
       "bg_button": "#505050",
       "bg_button_hover": "#404040",
       "bg_button_start": "#409040",
+      "bg_button_start_hover": "#50A050",
       "bg_scroll": "#202020",
       "bg_inner": "#101010",
       "bg_separator": "#606060",
       "fg_button": "#D0D0D0",
       "fg_button_hover": "#D0D0D0",
       "fg_button_start": "#004000",
+      "fg_button_start_hover": "#004000",
       "fg_scroll": "#808080",
       "fg_label": "#D0D0D0",
       "fg_text": "#F0F0F0",
@@ -64,13 +66,28 @@ class HandCodeApp:
     }
 
     def _load_fonts(self) -> None:
-        self._font_tooltip = tkf.Font(size=7)
-        self._font_text = tkf.Font(size=9)
+        _font_tooltip_size = 7
+        if sys.platform == "linux":
+            _font_tooltip_size = 6
+        self._font_tooltip = tkf.Font(size=_font_tooltip_size)
+
+        _font_text_size = 9
+        if sys.platform == "linux":
+            _font_text_size = 8
+        self._font_text = tkf.Font(size=_font_text_size)
+        
         _font_entry_size = 12
         if sys.platform == "win32":
             _font_entry_size = 10
+        if sys.platform == "linux":
+            _font_entry_size = 10
         self._font_entry = tkf.Font(size=_font_entry_size)
-        self._font_label = tkf.Font(size=10, weight="bold")
+
+        _font_label_size = 10
+        if sys.platform == "linux":
+            _font_label_size = 9
+        self._font_label = tkf.Font(size=_font_label_size, weight="bold")
+
         self._font_start = tkf.Font(size=24, weight="bold")
 
     def _load_styles(self) -> None:
@@ -121,6 +138,8 @@ class HandCodeApp:
             self._style_label_link["cursor"] = "pointinghand"
         if sys.platform == "win32":
             self._style_label_link["cursor"] = "hand2"
+        if sys.platform == "linux":
+            self._style_label_link["cursor"] = "hand2"
 
         self._style_scroll_x = "Maddin.HC.Horizontal.TScrollbar"
         self._style_scroll_y = "Maddin.HC.Vertical.TScrollbar"
@@ -165,6 +184,8 @@ class HandCodeApp:
         self._style_button_default = {
             "bg": self.STYLE["bg_button"],
             "fg": self.STYLE["fg_button"],
+            "activebackground": self.STYLE["bg_button_hover"],
+            "activeforeground": self.STYLE["fg_button_hover"],
             "relief": tk.FLAT,
             "bd": self.STYLE["borderwidth"],
             "highlightthickness": self.STYLE["highlightthickness"],
@@ -174,6 +195,8 @@ class HandCodeApp:
             "font": self._font_start,
             "bg": self.STYLE["bg_button_start"],
             "fg": self.STYLE["fg_button_start"],
+            "activebackground": self.STYLE["bg_button_start_hover"],
+            "activeforeground": self.STYLE["fg_button_start_hover"],
             "relief": tk.FLAT,
             "bd": self.STYLE["borderwidth"],
             "highlightthickness": self.STYLE["highlightthickness"],
