@@ -33,3 +33,13 @@ override-dependencies = [
     "tensorflow-intel; sys_platform == 'win32'",
     "tensorflow-io-gcs-filesystem; sys_platform == 'never'",
 ]
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
+
+[tool.uv.sources]
+torch = [
+    { index = "pytorch-cpu" },
+]
