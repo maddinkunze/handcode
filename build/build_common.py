@@ -1,6 +1,5 @@
 import os
 import sys
-import platform
 
 path_build = os.path.dirname(os.path.abspath(__file__))
 path_dist = os.path.join(path_build, "dist")
@@ -20,6 +19,9 @@ if sys.platform == "win32":
 elif sys.platform == "darwin":
     _platform = "macos"
     _distext = "app"
+elif sys.platform == "linux":
+    _platform = "linux"
+    _distext = "appimage"
 assert _platform is not None, "Unknown platform to build for: " + sys.platform
 
 sys.path.append(path_src)

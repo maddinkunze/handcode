@@ -13,6 +13,8 @@ else:
     path_icon = os.path.join(_path_icon_dir, "icon.png")
 
 use_compression = True
+if sys.platform == "linux":
+    use_compression = False
 ext_compression = f"{os.extsep}bz2"
 compression_depth = 3
 files_compressed = [

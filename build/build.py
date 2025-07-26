@@ -6,6 +6,9 @@ if sys.platform == "win32":
 elif sys.platform == "darwin":
     from build_macos import build_macos
     build_macos()
+elif sys.platform == "linux":
+    from build_linux import build_linux
+    build_linux()
 else:
     print("/--------------------------------------------------------------------------------\\")
     print("| WARNING! No matching build platform found, trying to build generic distribtion |")
