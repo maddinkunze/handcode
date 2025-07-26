@@ -88,7 +88,7 @@ class LabeledSelect:
         if cselect:
             self.select.configure(**cselect)
         if cmenu:
-            self.select["menu"].configure(**cmenu)
+            self.selectmenu.configure(**cmenu)
 
     def setOptions(self, options: list[SelectOption]):
         if self.get() not in options:
@@ -182,3 +182,7 @@ class LabeledSelect:
         if cls._empty_font_lz is None:
             cls._empty_font_lz = tkf.Font(size=0)
         return cls._empty_font_lz
+    
+    @property
+    def selectmenu(self) -> tk.Menu:
+        return self.select["menu"]

@@ -17,7 +17,6 @@ import dataclasses
 import tkinter as tk
 import tkinter.ttk as ttk
 import tkinter.font as tkf
-import tkinter.dialog as tkd
 import tkinter.filedialog as tkfd
 import tkinter.messagebox as tkmb
 
