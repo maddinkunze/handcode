@@ -187,7 +187,18 @@ You may encounter errors related to your python installation. They may be relate
 
 Since they are related to the `uv`-installed python, you will have to manually install or build the python version required for this project (at the time of writing 3.10.*, but you can find the currently needed python version in `pyproject.toml`).
 
-Here is a rundown on how to achieve this on Debian/Ubuntu-based systems:
+In the following sections there are two options on how to achieve this, one using `apt` and one using `pyenv`
+
+##### Using `apt`
+
+Here is a rundown on how to achieve this using `apt` on Debian/Ubuntu-based systems:
+1. `sudo add-apt-repository ppa:deadsnakes/ppa`
+2. `sudo apt-get update`
+3. `sudo apt-get install python3.10 python3.10-tkinter`
+
+###### Using `pyenv`
+
+Here is a rundown on how to achieve this using `pyenv` on Debian/Ubuntu-based systems:
 1. `curl -fsSL https://pyenv.run | bash` (see https://github.com/pyenv/pyenv?tab=readme-ov-file#a-getting-pyenv for other operating systems)
 2. You may want to follow the other steps given in the instructions for `pyenv` in step 1, but I was able to skip those and go straigt to installing the python dependencies (step 3)
 3. `sudo apt update; sudo apt install build-essential libssl-dev zlib1g-dev libbz2-dev libreadline-dev libsqlite3-dev curl git libncursesw5-dev xz-utils tk-dev libxml2-dev libxmlsec1-dev libffi-dev liblzma-dev` (see https://github.com/pyenv/pyenv/wiki#suggested-build-environment for other operating systems)
