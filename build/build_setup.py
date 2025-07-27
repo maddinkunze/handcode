@@ -1,7 +1,8 @@
 import os, sys
 from cx_Freeze import setup, Executable
 from build_common import path_src, path_lib, path_icon
-from build_common import buildname, buildversion, buildcpr, buildpath
+from build_common import buildname, buildversion, buildcpr
+from build_config import buildpath, package_to_build, buildbase
 from build_optimize import patch_build_exe_run
 
 # Dependencies are automatically detected, but it might need fine tuning.
@@ -12,7 +13,7 @@ includefiles = [
     (os.path.join(path_src, "data", "demo.txt"), os.path.join("data", "demo.txt")),
 ]
 if sys.platform == "win32":
-    includefiles.append((os.path.join(path_src, "lib", "icon.ico"), os.path.join("lib", "icon.ico")))
+    includefiles.append((path_icon, os.path.join("lib", "icon.ico")))
 excludes = ["sqlite3", "networkx", "lib"]
 bin_excludes = [
     "model.tflite",
@@ -30,7 +31,10 @@ build_exe_options = {
     'excludes': excludes,
     'bin_excludes': bin_excludes,
     'optimize': optimization,
-    'constants': [f"handcode_version=\"{buildversion}\""],
+    'constants': [
+        f"version_handcode=\"{buildversion}\"",
+        f"package=\"{package_to_build}\"",
+    ],
     'replace_paths': [("*", "")],
     'path': [*sys.path, path_src, path_lib],
 }
@@ -39,9 +43,6 @@ bdist_mac_options = {
     'bundle_name': buildpath,
 }
 
-# base="Win32GUI" should be used only for Windows GUI app
-base = "Win32GUI" if sys.platform == "win32" else None
-
 patch_build_exe_run()
 
 setup(
@@ -49,5 +50,5 @@ setup(
     version=buildversion,
     description="HandCode: Handwriting GCode Generator",
     options={"build_exe": build_exe_options, "bdist_mac": bdist_mac_options},
-    executables=[Executable(path_main, base=base, icon=path_icon, target_name=buildname, copyright=buildcpr)],
+    executables=[Executable(path_main, base=buildbase, icon=path_icon, target_name=buildname, copyright=buildcpr)],
 )

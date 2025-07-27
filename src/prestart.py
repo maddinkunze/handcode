@@ -1,16 +1,14 @@
-import sys
+import os
+from common import is_frozen, compression, path_exe_dir, path_lib, set_tk_icon
 
 def unpack_relevant_files():
-    if not getattr(sys, "frozen", False):
-        # if this is not a built package, skip prestart (i.e. dont unpack compressed files)
+    if not is_frozen:
+        # if not frozen, we don't need to unpack anything
         return
 
-    from common import use_compression, path_exe_dir, path_lib, ext_compression, files_compressed, compression_depth, set_tk_icon
-
-    if not use_compression:
+    if not compression:
+        # if compression is not enabled, we don't need to unpack anything
         return
-
-    import os
 
     path_unpacked = os.path.join(path_lib, "handcodeunpacked")
 
@@ -52,9 +50,9 @@ def unpack_relevant_files():
                 decompress_large_file(path_item)
 
     def decompress_large_file(path: str):
-        if not path.endswith(ext_compression):
+        if not path.endswith(compression.ext):
             return
-        path_decompressed = path[:-len(ext_compression)]
+        path_decompressed = path[:-len(compression.ext)]
 
         file_orig = bz2.open(path, "rb")
         file_compressed = open(path_decompressed, "wb")
@@ -65,13 +63,13 @@ def unpack_relevant_files():
         os.remove(path)
 
     def decompress_thread():
-        for path in files_compressed:
+        for path in compression.files:
             path_actual = os.path.join(path_exe_dir, *path)
             if os.path.isdir(path_actual):
-                decompress_large_files(path_actual, compression_depth)
+                decompress_large_files(path_actual, compression.depth)
                 continue
 
-            path_actual += ext_compression
+            path_actual += compression.ext
             if os.path.isfile(path_actual):
                 decompress_large_file(path_actual)
                 continue
