@@ -1,19 +1,11 @@
 import os
 import sys
+import enum
+import tkinter as tk
 
 # Whether we are running in a frozen environment (i.e. cx_Freeze)
 is_frozen = getattr(sys, "frozen", False)
 
-# Runtime environment (i.e. operating system)
-environment = None
-if sys.platform == "win32":
-    environment = "windows"
-elif sys.platform == "darwin":
-    environment = "macos"
-elif sys.platform.startswith("linux"):
-    environment = "linux"
-
-# Tyoe of package (if applicable, e.g. "windows-exe", "linux-appimage", "macos-app")
 package = None
 if is_frozen:
     from BUILD_CONSTANTS import package  # type: ignore[import-not-found]
@@ -44,16 +36,15 @@ if is_readonly or package in ("linux-appimage", "macos-app"):
     except:
         pass
 
-# Path to the directory containing the libraries
+# Path to the directory containing the libraries and assets
 path_lib = os.path.join(path_exe_dir, "lib")
+path_assets = os.path.join(path_exe_dir, "assets")
 
 path_icon = None
 if environment == "windows":
-    path_icon = os.path.join(path_lib, "icon.ico")
-#elif package == "appimage":
-#    pass
+    path_icon = os.path.join(path_assets, "icon.ico")
 else:
-    _path_icon_dir = path_exe_dir if is_frozen else path_lib
+    _path_icon_dir = path_exe_dir if is_frozen else path_assets
     path_icon = os.path.join(_path_icon_dir, "icon.png")
 
 class CompressionConfig:
@@ -113,7 +104,6 @@ assert isinstance(version_handcode, str), "Could not determine program version, 
 if not is_frozen:
     sys.path.append(path_lib) # for clean build reasons we dont include lib.* (e.g. lib.handwriting)
 
-import tkinter as tk
 def set_tk_icon(root: tk.Tk):
     if environment == "windows":
         root.iconbitmap(path_icon)

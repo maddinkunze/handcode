@@ -11,6 +11,7 @@ path_setup = os.path.join(path_build, "build_setup.py")
 
 path_src = os.path.join(path_build, "..", "src")
 path_lib = os.path.join(path_src, "lib")
+path_assets = os.path.join(path_src, "assets")
 
 sys.path.append(path_src)
 from common import CompressionConfig

@@ -1,6 +1,6 @@
 import os
 from build_common import CompressionConfig
-from build_common import buildversion, path_dist, environment, compression_lookup, path_lib, _package_key, _remove_file_filter
+from build_common import buildversion, path_src, path_assets, path_dist, environment, compression_lookup, _package_key, _remove_file_filter
 from build_utils import to_zip_file
 
 # Define default build configuration values
@@ -8,6 +8,9 @@ def pre_build_command(): ...
 def post_exe_command(): ...
 def post_build_command(): ...
 buildbase: str|None = None
+include_files = [
+    (os.path.join(path_src, "data", "demo.txt"), os.path.join("data", "demo.txt")),
+]
 move_files: list[tuple[tuple[str, ...], tuple[str, ...]]] = [
     (("frozen_application_license.txt",), ("lib", "cxfreeze_license.txt")),
 ]
@@ -92,6 +95,7 @@ if package_to_build in ("windows-zip",):
     buildbase = "Win32GUI"
     name_icon = "icon.ico"
 
+    include_files.append((os.path.join(path_assets, name_icon), os.path.join("lib", name_icon)))
     remove_files.append(("lib", "libcrypto-3.dll",)),
     remove_files.append(("lib", "libssl-3.dll",)),
     remove_files.append(("lib", "numpy", "core", "_simd.cp311-win_amd64.pyd")),
@@ -140,7 +144,7 @@ if not package_to_build in compression_lookup:
 compression: CompressionConfig | None = compression_lookup.get(package_to_build, None)
 
 # Determine the correct path for the icon file
-path_icon = os.path.join(path_lib, name_icon)
+path_icon = os.path.join(path_assets, name_icon)
 
 # Assemble the build path and final distribution filename
 _dirname = f"handcode-{_platform}-v{buildversion}"

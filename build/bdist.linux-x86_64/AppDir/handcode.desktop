@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=handcode
+Exec=HandCode
+Comment=Handwriting GCode Generator
+Icon=/share/icons/icon
+Categories=Development;
+Terminal=true
+X-AppImage-Arch=x86_64
+X-AppImage-Name=handcode
+X-AppImage-Version=0.5.0
