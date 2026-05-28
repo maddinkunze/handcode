@@ -95,7 +95,8 @@ class LabeledSelect:
             self.set("")
 
         self._options = options
-        self.selectmenu.delete(0, tk.END)
+        if options:
+            self.selectmenu.delete(0, tk.END)
         for option in options:
             _image_data = {}
             if option.has_image:
