@@ -66,7 +66,7 @@ def convertSettingsLegacyFrom041(settings):
             except:
                 styleId = 0
             settingsNewFont["style"] = styleId
-    settingsNew["model"] = "cai-ulw"
+    settingsNew["model"] = {"name": "cai-ulw"}
     settingsNew["version"] = "0.5.0"
     return settingsNew
 
