@@ -1,6 +1,6 @@
 <p align="center"><img src="doc/img/icon.svg" width="20%"></p>
 
-# HandCode - A handwiriting GCode generator
+# HandCode - A handwriting GCode generator
 
 ## Overview
 
@@ -13,7 +13,7 @@ HandCode is a simple tool that enables its users to automatically create GCode f
 ![](doc/img/diagram_process.png)
 
 > [!WARNING]
-> Please read and understand the license carefully before using this program! 
+> Please read and understand the license carefully before using this program!
 
 ### Getting started
 
@@ -44,7 +44,7 @@ The generated GCode can be saved on an SD-Card or loaded into a GCode Sender pro
 #### Calibrating and Testing different values
 
 I recommend spending some time to calibrate the font size to different line heights for your environment. To do so, simply take a text file with 10 lines of content and convert it to GCode with different font sizes. You can then measure the actual distance and graph and inter-/extrapolate it to whatever font size you might need in the future.
-Furthermore i encourage you to play around with the other options, such as how high you have to lift the pen and how low you have to put it to write but not drag unneccessarily.
+Furthermore i encourage you to play around with the other options, such as how high you have to lift the pen and how low you have to put it to write but not drag unnecessarily.
 All options available are described below.
 
 
@@ -105,7 +105,7 @@ This field can be set if you want to mount the paper perpendicular to your CNC/3
 
 <details>
 <summary>About the two images below</summary>
-This feature used to be called "Swap X/Y" before I implemented arbitrary rotation. The images still apply, whereas the left image shows a rotation of 0° (i.e. Swap X/Y off) and the right immage displays a rotation of 90° (i.e. Swap X/Y on).
+This feature used to be called "Swap X/Y" before I implemented arbitrary rotation. The images still apply, whereas the left image shows a rotation of 0° (i.e. Swap X/Y off) and the right image displays a rotation of 90° (i.e. Swap X/Y on).
 </details>
 
 
@@ -235,7 +235,7 @@ For building this project you need to do the following:
 > Only build this project after verifying that you can run the project (i.e. `uv run src/main.py`).
 
 Building a HandCode release is tested on the following platforms:
- - Windows (specifically Windows 10 on an amd64/x86_46 architecture)
+ - Windows (specifically Windows 10 on an amd64/x86_64 architecture)
  - macOS (specifically macOS 15.5 on an arm64 architecture)
 
 I have not tested nor built this project on other platforms than mentioned. If you have managed to build it for another platform, feel free to share your steps and code modifications.
